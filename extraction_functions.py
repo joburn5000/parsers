@@ -1,4 +1,5 @@
 import pdfplumber
+from pypdf import PdfReader
 # todo put each pdf_parser into its own class
 
 def pdf_plumber_extract(pdf):
@@ -30,7 +31,13 @@ def tabula_py_extract():
 def pdf2tables_extract():
     return
     
-def pdfreader_extract():
+def pdfreader_extract(pdf):
+    reader = PdfReader("../dataset/Arxiv_papers/3.pdf")
+    number_of_pages = len(reader.pages)
+    for i in range(number_of_pages):   
+        page = reader.pages[i]
+        text = page.extract_text()
+        print(text)
     return
     
 def PDFMiner_extract():
