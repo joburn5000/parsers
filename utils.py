@@ -2,10 +2,6 @@
 class dataset:
     pdfs = []
 
-class retrieval:
-    def extract(self, pdf, pdf_parser):
-        return pdf_parser.extract(pdf)
-
 class metrics:
     # init TODO
     speed = ""
