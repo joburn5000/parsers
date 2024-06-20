@@ -69,6 +69,12 @@ evaluations = []
 for extracted_data, pdf in zip(total_extracted_data, dataset.pdfs):
     evaluate(extracted_data, pdf)
 
+# notes for each
+pdf_plumber.metrics.speed = "very fast. TODO: number of pages per second"
+pdf_plumber.metrics.resource_efficiency = "very efficient: TODO CPU/GPU utilization metrics"
+pdf_plumber.metrics.cost = "Free"
+pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
+
 # TODO print method creation
 # TODO use a python logger - one that can also save to a file
 # TODO enable CICD on github (eventually)
