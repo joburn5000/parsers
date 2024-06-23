@@ -1,16 +1,13 @@
 from pypdf import PdfReader
 import pdfplumber
 import PyPDF2
+import camelot
 
 #todo: implement camelot test
-import camelot
-# tables = camelot.read_pdf('foo.pdf')
-# tables
-# <TableList n=1>
-# tables.export('foo.csv', f='csv', compress=True) # json, excel, html, markdown, sqlite
-# tables[0]
-# <Table shape=(7, 7)>
-# tables[0].parsing_report
+tables = camelot.read_pdf('../dataset/Arxiv_papers/3.pdf')
+tables.export('foo.csv', f='csv', compress=True) # json, excel, html, markdown, sqlite
+tables[0].parsing_report
+# notes: ease of setup lower due to dependency on ghostscript, especially difficult on windows
 
 # todo implement tabula_py test
 
