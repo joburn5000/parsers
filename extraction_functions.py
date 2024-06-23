@@ -32,7 +32,7 @@ def pdf2tables_extract():
     return
     
 def pdfreader_extract(pdf):
-    reader = PdfReader("../dataset/Arxiv_papers/3.pdf")
+    reader = PdfReader("dataset/Arxiv_papers/3.pdf")
     number_of_pages = len(reader.pages)
     for i in range(number_of_pages):   
         page = reader.pages[i]
