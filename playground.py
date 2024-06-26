@@ -9,7 +9,7 @@ import camelot
 # tables[0].parsing_report
 # notes: ease of setup lower due to dependency on ghostscript, especially difficult on windows
 
-# todo implement tabula_py test
+# todo implement tabula_py test https://github.com/chezou/tabula-py 
 import tabula
 
 # Read pdf into list of DataFrame
