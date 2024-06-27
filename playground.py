@@ -18,9 +18,6 @@ dfs = tabula.read_pdf("dataset/Arxiv_papers/3.pdf", pages='all')
 # convert PDF into CSV file
 tabula.convert_into("dataset/Arxiv_papers/3.pdf", "output.csv", output_format="csv", pages='all')
 
-# convert all PDFs in a directory
-tabula.convert_into_by_batch("input_directory", output_format='csv', pages='all')
-
 # reader = PdfReader("dataset/Arxiv_papers/3.pdf")
 # number_of_pages = len(reader.pages)
 # for i in range(number_of_pages):   
