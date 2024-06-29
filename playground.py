@@ -17,6 +17,8 @@ dfs = tabula.read_pdf("dataset/Arxiv_papers/3.pdf", pages='all')
 
 # convert PDF into CSV file
 tabula.convert_into("dataset/Arxiv_papers/3.pdf", "output.csv", output_format="csv", pages='all')
+# TODO add notes to evaluation
+# notes: extracts TABLE data to a CSV format. dependency (not necessary to run it though) jpype 'pip install jpype1'
 
 # reader = PdfReader("dataset/Arxiv_papers/3.pdf")
 # number_of_pages = len(reader.pages)
