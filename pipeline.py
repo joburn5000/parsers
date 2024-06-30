@@ -34,7 +34,7 @@ pdfreader.extract = pdfreader_extract
 PDFMiner.extract = PDFMiner_extract
 
 pdf_parsers = [pdf_plumber, pdfreader, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama2parser, tabula_py, pdf2tables, PDFMiner]
-test_pdf_parsers = [camelot, tabula_py]
+test_pdf_parsers = [camelot, tabula_py] # PyPDF2, PDFMiner, llama2parser, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
