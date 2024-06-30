@@ -3,22 +3,24 @@ import pdfplumber
 import PyPDF2
 import camelot
 
-# test PyPDF2
-# Pypdf2 https://pypi.org/project/PyPDF2/
-# todo: can it do tables?
-from PyPDF2 import PdfReader as PdfReader2
+# todo test llama2parser, pdf2tables
 
-reader = PdfReader2("dataset/Arxiv_papers/3.pdf")
-number_of_pages = len(reader.pages)
-page = reader.pages[0]
-text = page.extract_text()
-print(text)
+# # test PyPDF2
+# # Pypdf2 https://pypi.org/project/PyPDF2/
+# # todo: can it do tables?
+# from PyPDF2 import PdfReader as PdfReader2
 
-# test PDFMiner (community maintained: https://github.com/pdfminer/pdfminer.six) (this one is command-line only: https://pypi.org/project/pdfminer/)
-from pdfminer.high_level import extract_text
-text = extract_text("dataset/Arxiv_papers/3.pdf")
-print(text)
-# notes: very sloppy extraction result (lots of extra whitespace)
+# reader = PdfReader2("dataset/Arxiv_papers/3.pdf")
+# number_of_pages = len(reader.pages)
+# page = reader.pages[0]
+# text = page.extract_text()
+# print(text)
+
+# # test PDFMiner (community maintained: https://github.com/pdfminer/pdfminer.six) (this one is command-line only: https://pypi.org/project/pdfminer/)
+# from pdfminer.high_level import extract_text
+# text = extract_text("dataset/Arxiv_papers/3.pdf")
+# print(text)
+# # notes: very sloppy extraction result (lots of extra whitespace)
 
 # # implement camelot test
 # tables = camelot.read_pdf('dataset/Arxiv_papers/3.pdf')
