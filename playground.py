@@ -2,8 +2,21 @@ from pypdf import PdfReader
 import pdfplumber
 import PyPDF2
 import camelot
+# todo test pdf2tables
 
-# todo test llama2parser, pdf2tables
+# todo test llama2parser
+import nest_asyncio
+nest_asyncio.apply()
+from llama_parse import LlamaParse
+parser = LlamaParse(
+    api_key="llx-...",  # can also be set in your env as LLAMA_CLOUD_API_KEY
+    result_type="markdown",  # "markdown" and "text" are available
+    num_workers=4,  # if multiple files passed, split in `num_workers` API calls
+    verbose=True,
+    language="en",  # Optionally you can define a language, default=en
+)
+documents = parser.load_data("dataset/Arxiv_papers/3.pdf")
+print(documents)
 
 # # test PyPDF2
 # # Pypdf2 https://pypi.org/project/PyPDF2/
