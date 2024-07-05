@@ -2,7 +2,7 @@ from pypdf import PdfReader
 import pdfplumber
 import PyPDF2
 import camelot
-# todo test pdf2tables
+
 
 
 # # test llama2parser
@@ -77,4 +77,25 @@ import camelot
 #         print(page.extract_tables(table_settings={}))
 
 # pdfplumber github repo: https://github.com/jsvine/pdfplumber?tab=readme-ov-file#extracting-text
-    
+
+
+# # test pdf2tables https://github.com/chen1tian/pdf2tables
+# # notes: not a good candidate. lacks functionality, last update 5 years ago, it is simply a wrapper for camelot and pdfplumber
+
+# from pdf2tables import pdf_tables
+
+# imgOcrSettings = {
+#         'pytesseract_kernel': np.ones((4, 4), np.uint8),
+#         'pytesseract_bin_threshold': 127,
+#         'pytesseract_iterations': 1,
+#         # 单元格面积范围，决定哪些单元格会被选中
+#         'pytesseract_areaRange': [10000, 100000],
+#         'pytesseract_isDebug': False,
+#         # 单元格边框，用来更精确地获取文本
+#         'pytesseract_border': 10,
+#         'img_ocr_type': ImgOcrType.Pytesseract,
+#         'aliyun_appcode': 'b8f41a5f9b664a45af2bc9f58666a17e'
+#     }
+
+# tables = extract(
+#     'C:/pdf2tables/test_data/Jan-2010.pdf', lang='eng+tha', **imgOcrSettings)
