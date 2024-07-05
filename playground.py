@@ -3,7 +3,10 @@ import pdfplumber
 import PyPDF2
 import camelot
 
-
+# todo: test Amazon_Textract, Microsoft_Table_Transformer
+# todo: summarize findings
+# todo: write a post
+# todo: put best candidates into the pipeline
 
 # # test llama2parser
 # import nest_asyncio
