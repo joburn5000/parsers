@@ -8,6 +8,18 @@ import camelot
 # todo: write a post
 # todo: put best candidates into the pipeline
 
+
+
+
+# test Amazon_Textract
+# python example implementation: https://docs.aws.amazon.com/code-library/latest/ug/python_3_textract_code_examples.html
+# notes:
+# pricing: https://aws.amazon.com/textract/pricing/
+# The Free Tier lasts for three months, and new AWS customers can detect text from up to 1,000 pages per month
+# Text: $1.50 per 1,000 pages (then over 1 million in a month, $0.60 per 1,000 pages)
+# Tables: $15 per 1,000 pages (then over 1 million in a month, $10 per 1,000 pages)
+
+
 # # test llama2parser
 # import nest_asyncio
 # nest_asyncio.apply()
