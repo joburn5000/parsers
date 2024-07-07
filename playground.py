@@ -3,12 +3,15 @@ import pdfplumber
 import PyPDF2
 import camelot
 
-# todo: test Amazon_Textract, Microsoft_Table_Transformer
 # todo: summarize findings
 # todo: write a post
 # todo: put best candidates into the pipeline
 
 
+# test Microsoft_Table_Transformer https://github.com/microsoft/table-transformer
+# to train the detection model: ''python main.py --data_type detection --config_file detection_config.json --data_root_dir /path/to/detection_data''
+# To compute object detection metrics for the detection model: ''python main.py --mode eval --data_type detection --config_file detection_config.json --data_root_dir /path/to/pascal_voc_detection_data --model_load_path /path/to/detection_model ''
+# notes: A deep learning model based on object detection for extracting tables from PDFs and images.
 
 
 # test Amazon_Textract
