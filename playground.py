@@ -1,15 +1,10 @@
-
-
-# todo: reorder the ones in terms of priority
 # todo: summarize findings
-# todo: write a post
+# todo: add notes to evaluation
 # todo: put best candidates into the pipeline
+# todo: write a post
 
 
-
-
-
-# test pdf plumber
+# # test pdf plumber
 # import pdfplumber
 # with pdfplumber.open("dataset/Arxiv_papers/3.pdf") as pdf:
 #     for page in pdf.pages:
@@ -25,18 +20,16 @@
 # notes: dependency on ghostscript
 
 
-
-# # implement tabula_py test https://github.com/chezou/tabula-py 
+# # test tabula_py https://github.com/chezou/tabula-py 
 # import tabula
 # # Read pdf into list of DataFrame
 # dfs = tabula.read_pdf("dataset/Arxiv_papers/3.pdf", pages='all')
 # # convert PDF into CSV file
 # tabula.convert_into("dataset/Arxiv_papers/3.pdf", "output.csv", output_format="csv", pages='all')
-# # TODO add notes to evaluation
 # # notes: extracts TABLE data to a CSV format. dependency (not necessary to run it though) jpype 'pip install jpype1'
 
 
-# test pypdf
+# # test pypdf
 # from pypdf import PdfReader
 # reader = PdfReader("dataset/Arxiv_papers/3.pdf")
 # number_of_pages = len(reader.pages)
@@ -59,14 +52,12 @@
 # print(text)
 
 
-
-
-
 # # test PDFMiner (community maintained: https://github.com/pdfminer/pdfminer.six) (this one is command-line only: https://pypi.org/project/pdfminer/)
 # from pdfminer.high_level import extract_text
 # text = extract_text("dataset/Arxiv_papers/3.pdf")
 # print(text)
 # # notes: very sloppy extraction result (lots of extra whitespace)
+
 
 # # test pdf2tables https://github.com/chen1tian/pdf2tables
 # # notes: not a good candidate. lacks functionality, last update 5 years ago, it is simply a wrapper for camelot and pdfplumber
@@ -85,8 +76,6 @@
 #     }
 # tables = extract(
 #     'C:/pdf2tables/test_data/Jan-2010.pdf', lang='eng+tha', **imgOcrSettings)
-
-
 
 
 # # test llama2parser
@@ -114,15 +103,13 @@
 # # Llama 2 70B: $ 0.0032 / 1K Tokens
 
 
-
-
-# test Microsoft_Table_Transformer https://github.com/microsoft/table-transformer
+# # test Microsoft_Table_Transformer https://github.com/microsoft/table-transformer
 # to train the detection model: ''python main.py --data_type detection --config_file detection_config.json --data_root_dir /path/to/detection_data''
 # To compute object detection metrics for the detection model: ''python main.py --mode eval --data_type detection --config_file detection_config.json --data_root_dir /path/to/pascal_voc_detection_data --model_load_path /path/to/detection_model ''
 # notes: A deep learning model based on object detection for extracting tables from PDFs and images.
 
 
-# test Amazon_Textract
+# # test Amazon_Textract
 # python example implementation: https://docs.aws.amazon.com/code-library/latest/ug/python_3_textract_code_examples.html
 # notes:
 # pricing: https://aws.amazon.com/textract/pricing/
