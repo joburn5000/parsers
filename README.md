@@ -26,6 +26,8 @@ To install the necessary components for running the evaluation pipeline, follow 
     ```
     todo: add requirements.txt, add "You can find all the dependencies listed in the `requirements.txt` file."
 
+TODO add a note about needing to install ghostscript https://camelot-py.readthedocs.io/en/master/user/install-deps.html
+
 ## Dependencies
 
 The project relies on the following Python libraries and tools:
