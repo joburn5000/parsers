@@ -22,7 +22,7 @@ def Amazon_Textract_extract():
 def Microsoft_Table_Transformer_extract():
     return
     
-def llama2parser_extract():
+def llama_parse_extract():
     return
     
 def tabula_py_extract():
