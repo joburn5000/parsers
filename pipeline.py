@@ -15,7 +15,7 @@ PyPDF2 =  pdf_parser()
 camelot = pdf_parser()
 Amazon_Textract = pdf_parser()
 Microsoft_Table_Transformer = pdf_parser()
-llama2parser = pdf_parser()
+llama_parse = pdf_parser()
 tabula_py = pdf_parser()
 pdf2tables = pdf_parser()
 PDFMiner = pdf_parser()
@@ -27,14 +27,14 @@ PyPDF2.extract = PyPDF2_extract
 camelot.extract = camelot_extract
 Amazon_Textract.extract = Amazon_Textract_extract
 Microsoft_Table_Transformer.extract = Microsoft_Table_Transformer_extract
-llama2parser.extract = llama2parser_extract
+llama_parse.extract = llama_parse_extract
 tabula_py.extract = tabula_py_extract
 pdf2tables.extract = pdf2tables_extract
 pdfreader.extract = pdfreader_extract
 PDFMiner.extract = PDFMiner_extract
 
-pdf_parsers = [pdf_plumber, pdfreader, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama2parser, tabula_py, pdf2tables, PDFMiner]
-test_pdf_parsers = [camelot, tabula_py] # PyPDF2, PDFMiner, llama2parser, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
+pdf_parsers = [pdf_plumber, pdfreader, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf2tables, PDFMiner]
+test_pdf_parsers = [camelot, tabula_py] # PyPDF2, PDFMiner, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
