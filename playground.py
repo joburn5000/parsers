@@ -1,5 +1,4 @@
 # todo:
-# create a requirements.txt https://chatgpt.com/c/201a905b-186b-4196-b476-696765a0edf9
 # edit the readme
 # summarize findings, add notes to evaluation
 # put best candidates into the pipeline
