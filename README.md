@@ -32,11 +32,13 @@ To install the necessary components for running the evaluation pipeline, follow 
 The project relies on the following Python libraries and tools:
 
 - **pdfplumber**
-- **Camelot-py**
-- **PDFMiner**
-(among others)
-TODO add all libraries
-
+- **camelot-py**
+- **pdfminer**
+- **tabula-py**
+- **pypdf**
+- **PyPDF2**
+- **pdf2tables**
+- **llama_parse**
 
 ## Contributing
 
