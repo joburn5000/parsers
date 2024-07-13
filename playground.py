@@ -1,7 +1,7 @@
 # todo:
-# edit the readme
-# summarize findings, add notes to evaluation
-# put best candidates into the pipeline
+# list out the best candidates, order in terms of priority to add to the pipeline
+# put the first parser into the pipeline
+# put next candidates into the pipeline add notes to evaluation
 # flesh out capabilities of the best 3 parsers
 # write a post
 
