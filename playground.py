@@ -1,5 +1,5 @@
 # todo:
-# list out the best candidates, order in terms of priority to add to the pipeline
+# pdfplumber, pypdf, tabula_py, PyPDF2, PDFMiner, camelot, llama_parser
 # put the first parser into the pipeline
 # put next candidates into the pipeline add notes to evaluation
 # flesh out capabilities of the best 3 parsers
@@ -13,12 +13,14 @@
 #         print(page.extract_tables(table_settings={}))
 
 
-# # test camelot https://camelot-py.readthedocs.io/en/master/
-# import camelot
-# tables = camelot.read_pdf('dataset/Arxiv_papers/3.pdf')
-# tables.export('foo.csv', f='csv', compress=True) # json, excel, html, markdown, sqlite
-# tables[0].parsing_report
-# # notes: dependency on ghostscript
+# test pypdf https://pypdf.readthedocs.io/en/stable/
+from pypdf import PdfReader
+reader = PdfReader("dataset/Arxiv_papers/3.pdf")
+number_of_pages = len(reader.pages)
+for i in range(number_of_pages):   
+    page = reader.pages[i]
+    text = page.extract_text()
+    print(text)
 
 
 # test tabula_py https://github.com/chezou/tabula-py 
@@ -28,16 +30,6 @@ dfs = tabula.read_pdf("dataset/Arxiv_papers/3.pdf", pages='all')
 # convert PDF into CSV file
 tabula.convert_into("dataset/Arxiv_papers/3.pdf", "output.csv", output_format="csv", pages='all')
 # notes: extracts TABLE data to a CSV format. dependency (not necessary to run it though) jpype 'pip install jpype1'
-
-
-# test pypdf https://pypdf.readthedocs.io/en/stable/
-from pypdf import PdfReader
-reader = PdfReader("dataset/Arxiv_papers/3.pdf")
-number_of_pages = len(reader.pages)
-for i in range(number_of_pages):   
-    page = reader.pages[i]
-    text = page.extract_text()
-    print(text)
 
 
 # test PyPDF2 https://pypi.org/project/PyPDF2/
@@ -51,30 +43,12 @@ text = page.extract_text()
 print(text)
 
 
-# test PDFMiner https://github.com/pdfminer/pdfminer.six (this one is command-line only: https://pypi.org/project/pdfminer/)
-from pdfminer.high_level import extract_text
-text = extract_text("dataset/Arxiv_papers/3.pdf")
-print(text)
-# notes: very sloppy extraction result (lots of extra whitespace)
-
-
-# test pdf2tables https://github.com/chen1tian/pdf2tables
-# notes: not a good candidate. lacks functionality, last update 5 years ago, it is simply a wrapper for camelot and pdfplumber
-from pdf2tables import pdf_tables
-imgOcrSettings = {
-        'pytesseract_kernel': np.ones((4, 4), np.uint8),
-        'pytesseract_bin_threshold': 127,
-        'pytesseract_iterations': 1,
-        # 单元格面积范围，决定哪些单元格会被选中
-        'pytesseract_areaRange': [10000, 100000],
-        'pytesseract_isDebug': False,
-        # 单元格边框，用来更精确地获取文本
-        'pytesseract_border': 10,
-        'img_ocr_type': ImgOcrType.Pytesseract,
-        'aliyun_appcode': 'b8f41a5f9b664a45af2bc9f58666a17e'
-    }
-tables = extract(
-    'C:/pdf2tables/test_data/Jan-2010.pdf', lang='eng+tha', **imgOcrSettings)
+# # test camelot https://camelot-py.readthedocs.io/en/master/
+# import camelot
+# tables = camelot.read_pdf('dataset/Arxiv_papers/3.pdf')
+# tables.export('foo.csv', f='csv', compress=True) # json, excel, html, markdown, sqlite
+# tables[0].parsing_report
+# # notes: dependency on ghostscript
 
 
 # test  https://github.com/run-llama/llama_parse
@@ -115,3 +89,29 @@ print(documents)
 # The Free Tier lasts for three months, and new AWS customers can detect text from up to 1,000 pages per month
 # Text: $1.50 per 1,000 pages (then over 1 million in a month, $0.60 per 1,000 pages)
 # Tables: $15 per 1,000 pages (then over 1 million in a month, $10 per 1,000 pages)
+
+
+# # test PDFMiner https://github.com/pdfminer/pdfminer.six (this one is command-line only: https://pypi.org/project/pdfminer/)
+# from pdfminer.high_level import extract_text
+# text = extract_text("dataset/Arxiv_papers/3.pdf")
+# print(text)
+# # notes: very sloppy extraction result (lots of extra whitespace)
+
+
+# # test pdf2tables https://github.com/chen1tian/pdf2tables
+# # notes: not a good candidate. lacks functionality, last update 5 years ago, it is simply a wrapper for camelot and pdfplumber
+# from pdf2tables import pdf_tables
+# imgOcrSettings = {
+#         'pytesseract_kernel': np.ones((4, 4), np.uint8),
+#         'pytesseract_bin_threshold': 127,
+#         'pytesseract_iterations': 1,
+#         # 单元格面积范围，决定哪些单元格会被选中
+#         'pytesseract_areaRange': [10000, 100000],
+#         'pytesseract_isDebug': False,
+#         # 单元格边框，用来更精确地获取文本
+#         'pytesseract_border': 10,
+#         'img_ocr_type': ImgOcrType.Pytesseract,
+#         'aliyun_appcode': 'b8f41a5f9b664a45af2bc9f58666a17e'
+#     }
+# tables = extract(
+#     'C:/pdf2tables/test_data/Jan-2010.pdf', lang='eng+tha', **imgOcrSettings)
