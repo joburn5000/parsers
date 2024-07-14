@@ -1,5 +1,5 @@
 # todo:
-# pdfplumber, pypdf, tabula_py, PyPDF2, PDFMiner, camelot, llama_parser
+# tabula_py, PDFMiner, camelot, llama_parser
 # put the first parser into the pipeline
 # put next candidates into the pipeline add notes to evaluation
 # flesh out capabilities of the best 3 parsers
@@ -13,7 +13,7 @@
 #         print(page.extract_tables(table_settings={}))
 
 
-# test pypdf https://pypdf.readthedocs.io/en/stable/
+# test pdfreader https://pypdf.readthedocs.io/en/stable/
 from pypdf import PdfReader
 reader = PdfReader("dataset/Arxiv_papers/3.pdf")
 number_of_pages = len(reader.pages)
