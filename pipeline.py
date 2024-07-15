@@ -7,10 +7,11 @@
 
 import os
 from utils import *
-from extraction_functions import *
+import wrappers
+import wrappers.py_pdf_wrapper
 
 pdf_plumber = pdf_parser()
-PyPDF = pdf_parser() #TODO change the names so they're unique from the library
+PyPDF = pdf_parser() # TODO change the names so they're unique from the library
 PyPDF2 =  pdf_parser()
 camelot = pdf_parser()
 Amazon_Textract = pdf_parser()
@@ -19,20 +20,6 @@ llama_parse = pdf_parser()
 tabula_py = pdf_parser()
 pdf2tables = pdf_parser()
 PDFMiner = pdf_parser()
-
-# TODO fill in name for each pdf parser
-# TODO extract should return a result class
-# TODO move these from the extract function file to the wrapper
-pdf_plumber.extract = pdf_plumber_extract
-PyPDF2.extract = PyPDF2_extract
-camelot.extract = camelot_extract
-Amazon_Textract.extract = Amazon_Textract_extract
-Microsoft_Table_Transformer.extract = Microsoft_Table_Transformer_extract
-llama_parse.extract = llama_parse_extract
-tabula_py.extract = tabula_py_extract
-pdf2tables.extract = pdf2tables_extract
-PyPDF.extract = PyPDF_extract
-PDFMiner.extract = PDFMiner_extract
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf2tables, PDFMiner]
 test_pdf_parsers = [tabula_py] # PyPDF2, PDFMiner, camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
@@ -57,7 +44,8 @@ total_extracted_data = []
 for parser in test_pdf_parsers:
     for pdf in dataset.pdfs:
         new_result = result()
-        results.append(parser.extract(pdf))
+        print(parser)
+        results.append(wrappers.py_pdf_wrapper.extract(pdf))
 
 #evaluate data
 def evaluate(extracted_data, pdf):
