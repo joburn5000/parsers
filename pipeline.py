@@ -35,13 +35,13 @@ PyPDF.extract = PyPDF_extract
 PDFMiner.extract = PDFMiner_extract
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf2tables, PDFMiner]
-test_pdf_parsers = [camelot, tabula_py] # PyPDF2, PDFMiner, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
+test_pdf_parsers = [tabula_py] # PyPDF2, PDFMiner, camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
 # initialize data: get pdfs from dataset folder
-Arxiv_papaers_directory = "C:/Users/joshu/Documents/research/parsers/dataset/Arxiv_papers"
-public_SEC_docs_directory = "C:/Users/joshu/Documents/research/parsers/dataset/public_SEC_docs"
+Arxiv_papaers_directory = "dataset/Arxiv_papers"
+public_SEC_docs_directory = "dataset/public_SEC_docs"
 Arxiv_files = os.listdir(Arxiv_papaers_directory)
 public_SEC_pdfs = os.listdir(public_SEC_docs_directory)
 for pdf in Arxiv_files:

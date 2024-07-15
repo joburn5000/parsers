@@ -1,15 +1,17 @@
-# tabula_py https://github.com/chezou/tabula-py 
-import tabula
+# pypdf https://pypdf.readthedocs.io/en/stable/
+
+from pypdf import PdfReader
 from utils import *
 
-# todo test tabula
+# todo test
 def extract(pdf):
-    # Read pdf into list of DataFrame
-    dfs = tabula.read_pdf("dataset/Arxiv_papers/3.pdf", pages='all')
-    # convert PDF into CSV file
-    tabula.convert_into("dataset/Arxiv_papers/3.pdf", "tabula_output.csv", output_format="csv", pages='all')
-    # notes: extracts TABLE data to a CSV format. dependency (not necessary to run it though) jpype 'pip install jpype1'
-    return dfs
+    reader = PdfReader("dataset/Arxiv_papers/3.pdf")
+    number_of_pages = len(reader.pages)
+    for i in range(number_of_pages):   
+        page = reader.pages[i]
+        text = page.extract_text()
+        print(text)
+    return reader
 
 def format_result(pdf):
     output = result()
