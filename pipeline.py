@@ -7,22 +7,17 @@
 
 import os
 from utils import *
-import wrappers
-import wrappers.py_pdf_wrapper
+from wrappers import PyPDF2, PyPDF, tabula_py, pdf_plumber
 
-pdf_plumber = pdf_parser()
-PyPDF = pdf_parser() # TODO change the names so they're unique from the library
-PyPDF2 =  pdf_parser()
 camelot = pdf_parser()
 Amazon_Textract = pdf_parser()
 Microsoft_Table_Transformer = pdf_parser()
 llama_parse = pdf_parser()
-tabula_py = pdf_parser()
 pdf2tables = pdf_parser()
 PDFMiner = pdf_parser()
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf2tables, PDFMiner]
-test_pdf_parsers = [tabula_py] # PyPDF2, PDFMiner, camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
+test_pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, PyPDF2] # , PDFMiner, camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
@@ -42,10 +37,10 @@ print(dataset.pdfs)
 results = []
 total_extracted_data = []
 for parser in test_pdf_parsers:
-    for pdf in dataset.pdfs:
+    for pdf in dataset.pdfs[:2]:
         new_result = result()
         print(parser)
-        results.append(wrappers.py_pdf_wrapper.extract(pdf))
+        results.append(parser.extract(pdf))
 
 #evaluate data
 def evaluate(extracted_data, pdf):
