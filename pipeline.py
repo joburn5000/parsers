@@ -1,3 +1,6 @@
+# TODO: install ghostscript https://ghostscript.readthedocs.io/en/latest/Install.html
+
+
 # write a script to evaluate them correctly. 
 # have a dataset class, class for metrics, 4th class: type of PDF parser
 # define input & output. 
@@ -16,7 +19,7 @@ llama_parse = pdf_parser()
 pdf2tables = pdf_parser()
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf2tables, PDFMiner]
-test_pdf_parsers = [PDFMiner] # , , camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
+test_pdf_parsers = [] # , , camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
