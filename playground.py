@@ -4,6 +4,9 @@
 # put next candidates into the pipeline add notes to evaluation
 # flesh out capabilities of the best 3 parsers
 # write a post
+# comment 1
+# comment 2
+# comment 3
 
 
 # # test pdfplumber https://github.com/jsvine/pdfplumber?tab=readme-ov-file#extracting-text
