@@ -45,9 +45,10 @@
 
 # test camelot https://camelot-py.readthedocs.io/en/master/
 import camelot
-tables = camelot.read_pdf('dataset/Arxiv_papers/3.pdf')
-tables.export('foo.csv', f='csv', compress=True) # json, excel, html, markdown, sqlite
-tables[0].parsing_report
+tables = camelot.read_pdf('dataset/Arxiv_papers/4.pdf')
+tables.export('foo.csv', f='csv') # json, excel, html, markdown, sqlite
+print(tables)
+# tables[0].parsing_report
 # notes: dependency on ghostscript
 
 
