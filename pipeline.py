@@ -1,6 +1,3 @@
-# TODO: install ghostscript https://ghostscript.readthedocs.io/en/latest/Install.html
-# TODO update the dependency folder and readme regarding ghostscript
-
 # write a script to evaluate them correctly. 
 # have a dataset class, class for metrics, 4th class: type of PDF parser
 # define input & output. 

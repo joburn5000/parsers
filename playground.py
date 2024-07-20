@@ -50,6 +50,8 @@ tables.export('foo.csv', f='csv') # json, excel, html, markdown, sqlite
 print(tables)
 # tables[0].parsing_report
 # notes: dependency on ghostscript
+# notes: not doing a good job: extracts 0 tables from the first couple pdfs in the dataset
+#   the github repo has 205 open issues and few maintainers. hasn't been updated in 10 months.
 
 
 # # test  https://github.com/run-llama/llama_parse
