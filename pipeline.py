@@ -7,16 +7,15 @@
 
 import os
 from utils import *
-from wrappers import PyPDF2, PyPDF, tabula_py, pdf_plumber, PDFMiner
+from wrappers import PyPDF2, PyPDF, tabula_py, pdf_plumber, PDFMiner, camelot
 
-camelot = pdf_parser()
 Amazon_Textract = pdf_parser()
 Microsoft_Table_Transformer = pdf_parser()
 llama_parse = pdf_parser()
 pdf2tables = pdf_parser()
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf2tables, PDFMiner]
-test_pdf_parsers = [] # , , camelot, llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
+test_pdf_parsers = [camelot] # , , , llama_parse, pdf2tables, Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
@@ -36,7 +35,7 @@ print(dataset.pdfs)
 results = []
 total_extracted_data = []
 for parser in test_pdf_parsers:
-    for pdf in dataset.pdfs[:2]:
+    for pdf in dataset.pdfs:
         new_result = result()
         print(parser)
         results.append(parser.extract(pdf))
