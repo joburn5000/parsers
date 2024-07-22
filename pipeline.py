@@ -13,7 +13,7 @@ Amazon_Textract = pdf_parser()
 Microsoft_Table_Transformer = pdf_parser()
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
-test_pdf_parsers = [pdf_2_tables] # , , , , llama_parse, Amazon_Textract, Microsoft_Table_Transformer
+test_pdf_parsers = [llama_parse] # , , , , , Amazon_Textract, Microsoft_Table_Transformer
 dataset = dataset()
 metrics = metrics()
 
@@ -49,10 +49,10 @@ for extracted_data, pdf in zip(total_extracted_data, dataset.pdfs):
     evaluate(extracted_data, pdf)
 
 # notes for each
-pdf_plumber.metrics.speed = "very fast. TODO: number of pages per second"
-pdf_plumber.metrics.resource_efficiency = "very efficient: TODO CPU/GPU utilization metrics"
-pdf_plumber.metrics.cost = "Free"
-pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
+# pdf_plumber.metrics.speed = "very fast. TODO: number of pages per second"
+# pdf_plumber.metrics.resource_efficiency = "very efficient: TODO CPU/GPU utilization metrics"
+# pdf_plumber.metrics.cost = "Free"
+# pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
 
 # TODO print method creation
 # TODO use a python logger - one that can also save to a file

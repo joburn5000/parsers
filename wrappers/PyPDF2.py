@@ -41,6 +41,3 @@ def evaluate(extracted_data, pdf):
     evaluation.variation_robustness = ""
 
     return(evaluation)
-
-PyPDF2 =  pdf_parser()
-PyPDF2.extract = extract
