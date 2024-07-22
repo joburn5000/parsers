@@ -1,5 +1,4 @@
 from pdfminer.high_level import extract_text
-from utils import *
 # llama_parse https://github.com/run-llama/llama_parse
 import nest_asyncio
 

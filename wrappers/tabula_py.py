@@ -1,6 +1,5 @@
 # tabula_py https://github.com/chezou/tabula-py 
 import tabula
-from utils import *
 
 # todo test tabula
 def extract(pdf):

@@ -1,7 +1,6 @@
 # pypdf https://pypdf.readthedocs.io/en/stable/
 
 from pypdf import PdfReader
-from utils import *
 
 # todo test
 def extract(pdf):

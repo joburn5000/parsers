@@ -1,5 +1,4 @@
 import pdfplumber
-from utils import *
 # todo put each pdf_parser into its own class
 
 def extract(pdf):

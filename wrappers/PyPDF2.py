@@ -1,6 +1,5 @@
 # PyPDF2 https://pypi.org/project/PyPDF2/
 from PyPDF2 import PdfReader as PdfReader2
-from utils import *
 
 
 # todo test tabula
