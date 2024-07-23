@@ -7,13 +7,10 @@
 
 import os
 from utils import *
-from wrappers import PyPDF2, PyPDF, pdf_2_tables, tabula_py, pdf_plumber, PDFMiner, camelot, llama_parse
-
-Amazon_Textract = pdf_parser()
-Microsoft_Table_Transformer = pdf_parser()
+from wrappers import PyPDF2, PyPDF, pdf_2_tables, tabula_py, pdf_plumber, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
-test_pdf_parsers = [llama_parse] # , , , , , Amazon_Textract, Microsoft_Table_Transformer
+test_pdf_parsers = [Amazon_Textract, Microsoft_Table_Transformer] # , , , , , , 
 dataset = dataset()
 metrics = metrics()
 
