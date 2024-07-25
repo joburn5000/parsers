@@ -1,7 +1,5 @@
 # todo:
-# tabula_py, PDFMiner, camelot, llama_parser
-# put the first parser into the pipeline
-# put next candidates into the pipeline add notes to evaluation
+# add notes to evaluation
 # flesh out capabilities of the best 3 parsers
 # write a post
 

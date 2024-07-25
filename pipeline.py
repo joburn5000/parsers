@@ -1,16 +1,14 @@
-# write a script to evaluate them correctly. 
-# have a dataset class, class for metrics, 4th class: type of PDF parser
-# define input & output. 
-# put those inputs & outputs. 
-# make them defined. 
-# go and only change the PDF parser class
+# TODO:
+# test and write metrics for each parser
+# compare parsers
+# output results in a comprehensible manner
 
 import os
 from utils import *
 from wrappers import PyPDF2, PyPDF, pdf_2_tables, tabula_py, pdf_plumber, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
-test_pdf_parsers = [Amazon_Textract, Microsoft_Table_Transformer] # , , , , , , 
+test_pdf_parsers = []
 dataset = dataset()
 metrics = metrics()
 
@@ -23,8 +21,6 @@ for pdf in Arxiv_files:
     dataset.pdfs.append(Arxiv_papaers_directory+"/"+pdf)
 for pdf in public_SEC_pdfs:
     dataset.pdfs.append(public_SEC_docs_directory+"/"+pdf)
-print(dataset.pdfs)
-# TODO set up the classes correctly
 
 #retrieve data for each pdf
 results = []
