@@ -1,16 +1,30 @@
 # TODO:
 # test and write metrics for each parser
+    # cost = ""
+    # speed = ""
+    # resource_efficiency = ""
+    # accuracy = ""
+    # variation_robustness = ""
 # compare parsers
+    # pdf_plumber
+    # PyPDF2
+    # PyPDF
+    # pdf_2_tables
+    # tabula_py
+    # PDFMiner
+    # camelot
+    # llama_parse
+    # Amazon_Textract
+    # Microsoft_Table_Transformer
 # output results in a comprehensible manner
 
 import os
 from utils import *
-from wrappers import PyPDF2, PyPDF, pdf_2_tables, tabula_py, pdf_plumber, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
+from wrappers import pdf_plumber, PyPDF2, PyPDF, pdf_2_tables, tabula_py, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
 test_pdf_parsers = []
 dataset = dataset()
-metrics = metrics()
 
 # initialize data: get pdfs from dataset folder
 Arxiv_papaers_directory = "dataset/Arxiv_papers"
@@ -42,10 +56,23 @@ for extracted_data, pdf in zip(total_extracted_data, dataset.pdfs):
     evaluate(extracted_data, pdf)
 
 # notes for each
-# pdf_plumber.metrics.speed = "very fast. TODO: number of pages per second"
-# pdf_plumber.metrics.resource_efficiency = "very efficient: TODO CPU/GPU utilization metrics"
-# pdf_plumber.metrics.cost = "Free"
-# pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
+for parser in pdf_parsers:
+    parser.metrics = metrics()
+
+pdf_plumber.metrics.speed = "very fast. TODO: number of pages per second"
+pdf_plumber.metrics.resource_efficiency = "very efficient: TODO CPU/GPU utilization metrics"
+pdf_plumber.metrics.cost = "Free"
+pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
+pdf_plumber.metrics.cost = "Free"
+PyPDF2.metrics.cost = "Free"
+PyPDF.metrics.cost = "Free"
+pdf_2_tables.metrics.cost = "Free"
+tabula_py.metrics.cost = "Free"
+PDFMiner.metrics.cost = "Free"
+camelot.metrics.cost = "Free"
+llama_parse.metrics.cost = "Paid"
+Amazon_Textract.metrics.cost = "Paid"
+Microsoft_Table_Transformer.metrics.cost = "Paid"
 
 # TODO print method creation
 # TODO use a python logger - one that can also save to a file
