@@ -1,7 +1,7 @@
 # pypdf https://pypdf.readthedocs.io/en/stable/
 
 from pypdf import PdfReader
-
+name = "PyPdf"
 # todo test
 def extract(pdf):
     reader = PdfReader(pdf)

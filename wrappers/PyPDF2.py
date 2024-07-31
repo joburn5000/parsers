@@ -1,6 +1,6 @@
 # PyPDF2 https://pypi.org/project/PyPDF2/
 from PyPDF2 import PdfReader as PdfReader2
-
+name = "PyPdf2"
 
 # todo test tabula
 def extract(pdf):

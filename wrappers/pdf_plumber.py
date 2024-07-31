@@ -1,5 +1,5 @@
 import pdfplumber
-# todo put each pdf_parser into its own class
+name = "Pdf Plumber"
 
 def extract(pdf):
     plumber_pdf = pdfplumber.open(pdf)

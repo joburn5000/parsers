@@ -1,6 +1,7 @@
 # pypdf https://pypdf.readthedocs.io/en/stable/
 
 import camelot
+name = "camelot"
 
 # todo test
 def extract(pdf):

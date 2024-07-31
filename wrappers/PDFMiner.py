@@ -1,5 +1,6 @@
 from pdfminer.high_level import extract_text
 # PDFMiner https://github.com/pdfminer/pdfminer.six
+name = "Pdf Miner"
 
 def extract(pdf):
     text = extract_text(pdf)

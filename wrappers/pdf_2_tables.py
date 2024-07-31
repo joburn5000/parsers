@@ -1,5 +1,6 @@
 from pdf2tables import pdf_tables
 import numpy as np
+name = "pdf2tables"
 # pdf2tables https://github.com/chen1tian/pdf2tables
 
 def extract(pdf):
