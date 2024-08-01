@@ -24,7 +24,7 @@ from utils import *
 from wrappers import pdf_plumber, PyPDF2, PyPDF, pdf_2_tables, tabula_py, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
-test_pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
+test_pdf_parsers = [pdf_plumber, PyPDF] # PyPDF2, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
 
 data = get_pdfs()
 # initialize metrics for each parser
@@ -53,7 +53,7 @@ Microsoft_Table_Transformer.metrics.cost = "Paid"
 output_file = open("evaluations.txt", "w")
 for parser in pdf_parsers:
     output_file.write(parser.name + "\n")
-    output_file.write("Speed: " + str(parser.metrics.speed) + "\n")
+    output_file.write("Speed: " + str(parser.metrics.speed) + " PDFs per second\n")
     output_file.write("Resource Efficiency: " + parser.metrics.resource_efficiency + "\n")
     output_file.write("Accuracy: " + parser.metrics.accuracy + "\n")
     output_file.write("Cost: " + parser.metrics.cost + "\n\n")

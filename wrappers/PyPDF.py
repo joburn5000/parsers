@@ -8,8 +8,7 @@ def extract(pdf):
     number_of_pages = len(reader.pages)
     for i in range(number_of_pages):   
         page = reader.pages[i]
-        text = page.extract_text()
-        print(text)
+        page.extract_text()
     return "'reader'"
 
 def format_result(pdf):

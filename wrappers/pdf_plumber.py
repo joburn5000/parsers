@@ -4,7 +4,7 @@ name = "Pdf Plumber"
 def extract(pdf):
     plumber_pdf = pdfplumber.open(pdf)
     for page in plumber_pdf.pages:
-        print(page.extract_text())
+        page.extract_text()
         # extract only table data:
         # print(page.extract_tables(table_settings={}))
     return plumber_pdf
