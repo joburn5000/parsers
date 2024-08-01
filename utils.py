@@ -44,11 +44,9 @@ def retrieve_data(test_pdf_parsers):
     total_extracted_data = []
     for parser in test_pdf_parsers:
         timestamp = datetime.datetime.now()
-        for pdf in dataset.pdfs[:1]:
-            new_result = result()
+        for pdf in dataset.pdfs:
             print(parser)
             results.append(parser.extract(pdf))
-        # parser.metrics.speed = len(dataset.pdfs) / (datetime.datetime.now() - timestamp).total_seconds()
-        parser.metrics.speed = 4
+        parser.metrics.speed = len(dataset.pdfs) / (datetime.datetime.now().total_seconds() - timestamp.total_seconds())
         print("PDFs per second: ", parser.metrics.speed)
     return results
