@@ -1,7 +1,5 @@
 # TODO:
 # test and write metrics for each parser
-    # cost = ""
-    # speed = ""
     # resource_efficiency = ""
     # accuracy = ""
     # variation_robustness = ""
@@ -35,7 +33,6 @@ for parser in pdf_parsers:
 
 results = retrieve_data(test_pdf_parsers)
 
-pdf_plumber.metrics.speed = "very fast. TODO: number of pages per second"
 pdf_plumber.metrics.resource_efficiency = "very efficient: TODO CPU/GPU utilization metrics"
 pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
 
@@ -56,7 +53,7 @@ Microsoft_Table_Transformer.metrics.cost = "Paid"
 output_file = open("evaluations.txt", "w")
 for parser in pdf_parsers:
     output_file.write(parser.name + "\n")
-    output_file.write("Speed: " + parser.metrics.speed + "\n")
+    output_file.write("Speed: " + str(parser.metrics.speed) + "\n")
     output_file.write("Resource Efficiency: " + parser.metrics.resource_efficiency + "\n")
     output_file.write("Accuracy: " + parser.metrics.accuracy + "\n")
-    output_file.write("Cost " + parser.metrics.cost + "\n\n")
+    output_file.write("Cost: " + parser.metrics.cost + "\n\n")
