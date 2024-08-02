@@ -5,9 +5,8 @@ name = "camelot"
 
 # todo test
 def extract(pdf):
-    tables = camelot.read_pdf('dataset/Arxiv_papers/4.pdf')
+    tables = camelot.read_pdf(pdf)
     tables.export('foo.csv', f='csv') # json, excel, html, markdown, sqlite
-    print(tables)
     return tables
 
 def format_result(pdf):

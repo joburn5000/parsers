@@ -1,6 +1,5 @@
 # TODO:
 # test and write metrics for each parser
-    # memory_usage = ""
     # accuracy = ""
     # variation_robustness = ""
 # compare parsers
@@ -17,14 +16,13 @@
 # output results in a comprehensible manner
 # TODO:
 # update requirements.txt
-# make an init.py that handles data initialization
 
 
 from utils import *
 from wrappers import pdf_plumber, PyPDF2, PyPDF, pdf_2_tables, tabula_py, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
 
 pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
-test_pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, Amazon_Textract, Microsoft_Table_Transformer, llama_parse, tabula_py, pdf_2_tables, PDFMiner]
+test_pdf_parsers = pdf_parsers
 
 data = get_pdfs()
 # initialize metrics for each parser
@@ -33,7 +31,6 @@ for parser in pdf_parsers:
 
 results = retrieve_data(test_pdf_parsers)
 
-pdf_plumber.metrics.memory_usage = "very efficient: TODO CPU/GPU utilization metrics"
 pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
 
 pdf_plumber.metrics.cost = "Free"
