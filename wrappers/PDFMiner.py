@@ -4,7 +4,6 @@ name = "Pdf Miner"
 
 def extract(pdf):
     text = extract_text(pdf)
-    print(text)
     return text
 
 def format_result(plumber_pdf):
@@ -24,7 +23,7 @@ def evaluate(extracted_data, pdf):
     evaluation.speed = finish_time - start_time
 
     # test resource efficiency
-    evaluation.resource_efficiency = ""
+    evaluation.memory_usage = ""
     evaluation.cost = 0
 
     # test accuracy

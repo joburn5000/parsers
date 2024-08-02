@@ -1,5 +1,7 @@
 import os
 import datetime
+import tracemalloc
+
 
 class dataset:
     pdfs = []
@@ -7,7 +9,7 @@ class dataset:
 class metrics:
     # init TODO
     speed = ""
-    resource_efficiency = ""
+    memory_usage = ""
     cost = ""
     accuracy = ""
     variation_robustness = ""
@@ -40,11 +42,22 @@ def get_pdfs():
 
 def retrieve_data(test_pdf_parsers):
     #retrieve data for each pdf
+    
     num_pdfs = len(dataset.pdfs)
     for parser in test_pdf_parsers:
+        # track memory usage
+        tracemalloc.start()
+        # track time elapsed
         timestamp = datetime.datetime.now()
-        for pdf in dataset.pdfs:
+        for pdf in dataset.pdfs[:1]:
             parser.extract(pdf)
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        # record speed (PDFs per second)
         seconds_elapsed =  (datetime.datetime.now() - timestamp).total_seconds()
         parser.metrics.speed = "n/a" if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
+        # record memory usage (MB)
+        parser.metrics.memory_usage = "n/a" if current < .01 else current / 10**6
+        print(f"Current memory usage: {current / 10**6} MB")
+        print(f"Peak memory usage: {peak / 10**6} MB")
     return
