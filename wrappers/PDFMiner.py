@@ -1,4 +1,5 @@
 from pdfminer.high_level import extract_text
+import os
 # PDFMiner https://github.com/pdfminer/pdfminer.six
 name = "Pdf Miner"
 
