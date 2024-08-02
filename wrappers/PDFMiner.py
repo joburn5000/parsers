@@ -3,7 +3,11 @@ from pdfminer.high_level import extract_text
 name = "Pdf Miner"
 
 def extract(pdf):
+    output_dir = "output/"+pdf[:-4]
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = open(output_dir+"/PDFMiner.txt", "w", encoding='utf-8')
     text = extract_text(pdf)
+    output_file.write(text)
     return text
 
 def format_result(plumber_pdf):
