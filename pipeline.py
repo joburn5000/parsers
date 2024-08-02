@@ -50,7 +50,7 @@ Microsoft_Table_Transformer.metrics.cost = "Paid"
 output_file = open("evaluations.txt", "w")
 for parser in pdf_parsers:
     output_file.write(parser.name + "\n")
-    output_file.write("Speed: " + str(parser.metrics.speed) + " PDFs per second\n")
+    output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
     output_file.write("Memory Usage: " + str(parser.metrics.memory_usage) + " MB\n")
     output_file.write("Accuracy: " + parser.metrics.accuracy + "\n")
     output_file.write("Cost: " + parser.metrics.cost + "\n\n")
