@@ -1,0 +1,1431 @@
+Collaborative Heterogeneous Causal Inference Beyond
+Meta-analysis
+Tianyu Guo∗ ∗Sai Praneeth Karimireddy† †Michael I. Jordan∗†
+April 25, 2024
+Abstract
+Collaboration between different data centers is often challenged by heterogeneity across sites. To
+account for the heterogeneity, the state-of-the-art method is to re-weight the covariate distributions in
+each site to match the distribution of the target population. Nevertheless, this method could easily
+fail when a certain site couldn’t cover the entire population. Moreover, it still relies on the concept of
+traditional meta-analysis after adjusting for the distribution shift.
+In this work, we propose a collaborative inverse propensity score weighting estimator for causal
+inference with heterogeneous data. Instead of adjusting the distribution shift separately, we use weighted
+propensity score models to collaboratively adjust for the distribution shift. Our method shows significant
+improvements over the methods based on meta-analysis when heterogeneity increases. To account for the
+vulnerable density estimation, we further discuss the double machine method and show the possibility of
+using nonparametric density estimation with d <8and a flexible machine learning method to guarantee
+asymptotic normality. We propose a federated learning algorithm to collaboratively train the outcome
+model while preserving privacy. Using synthetic and real datasets, we demonstrate the advantages of our
+method.
+1 Introduction
+The booming of Federated Learning ( FL) has drawn attention in medical and social sciences, where sharing
+datasets between data centers is often limited. However, their research focuses more on Causal Inference, in
+which prediction gets less attention, whereas valid inference is the main focus. For example, Meta-analysis
+takes the weighted mean of published estimators of the average treatment effect ( ate) and mainly focuses
+on choosing optimal weights and making inferences.
+Given homogeneous data, how could Federated Learning help Causal Inference? The estimation of atecom-
+monly incorporates nuisance prediction models , e.g., the propensity score model. Thanks to the homogeneity,
+we can use FLmethods to train a shared propensity score model, then each site gets its own ateestimator,
+and finally, the central server uses Meta-analysis to take the weighted mean.
+Nevertheless, given heterogeneous data, Federated Learning seems to play a negligible role. Since propensity
+score models differ between sites, training a shared model is meaningless. As a result, all methods fall within
+the scope of Meta-analysis. For example, to estimate the atefor a target site, Han et al. (2022) and Han
+et al. (2023b) consider using density ratio to re-weight source sites and summarizing estimates from source
+sites with Meta-analysis.
+We propose a novel method tailored for collaboration with heterogeneous data. Suppose we have Ksites,
+denote the ateasτ, the nuisance propensity model as e, the site-wise weight as ηk. Instead of taking the
+weighted mean afterward, we directly take the weighted mean of nuisance models and get ˆτk(PK
+r=1ηrˆer)in
+each site k, which is inconsistent. Then, we could recover a consistent estimator ˆτClbby taking the average
+∗Department of Statistics, UC Berkeley. Email: tianyu_guo@berkeley.edu
+†Department of EECS, UC Berkeley.
+1arXiv:2404.15746v1  [stat.ML]  24 Apr 2024across all sites. Equations (1) and (2) summarize the previous and our estimators.
+ˆτhomo =KX
+k=1ηkˆτk(ˆeFL) ˆτheter=KX
+k=1ηkˆτk(ˆek), (1)
+we propose: ˆτClb=KX
+k=1ˆτk(PK
+r=1ηrˆer). (2)
+Our method outperforms previous ones in several ways: first, it is the first method that allows collabo-
+ration across disjoint domains without additional assumptions; second, it achieves better accuracy than
+Meta-analysis; third, it remains stable even as the heterogeneity between sites increases, which encourages
+collaboration from a broader range. We provide theory and experiment to demonstrate these claims.
+2 Problem Setup
+We use S= [K]to denote the set of sites, with D(k)being the dataset of site k. Let Zbe the binary
+treatment, X∈Rdbe the covariates with dimension d,Ybe the outcome. Let Y(z)be the potential
+outcome under treatment z∈ {1,0}. Classical causal inference only copes with the biased sampling of Z.
+However, we need to cope with multiple sites. We first present a motivating example from Meta-analysis to
+model the actual data-generating procedure.
+Example 1 (Collaboration of Clinical Trails) .Koesters et al. (2013) reviews clinical trials of Agomelatine,
+an antidepressant drug approved by the European Medicines Agency in 2009. The 13 included trials have
+different data sizes and demographic distributions. One study was carried out on individuals aged 60 or
+above, and the remaining is for all ages. Each study reports the mean difference in Hamilton Rating Scale
+for Depression (HRSD) scores between treatment and control groups.
+The target group in Example 1 is the patients with depression. However, each clinical trial is a biased sample
+from the target population. Abstracting from this example, we propose a sampling-selecting framework for
+collaborative causal inference:
+1.Sampling : Sample an individual ifrom the target distribution, let Si∈ {(k, Z)|k∈ S, Z∈ {0,1}} ∪ ∅
+be the selection indicator. If S= (k,1), individual igets selected to site kand gets treated. If
+S=∅, the individual is eliminated from the dataset. Sample (Xi, Yi(1), Yi(0), Si)i.i.d. from the target
+distribution according to Equation (3) and get the pooled dataset (4).
+P(S=∅ |X) =e∅(X),
+P(S= (k, z)|X) =e(k,z)(X)
+with e∅(X) +KX
+k=1X
+z∈{0,1}e(k,z)(X) = 1 . (3)
+DMeta={(Xi, Yi(1), Yi(0), Si)|i∈[N]}. (4)
+2.Selecting: We use Z(Si)to denote the treatment indicator corresponding to Si. We follow the potential
+outcome framework and invoke the Stable Unit Treatment Value Assumption (SUTVA). Therefore,
+Yi=Z(Si)Yi(1) +{1−Z(Si)}Yi(0). Split DMetato each site and treatment/control groups according
+toSand get
+D(k)={(Xi, Yi, Zi)∈ DMeta|Si= (k, Zi)}. (5)
+Furthermore, census data commonly reflects the target distribution of covariates. Therefore, we assume
+there’s a public dataset D(t)that contains covariates information.
+D(t)={(Xi)|Xidrawn i.i.d.from target distribution }. (6)
+2(a)Sampling-Selecting Framework.
+Selection to sites
+Discard
+S=(k,1)S=(k,0)S=(ℓ,1)S=∅⋮
+Target Population
+⋮Census DataD(t)
+(b) KL-MSE curve of different estimators
+0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+Heterogeneity0.00.51.01.52.02.53.03.5Mean Sqaured Error
+MetaIPW
+MetaAIPW
+ClbIPW
+ClbAIPW
+IPW in sites
+Figure 1: Visualization of the data-generating process and the comparison of proposed estimators.
+Figure 1a visualizes the data-generating process. Each site selects from the target distribution in a different
+way. The selection indicator S= (k, z)describes the sampling mechanism of the Z=zgroup in site k. The
+figure shows distribution shifts with left and right tilting ( S= (k,1),(k,0)), under coverage ( S= (ℓ,1)), and
+discarded data S=∅. Xiong et al. (2022) assumes that i.e., P(S=∅) = 0and consider the pooled dataset.
+In contrast, we allow S=∅to reflect the biased sampling of the pooled dataset ∪K
+k=1D(k)from the target
+population, which is neglected by Xiong et al. (2022). For example, if all sites include fewer men in the
+dataset, we would have that P(S̸=∅ |men)<P(S̸=∅ |other genders ).
+One may question that there’s no real sampling-selecting process since each site collects data independently.
+Apossibleansweristorecallthewell-acceptedquasi-experimentframework(Cooketal.,2002). Forexample,
+to understand the effect of gender on an outcome. The quasi-experiment framework imagines that individual
+Xifirstlygets i.i.d.sampled, thengets“treated” bygender Gi, althoughthere’snoactual“gender” assignment
+process. The sampling-selecting framework extends the quasi-experiment to multiple-site settings.
+The objective is to estimate the average causal effect on the target distribution τ=E[Y(1)−Y(0)]. A
+foundation for identifying τis Assumption 1.
+Assumption 1 (Homogeneity and unconfoundedness) .We have that
+(Y(1), Y(0))⊥ ⊥S|X (7)
+More than unconfounded treatment assignment, Assumption 1 also implies that the individual treatment
+effects are the same across sites. In Example 1, when fixing Xfor an individual i, if the effect of Agomelatine
+stillvariesacrosssites, collaborationismeaninglessduetounmeasuredconfounders. ViolationofAssumption
+1 is sometimes termed as anti-causal learning (Farahani et al., 2020).
+Another foundation for identifying the causal effect is the overlapping assumption. There are two kinds of
+overlapping assumptions. Given an individual, Assumption 2 requires each site to select them with non-zero
+probability, whereas Assumption 3 only requires the overall selection probability to be non-zero.
+Assumption 2 (Individual-Overlapping) .We have that
+min
+x,k{P(Z= 1, S= 1|x, A=k)}> c > 0.
+Assumption 3 (Overall-Overlapping) .We have that
+min
+x{P(Z= 1, S= 1|x)}> c > 0.
+Revisiting Example 1, Assumption 1 is guaranteed by the experimental design and by the similar effect
+of drugs given sufficient demographic information. Assumption 2 fails since one site only includes senior
+patients. While Assumption 3 holds since other sites collect data from all ages.
+3We provide a counter-example showing that Assumptions 1 and 3 might not hold.
+Example 2 (Collaboration of Observational Studies with Unmeasured Confounder) .Betthäuser et al.
+(2023) reviews observational studies regarding the learning deficits of school-aged children during COVID-
+19. Among 42 included observational studies, four were from middle-income countries, and the remaining
+were from high-income countries. Over half of the studies didn’t collect covariates and took the difference
+in means of grades before and after the pandemic.
+Sinceoverhalfofthestudiesdidn’tcollectcovariates, thereareunmeasuredconfounders. Therefore, Assump-
+tion 1 is unlikely to hold. Moreover, if the target distribution is school-aged children from the entire world,
+both 2 and 3 fail since low-income countries are missing in the study. We suggest avoiding collaboration in
+this case.
+We have some additional notations: Denote E[Y1]asµ1andE[Y0]asµ0. Define NS=PK
+k=1N(k)with
+N(k)=|D(k)|being the sample size of dataset k. Note that NS< Nsince we drop the individuals with
+S=∅.
+2.1 Related Work
+There are extensive attempts in Meta-analysis literature to cope with heterogeneity (Borenstein et al., 2007,
+2010; Higgins et al., 2009). For example, by assuming that the average treatment effect follows the normal
+distribution across sites, many propose using random effects models (Hedges & Vevea, 1998; Riley et al.,
+2011) instead of fixed effects models (Tufanaru et al., 2015). There are other ways, such as using site-specific
+information and conduct Meta-regression (van Houwelingen et al., 2002; Glynn & Quinn, 2010), using quasi-
+likelihood (Tufanaru et al., 2015). More recently, Cheng & Cai (2021) propose a penalized method for
+integrating heterogeneous causal effects. However, all methods need strong parametric assumptions on the
+heterogeneity. It’s still necessary to rely on qualitative understandings of heterogeneity based on summary
+statistics (Stroup, 2000).
+CausalInferenceliteraturealsohasagrowinginterestincollaborationwithconcernsinexternalvalidity(Con-
+cato et al., 2000; Rothwell, 2005; Colnet et al., 2023). Yang & Ding (2020) propose a Rao-Blackwellization
+method for incorporating RCT and observational studies with unmeasured confounders to improve the es-
+timation efficiency. Recently, more works try to incorporate federated learning in causal inference (Xiong
+et al., 2022; Han et al., 2023a; Guo et al., 2023; Vo et al., 2023). (Vo et al., 2022) proposes adaptive kernel
+methods under the causal graph model. Several focus on inference. For example, (Xiong et al., 2022; Hu
+et al., 2022) assumes homogeneous models and proposes a collaboration framework that avoids direct data
+merging. Han et al. (2022, 2023b) considers heterogeneous sample selection under parametric distribution
+shift assumptions. Nevertheless, most new methods still fall under the framework of Meta-analysis.
+As a broader interest, our work also uses double machine learning.Chernozhukov et al. (2018); Athey &
+Imbens (2019). It extends the doubly robust estimator (Bang & Robins, 2005; Glynn & Quinn, 2010; Funk
+et al., 2011) to non-parametric and machine learning methods (Huang et al., 2006; Sugiyama et al., 2007b,a;
+Wager & Athey, 2017; Tibshirani, 1996). We adopt it in particular to mitigate the hardness of estimating
+density ratio (Farahani et al., 2020; Härdle et al., 2004).
+3 Collaborative Inverse Propensity Score Weighting
+The inverse propensity score weighting ( ipw) estimator plays a central role in causal inference. We generalize
+it to collaborative setting, thinking e(k,z)(X) =P(S= (k, z)|X)as a generalized version of propensity score.
+We begin with using the oracle propensity score models and then discuss how to estimate the models.
+3.1 The Clb-IPW estimator
+As a benchmark, consider the method where each site calculates its own ipwestimator for ateand takes
+weighted sum, which is the standard method in Meta-analysis. Since we assume propensity score models are
+4correct, it’s not necessary to use L1penalty as in Han et al. (2022). Define
+ˆτMeta=KX
+k=1η(k)(ˆµ(k)
+Meta,1−ˆµ(k)
+Meta,0),with
+ˆµ(k)
+Meta,1=1
+ˆN(k)
+Meta,1X
+i∈D(k)ZiYi
+e(k,1)(Xi), (8)
+ˆµ(k)
+Meta,0=1
+ˆN(k)
+Meta,0X
+i∈D(k)(1−Zi)Yi
+e(k,0)(Xi), (9)
+ˆN(k)
+Meta,1=X
+i∈D(k)Zi
+e(k,1)(Xi),and (10)
+ˆN(k)
+Meta,0=X
+i∈D(k)1−Zi
+e(k,0)(Xi). (11)
+Equations (8), (9), (10), and (11) take the Hájek form Little & Rubin (2019), in which we use a consistent
+estimator ˆNfor the sample size. It always achieves better numerical stability and smaller variance than
+directly using sample size. More importantly, as we will show later, we could only identify e(k,z)(X)up to a
+constant factor, Hájek form releases us from the identifiability issue.
+The best choice of η(k)is the inverse variance. In specific, denoting Var(ˆτ(k)
+Meta) = ( σ(k)
+Meta)2, the optimal
+weights are η(k)∝(σ(k)
+Meta)−2.See Cheng & Cai (2021); Ye et al. (2021) for more discussions.
+Meta- ipwis designed for review studies (Borenstein et al., 2007) rather than collaboration. Each site must
+be able to obtain a valid estimator. But, a single site would commonly suffer from under-coverage of the
+entire population. Revisiting Example 1, one site only takes experiments for older people. Due to their
+under-coverage, they can never get the valid ateestimator for the entire population, so it’s impossible to
+incorporate them into the Meta- ipwestimator.
+Alternatively, we introduce the Clb-ipwestimator. Clb-ipwdirectly takes the weighted mean of heteroge-
+neous propensity score functions. In specific, to estimate µ1, we use
+ˆµ(k)
+Clb,1=1
+ˆN(k)
+Clb,1X
+i∈D(k)η(k)ZiYiPK
+r=1η(r)e(r,1)(Xi), (12)
+with ˆN(k)
+Clb,1=X
+i∈D(k)η(k)ZiPK
+r=1η(r)e(r,1)(Xi)
+We have that
+E[ˆµ(k)
+Clb,1] =Ehη(k)e(k,1)(X)Y1PK
+r=1η(r)e(r,1)(X)i
+,
+which means that it’s not consistent for µ1. However, when we take summation of ˆµ(k)
+Clb,1across k, we get
+that
+E[ˆµClb,1] =EhPK
+k=1η(k)e(k,1)(X)Y1PK
+r=1η(r)e(r,1)(X)i
+=µ1.
+It allows collaboration between disjoint domains. In Example 1, the site that only includes elders could
+compute ˆµ(k)
+Clb,1without worrying about their under-coverage. Given a young patient Xfrom other sites.
+We have that e(k,1)(X) = 0bute(r,1)(X)>0forr̸=k, which ensures a non-zero denominator. The
+estimators for µ0follow the same manner, which we relegate to the appendix. We could compute ˆτClbin a
+fully federated way, as presented in Algorithm 1.
+5Algorithm 1 Clb-ipwAlgorithm
+Require: Kdatasets with D(k)as shown in Equation (5). Each site publishes their propensity score models
+e(k,1)(X)ande(k,0)(X).
+1:fork= 1toKdo
+2:At site k, calculate ˆµ(k)
+Clb,1,ˆµ(k)
+Clb,0,ˆN(k)
+Clb,1, and ˆN(k)
+Clb,1according to Equation (12). Send them to the
+central server.
+3:end for
+4:Central server computes
+ˆτClb= ˆµClb,1−ˆµClb,0, (13)
+where ˆµClb,1is the average of ˆµ(k)
+Clb,1weighted by ˆN(k)
+Clb,1, with ˆµClb,0following the same manner.
+The best choice of η(k)is data-dependent and thus could not be obtained from one round of communication.
+Therefore, we suggest taking vanilla weights η(k)= 1for all k. Notice that
+KX
+k=1e(k,1)(X) =P(Z(S) = 1|X), (14)
+which means that the vanilla weights match the propensity score for Zin the pooled dataset. More impor-
+tantly, we find that the vanilla weights would already make the Clb-ipwestimator uniformly better than
+Meta- ipwestimator.
+Proposition 1 (Meta- ipwEstimator) .Given Assumptions 1 and 2, using inverse variance weighting, as
+N→ ∞, we have that
+√
+N(ˆτMeta−τ)d→N(0, v2
+Meta),
+where
+v2
+Meta=nKX
+k=1Eh(Y1−µ1)2
+e(k,1)(X)+(Y0−µ0)2
+e(k,0)(X)io−1
+.
+Theorem 2 (Clb-ipwEstimator) .Given Assumptions 1 and 3, using vanilla weights for Clb-ipw, as
+N→ ∞, we have that√
+N(ˆτClb−τ)d→N(0, v2
+Clb), (15)
+where
+v2
+Clb=Eh(Y1−µ1)2
+PK
+k=1e(k)(X)+(Y0−µ0)2
+PK
+r=1e(r,0)(X)i
+Moreover, we have that
+v2
+Clb≤v2
+Meta.
+There are two ways to understand why ˆτClbis better: First, Meta- ipwtakes the weighted mean site-wise,
+whereas Clb-ipwtakes the weighted mean individual-wise. Given each individual Xi,Clb-ipwadaptively
+putsmoreweightsonsiteswithlarger e(k)(Xi). WhereasMeta- ipwusesthesameweightsforany Xi. Second,
+Clb-ipwutilizes coarser balancing scores Imbens & Rubin (2015). Balancing score is a generalization of the
+propensity score. Any function of covariates is sufficient for adjusting the confoundingness between Zand
+Y. The Meta- ipwusesP(S|X)as its inverse weights, and Clb-ipwusesP(Z(S)|X). Theorem 3 shows
+that they are both balancing scores.
+Theorem 3. We have that
+(Y(1), Y(0))⊥ ⊥Z(S)|P(S|X),and
+(Y(1), Y(0))⊥ ⊥Z(S)|P(Z(S)|X).
+6Notice that P(S|X)has an auxiliary variable k(X)comparing to P(Z(S)|X). But k(X)is superfluous
+since it doesn’t affect (Y1, Y0). As a result, Clb-ipwgets better efficiency by maintaining a smaller model.
+A simpler model benefits us by maintaining fewer variables to adjust for, thus attaining better efficiency.
+Similar ideas occur extensively in model selection literature Raschka (2020).
+3.2 Estimation of propensity score models
+We start from the identification of e(k,z)(X). Since we have no information on the dropped set D∅=
+{i|Si=∅}, it’s impossible to identify all parameters. For instance, multiplying Nby a factor 2and dividing
+e(k,z)(X)by2would lead to the same observed distribution. However, identifiability is guaranteed up to
+a constant factor. And thanks to the Hájek forms of our ipwestimators, identification up to a constant is
+enough.
+Proposition 4. We have that
+e(k,z)(X) =r(k,z)(X)P(S= (k, z)|S̸=∅)P(S=∅).
+where r(k)(X) =p(X|S= (k, z))/p(X)is the density ratio function, which is identifiable. Meanwhile,
+P(S= (k, z)|S̸=∅)is identifiable by taking N(k)/NS. Only P(S=∅)is not identifiable.
+We focus on estimating density ratio r(k,z)(X). We suggest two methods from the large literature on density
+ratio estimation. Han et al. (2022) applies a parametric exponential tilting model. They assumes that
+r(k,z)(X) = exp ( ψ(X)⊤γ(k,z))for a given representation function ψ(such as ψ(x) =x) and unknown
+parameter γ(k,z). We could estimate γthrough the method of moments, i.e., finding ˆγ(k,z)that solves
+X
+i∈D(k)Ziψ(Xi) exp ( ψ(X)⊤γ(k,z))
+=X
+i∈Dtψ(Xi) exp ( ψ(X)⊤γ(k,z)),
+which is equivalent to entropy balancing Zhao & Percival (2017). Recently, motivated by Matching Abadie
+& Imbens (2016) and K-Nearest Neighbour Zhang et al. (2018), Lin et al. (2021) propose a minimax non-
+parametric way to estimate the density ratio. Using their method, we have that
+ˆr(k,z)(x) =N(t)
+P
+i∈D(k)ZiM
+W(x;Dt,D(k,z)), (16)
+where W(x;Dt,D(k,z))means the total number of units in Dtthatxis close to Xithan its M-nearest
+neighbour in D(k,z). See Lin et al. (2021) for more detail. We have the following convergence rates for them
+Proposition 5 (Point-wise error of density estimation) .Given x∈Rd, if the exponential tilting model is
+correctly specified, we have that
+Eh
+|exp (ψ(x)⊤ˆγ(k,z))−r(k,z)(x)|i
+=O(N−1/2). (17)
+For the nonparametric method, we have that
+Eh
+|ˆr(k,z)(x)−r(k,z)(x)|i
+=O(N−1/(2+d)). (18)
+4 Incorporating Outcome Models
+Density ratio estimation is challenging and can easily fail under mis-specification or due to the curse of
+dimensionality. Therefore, it is essential to incorporate outcome models to mitigate the errors caused by
+density ratio estimation. To maintain consistent structure with Section 3, we first discuss how to incorporate
+outcome models in the estimator and then discuss how to learn the outcome models.
+74.1 Decoupled AIPW estimator
+The augmented inverse propensity score weighted ( aipw) estimator Bang & Robins (2005) employs Neyman
+orthogonality to construct an asymptotically normal estimator even if nuisance models converge at slower
+rates. We introduce their idea to the collaboration setting.
+How to use outcome models? Due to the biased selection of S, directly taking the mean across all source
+data renders the estimator inconsistent. A natural idea is to use the inverse propensity score to adjust the
+distribution and get that
+ˆτadjust =1
+NX
+Si̸=∅hˆm1(Xi)
+ˆe(k,1)(Xi)−ˆm0(Xi)
+ˆe(k,0)(Xi)i
+.
+This is the choice of Han et al. (2022). However, the consistency of ˆτadjustsubstantially depends on the
+density ratio function, making the regression model useless. Alternatively, we make use of the public census
+dataset D(t). As discussed in Section 2, D(t)provides public information for Xin the target distribution.
+Utilizing it, we propose a decoupled aipwestimator.
+ˆτaipw=1
+N(t)N(t)X
+i=1h
+ˆm1(X(t)
+i)−ˆm0(X(t)
+i)i
++KX
+k=1ˆδ(k)
+aipw, (19)
+with ˆδ(k)
+aipwhaving two versions:
+ˆδ(k)
+Meta−aipw=KX
+k=1η(k)h
+ˆδ(k)
+Meta−aipw,1−ˆδ(k)
+Meta−aipw,0i
+,
+δ(k)
+Clb−aipw=KX
+k=1ˆw(k)
+Clb,1ˆδ(k)
+Clb−aipw,1−KX
+k=1ˆw(k)
+Clb,0ˆδ(k)
+Clb−aipw,0,
+with ˆw(k)
+Clb,1∝ˆN(k)
+Clb,1,ˆw(k)
+Clb,0∝ˆN(k)
+Clb,0.
+Here ˆδ(k)
+Meta−aipwandˆδ(k)
+Clb−aipware residual versions of the corresponding ipwestimators, changing all Yto
+Y−m(X)in the formula. We only present the formula for the ˆδ1’s and relegate ˆδ0’s to the appendix.
+ˆδ(k)
+Meta−aipw,1=1
+ˆN(k)
+Meta,1X
+i∈D(k)Zi[Yi−m1(Xi)]
+e(k,1)(Xi),
+ˆδ(k)
+Clb−aipw,1=1
+ˆN(k)
+Clb,1X
+i∈D(k)Zi[Yi−m1(Xi)]PK
+r=1e(r,1)(Xi).
+The proposed estimator computes the difference in mean of outcome models only in D(t)and the correction
+terms only in D(k)’s. Though being decoupled, it preserves the robustness of the aipwestimator. We
+summarize its properties in Theorem 6.
+Theorem 6. Suppose that
+1. The estimated models ˆm1,ˆm0andˆeare independent1withD(t)andD(k)’s.
+2. They have convergence rates
+E[∥ˆm1−m1∥2],E[∥ˆm0−m1∥2] =O(1/N−ξm), (20)
+andE[∥ˆe−e∥2] =O(1/N−ξe), (21)
+with ξmξe>1/2.
+1We could achieve independence by using sampling splitting, see Chernozhukov et al. (2018) for more detailed discussion.
+83. The models ˆe,ˆm,e, and mare bounded.
+Further supposing that N(t)/NS→λ, we have that
+√
+N(ˆτClb−aipw−τ)d→N(0, v2
+Clb−aipw), (22)
+with
+v2
+Clb−aipw=λ−1Eh
+[m1(X)−m0(X)]2i
+−λ−1τ2
++Eh(Y1−m1(X))2
+P(Z(S) = 1|X)+(Y0−m0(X))2
+P(Z(S) = 0|X)i
+.
+The assumptions in Theorem 6 are standard in the literature (Chernozhukov et al., 2018; Athey & Wager,
+2020). If we use the K-NN density ratio estimation (Lin et al., 2021), we get that ξe= 2/(2 +d). Therefore,
+taking any outcome model with ξm≥1/2−2/(2+d)would guarantee the asymptotic normality of ˆτClb−aipw.
+4.2 Estimation of outcome models
+It’s worth noting the convergence rates in Equation (20) are taking average over the target population. To
+achieve low excess risk in the target population, we adopt the domain adaptation part from orthogonal statis-
+tical learning Foster & Syrgkanis (2020). Consider the loss function re-weighted through inverse propensity
+scores:
+L(m1;{D(k)}k∈S) =KX
+k=1L(k)(m1;D(k))
+with L(k)=X
+i∈D(k)Ziℓ(Yi, m1(Xi))PK
+r=1ˆe(r,1)(Xi). (23)
+We want to compare it with training directly on the target distribution, i.e., using loss function ˜L
+˜L(m1;D) =NX
+i=1ℓ(Yi(1), m1(Xi)). (24)
+Theorem 7. Suppose that
+1. The estimated propensity score model ˆe(X)satisfies Equation (21).
+2. Using loss function (24), ˆm1satisfies Equation (21).
+Then, using loss function (23), we have that
+E[∥ˆm1(X)−m1(X)∥2]≤O(1/N−ξm) +O(1/N−4ξe). (25)
+4.3 Federated Learning Algorithm
+The estimation of the outcome model requires federated learning. We could optimize the loss function by
+using FedAvg Li et al. (2020) or SCAFFOLD Karimireddy et al. (2020). We present the process, including
+computing ˆτaipwin Algorithm 2.
+As a result, using Algorithm 2, if we combine Theorems 6 and 7, we could get that ˆτClb−aipwis asymptotic
+normal given that ξmξe<1/2andξ5
+e<1/2. Using Proposition 5, it suffices to utilize the K-NN density
+ratio estimation method with d≤8and find an outcome model with ξm≥1/2−2/(2 +d). This avoids the
+problem of the misspecification of the exponential tilting model.
+It is worth noting that our discussion of aipwis is from the point of view of learning theory. If we adopt
+the classical double robustness framework, when the outcome model is correctly specified, there’s no need
+to adjust the distribution of the covariates. The aipwestimator is asymptotically normal even when the
+propensity score model completely fails. We would demonstrate its robustness in the simulation.
+9Algorithm 2 Clb-aipwAlgorithm
+Require: Kdatasets {D(k)}k∈SandD(t).
+1:(Locally) estimate ˆe(k,z)(X).
+2:whilenot converged do
+3:Train model m1andm0using the FedAvg Algorithm with Loss function in (23).
+4:end while
+5:(Locally) update Yi’s by Yi→Yi−mZi(Xi).
+6:Use Algorithm 1 to getPK
+k=1δ(k)
+Clb−aipw.
+7:Construct the Clb-aipwestimator using Equation (19).
+5 Experiments
+5.1 Synthetic Dataset
+We conduct the experiment using synthetic dataset. Echoing the discussion in Section 2, to show that
+thesampling -selecting procedure is not necessarily to truly happen, we fix sample sizes and generate the
+covariates using different distributions. Consider three source datasets, with N(k)= 1000 ,2000,3000. The
+target dataset contains N(t)= 10000 data points. In specific, we generate the target distribution through
+X∼N(µ(t), σ2I3)with µ(t)=−0.1andσ= 2.
+In the source dataset, we fix the treatment assignment mechanism and take the true propensity score as
+P(Z(k)= 1|X(k)) = 1 /[1 + exp ([1 .2; 0.3;−1.2]⊤X(k))].
+Take the true potential outcomes as
+Y(1) = [1 .2; 1.8; 1.4]⊤X(k)
+andY(0) = [0 .6; 0.7; 0.6]⊤X(k).
+We also choose normal distribution for source datasets. Suppose that X(k)∼N(µ(k), σ2), with σ= 2. We use
+the mean KL−divergence between source datasets to the target dataset as a measure for the heterogeneity
+across sites, which is given by
+dKL(D(t),{D(k)}k∈[3]) =3X
+k=11
+2σ2(µ(k)−µ)2.
+We increase dKLfrom 0 to 4. Fixing each dKL, we choose µ(k)uniformly and randomly assign negative
+sign to one of them. In the estimation process, we use the exponential tilting model for density ratio
+estimation and the linear model for outcome regression. We calculate the mean squared error (MSE) of
+Meta- ipw,Clb-ipw, and Meta- aipw, and Clb-aipwthrough 2000 Monte Carlo Simulations, with four
+replications of different {µ(k)}’s. Figure 1b shows the dKL−MSE curve. We mark the ipwestimators in
+each single site with dotted line. Although outperforming each individual sites, the Meta- ipwestimator
+still suffers from the increasing of heterogeneity. In contrast, both Clb-ipwandaipwremain stable when
+heterogeneity increases.
+We further demonstrate the robustness of the aipwestimator with four combinations of specifications of
+propensity score and outcome models. We relegate the detail of how to construct mis-specified model to the
+appendix. Figure 2a shows the 95% C.I. of the Meta- ipw,Clb-ipw, Meta- aipw, and Clb-aipwestimators.
+We choose the case with the mean KL-distance being 3. In all cases, Clb-ipwestimator has tighter
+confidence intervals. When propensity score model is misspecified, both Meta- ipwandClb-ipwfail due to
+incorrect weighting. In contrast, aipwestimators remain consistent as long as outcome model is correct.
+When both models get misspecified, there is no hope to obtain consitent result.
+10(a) Synthetic dataset
+4
+2
+0246True PS; True OM
+MetaIPW
+ClbIPW
+MetaAIPW
+ClbAIPW
+4
+2
+0246True PS; False OM
+4
+2
+0246False PS; True OM
+4
+2
+0246False PS; False OM (b) Real dataset
+1
+ 2
+MetaIPW
+ClbIPW
+MetaAIPW
+ClbAIPW
+1.52.02.53.03.5Estimated Treatment Effect×102
+Figure 2: The 95% confidence intervals for synthetic dataset and the real dataset. The red dots mark the
+true effect size. In Figure 2a, Clb-ipwshows smaller variance than Meta- ipwunder all scenarios. The
+aipwestimator remains consistent when either of the PS or OM model is correctly specified. In Figure 2b,
+τ1denotes the estimated causal effect in Pennycook et al. (2020), and τ2denotes Roozenbeek et al. (2021).
+We find that Meta- ipw,Clb-ipw, Meta- aipw, and Clb-aipwestimators have similar performance, with
+Meta- ipwand Meta- aipwshowing slightly larger effect sizes.
+5.2 Real world application
+We present a real-world application of our method. Our data comes from two studies about preventing
+sharing fake news during COVID-19. Roozenbeek et al. (2021) replicates the experiment of Pennycook et al.
+(2020) to study the effect of a nudge intervention on preventing the sharing of fake news. Both of the two
+studies sample participants according to U.S. census through online platforms. The outcome is measured
+by the difference of sharing intentions between true and false headlines about COVID-19 (truth discernment
+score). They find that a simple accuracy reminder could increase the truth discernment score ( ˆτ= 0.034,
+p <0.001). Using the same design and analysis procedures, Roozenbeek et al. (2021) replicates their findings,
+though with a less significant effect size ( ˆτ= 0.015, p≈0.017).
+Although two studies both try to sample from the target distribution and their heterogeneity is well-
+controlled, as suggested by Jin et al. (2023), we still use exponential tilting method to adjust the covariates
+shift. We adjust the distribution for the mean and variance of the Cognitive Reflection Test (CRT) score, the
+scientific knowledge quiz score, the Medical Maximizer-Minimizer Scale (MMS), distribution of self-reported
+political leanings, gender, and age. Figure 2b presents the 95% C.I.s for the two datasets and three estima-
+tors. Due to that the two datasets are close, we find close results. But Clb-ipwandaipwshow slightly
+larger effect size, matching the conclusion of the original study.
+6 Conclusion
+In this work, we propose a collaborative inverse propensity score estimator that is suitable for heterogeneous
+data. Along the way, we utilize the sampling -selecting framework to describe the heterogeneity across sites.
+We show that the Clb-ipwestimator outperforms Meta-analysis-based estimator both in theory and in
+simulation. To account for the difficulty of density estimation, we borrow ideas from AIPW and orthogonal
+statistical learning literature, and provide the necessary convergence rates for nuisance models. As a future
+direction, it is worth while to explore the communication-efficient method for the optimal weighting of
+propensity score models.
+11References
+Abadie, A. and Imbens, G. W. Matching on the Estimated Propensity Score. Econometrica , 84(2):781–807,
+2016. ISSN 0012-9682. doi: 10.3982/ECTA11293. URL https://www.econometricsociety.org/doi/
+10.3982/ECTA11293 .
+Athey, S. and Imbens, G. Machine Learning Methods Economists Should Know About, March 2019. URL
+http://arxiv.org/abs/1903.10075 . arXiv:1903.10075 [econ, stat].
+Athey, S. and Wager, S. Policy Learning with Observational Data, September 2020. URL http://arxiv.
+org/abs/1702.02896 . arXiv:1702.02896 [cs, econ, math, stat].
+Bang, H. and Robins, J. M. Doubly Robust Estimation in Missing Data and Causal Inference Mod-
+els. Biometrics , 61(4):962–973, 2005. ISSN 1541-0420. doi: 10.1111/j.1541-0420.2005.00377.x.
+URL https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1541-0420.2005.00377.x . _eprint:
+https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1541-0420.2005.00377.x.
+Betthäuser, B. A., Bach-Mortensen, A. M., and Engzell, P. A systematic review and meta-analysis of the
+evidence on learning during the COVID-19 pandemic. Nature Human Behaviour , 7(3):375–385, March
+2023. ISSN 2397-3374. doi: 10.1038/s41562-022-01506-4. URL https://www.nature.com/articles/
+s41562-022-01506-4 . Number: 3 Publisher: Nature Publishing Group.
+Borenstein, M., Hedges, L., and Rothstein, H. Introduction to Meta-Analysis . 2007.
+Borenstein, M., Hedges, L. V., Higgins, J. P., and Rothstein, H. R. A basic introduction to fixed-effect and
+random-effects models for meta-analysis. Research Synthesis Methods , 1(2):97–111, 2010. ISSN 1759-2887.
+doi: 10.1002/jrsm.12. URL https://onlinelibrary.wiley.com/doi/abs/10.1002/jrsm.12 . _eprint:
+https://onlinelibrary.wiley.com/doi/pdf/10.1002/jrsm.12.
+Cheng, D. and Cai, T. Adaptive Combination of Randomized and Observational Data, November 2021.
+URL http://arxiv.org/abs/2111.15012 . arXiv:2111.15012 [stat].
+Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., and Robins, J.
+Double/debiased machine learning for treatment and structural parameters. The Econometrics Jour-
+nal, 21(1):C1–C68, February 2018. ISSN 1368-4221, 1368-423X. doi: 10.1111/ectj.12097. URL
+https://academic.oup.com/ectj/article/21/1/C1/5056401 .
+Colnet, B., Mayer, I., Chen, G., Dieng, A., Li, R., Varoquaux, G., Vert, J.-P., Josse, J., and Yang, S. Causal
+inference methods for combining randomized trials and observational studies: a review, January 2023.
+URL http://arxiv.org/abs/2011.08047 . arXiv:2011.08047 [stat].
+Concato, J., Shah, N., and Horwitz, R. I. Randomized, Controlled Trials, Observational Studies, and the
+Hierarchy of Research Designs. New England Journal of Medicine , 342(25):1887–1892, June 2000. ISSN
+0028-4793, 1533-4406. doi: 10.1056/NEJM200006223422507. URL http://www.nejm.org/doi/abs/10.
+1056/NEJM200006223422507 .
+Cook, T. D., Campbell, D. T., and Shadish, W. Experimental and quasi-experimental designs for generalized
+causal inference , volume 1195. Houghton Mifflin Boston, MA, 2002.
+Farahani, A., Voghoei, S., Rasheed, K., and Arabnia, H. R. A Brief Review of Domain Adaptation, October
+2020. URL http://arxiv.org/abs/2010.03978 . arXiv:2010.03978 [cs].
+Foster, D. J. and Syrgkanis, V. Orthogonal Statistical Learning, September 2020. URL http://arxiv.org/
+abs/1901.09036 . arXiv:1901.09036 [cs, econ, math, stat].
+Funk, M. J., Westreich, D., Wiesen, C., Stürmer, T., Brookhart, M. A., and Davidian, M. Doubly Robust
+Estimation of Causal Effects. American Journal of Epidemiology , 173(7):761–767, April 2011. ISSN 1476-
+6256, 0002-9262. doi: 10.1093/aje/kwq439. URL https://academic.oup.com/aje/article-lookup/
+doi/10.1093/aje/kwq439 .
+12Glynn, A. N. and Quinn, K. M. An Introduction to the Augmented Inverse Propensity Weighted Estimator.
+Political Analysis , 18(1):36–56, 2010. ISSN 1047-1987, 1476-4989. doi: 10.1093/pan/mpp036. URL https:
+//www.cambridge.org/core/product/identifier/S1047198700012304/type/journal_article .
+Guo, Z., Li, X., Han, L., and Cai, T. Robust Inference for Federated Meta-Learning, January 2023. URL
+http://arxiv.org/abs/2301.00718 . arXiv:2301.00718 [stat].
+Han, L., Hou, J., Cho, K., Duan, R., and Cai, T. Federated Adaptive Causal Estimation (FACE) of Target
+Treatment Effects, April 2022. URL http://arxiv.org/abs/2112.09313 . arXiv:2112.09313 [math, stat].
+Han, L., Li, Y., Niknam, B. A., and Zubizarreta, J. R. Privacy-Preserving, Communication-Efficient, and
+Target-Flexible Hospital Quality Measurement, February 2023a. URL http://arxiv.org/abs/2203.
+00768. arXiv:2203.00768 [stat].
+Han, L., Shen, Z., and Zubizarreta, J. Multiply Robust Federated Estimation of Targeted Average Treatment
+Effects, September 2023b. URL http://arxiv.org/abs/2309.12600 . arXiv:2309.12600 [cs, math, stat].
+Hedges, L. V. and Vevea, J. L. Fixed-and random-effects models in meta-analysis. Psychological methods , 3
+(4):486, 1998. Publisher: American Psychological Association.
+Higgins, J. P. T., Thompson, S. G., and Spiegelhalter, D. J. A Re-Evaluation of Random-Effects Meta-
+Analysis. Journal of the Royal Statistical Society Series A: Statistics in Society , 172(1):137–159, January
+2009. ISSN 0964-1998, 1467-985X. doi: 10.1111/j.1467-985X.2008.00552.x. URL https://academic.
+oup.com/jrsssa/article/172/1/137/7084465 .
+Hu, M., Shi, X., and Song, P. X.-K. Collaborative causal inference with a distributed data-sharing manage-
+ment, April 2022. URL http://arxiv.org/abs/2204.00857 . arXiv:2204.00857 [stat].
+Huang, J., Gretton, A., Borgwardt, K., Schölkopf, B., and Smola, A. Correcting Sam-
+ple Selection Bias by Unlabeled Data. In Advances in Neural Information Processing Sys-
+tems, volume 19. MIT Press, 2006. URL https://proceedings.neurips.cc/paper/2006/hash/
+a2186aa7c086b46ad4e8bf81e2a3a19b-Abstract.html .
+Härdle, W., Müller, M., Sperlich, S., Werwatz, A., and others. Nonparametric and semiparametric models ,
+volume 1. Springer, 2004.
+Imbens, G. W. and Rubin, D. B. Causal Inference for Statistics, Social, and Biomedical Sciences: An
+Introduction . Cambridge University Press, 2015.
+Jin, Y., Guo, K., and Rothenhäusler, D. Diagnosing the role of observable distribution shift in scientific
+replications, September 2023. URL http://arxiv.org/abs/2309.01056 . arXiv:2309.01056 [stat].
+Karimireddy, S. P., Kale, S., Mohri, M., Reddi, S., Stich, S., and Suresh, A. T. SCAFFOLD: Stochastic
+Controlled Averaging for Federated Learning. In Proceedings of the 37th International Conference on
+Machine Learning , pp. 5132–5143. PMLR, November 2020. URL https://proceedings.mlr.press/
+v119/karimireddy20a.html . ISSN: 2640-3498.
+Koesters, M., Guaiana, G., Cipriani, A., Becker, T., and Barbui, C. Agomelatine efficacy and acceptability
+revisited: systematic review and meta-analysis of published and unpublished randomised trials. British
+Journal of Psychiatry , 203(3):179–187, September 2013. ISSN 0007-1250, 1472-1465. doi: 10.1192/bjp.bp.
+112.120196. URL https://www.cambridge.org/core/product/identifier/S0007125000052533/type/
+journal_article .
+Li, X., Huang, K., Yang, W., Wang, S., and Zhang, Z. On the Convergence of FedAvg on Non-IID Data,
+June 2020. URL http://arxiv.org/abs/1907.02189 . arXiv:1907.02189 [cs, math, stat].
+Lin, Z., Ding, P., and Han, F. Estimation based on nearest neighbor matching: from density ratio to average
+treatment effect, December 2021. URL http://arxiv.org/abs/2112.13506 . arXiv:2112.13506 [econ,
+math, stat].
+13Little, R. J. and Rubin, D. B. Statistical analysis with missing data , volume 793. John Wiley & Sons, 2019.
+Pennycook, G., McPhetres, J., Zhang, Y., Lu, J. G., and Rand, D. G. Fighting COVID-19 Misinformation on
+Social Media: Experimental Evidence for a Scalable Accuracy-Nudge Intervention. Psychological Science ,
+31(7):770–780, July 2020. ISSN 0956-7976. doi: 10.1177/0956797620939054. URL https://doi.org/10.
+1177/0956797620939054 . Publisher: SAGE Publications Inc.
+Raschka, S. Model Evaluation, Model Selection, and Algorithm Selection in Machine Learning, November
+2020. URL http://arxiv.org/abs/1811.12808 . arXiv:1811.12808 [cs, stat].
+Riley, R. D., Higgins, J. P. T., and Deeks, J. J. Interpretation of random effects meta-analyses. BMJ,
+342:d549, February 2011. ISSN 0959-8138, 1468-5833. doi: 10.1136/bmj.d549. URL https://www.bmj.
+com/content/342/bmj.d549 . Publisher: British Medical Journal Publishing Group Section: Research
+Methods &amp; Reporting.
+Roozenbeek, J., Freeman, A. L. J., and Linden, S. v. d. How Accurate Are Accuracy-Nudge Interventions?
+A Preregistered Direct Replication of Pennycook et al. (2020). Psychological Science , 32(7):1169–1178,
+2021. doi: 10.1177/09567976211024535. URL https://doi.org/10.1177/09567976211024535 . _eprint:
+https://doi.org/10.1177/09567976211024535.
+Rothwell, P. M. External validity of randomised controlled trials: “To whom do the results of this trial
+apply?”. The Lancet , 365(9453):82–93, January 2005. ISSN 01406736. doi: 10.1016/S0140-6736(04)
+17670-8. URL https://linkinghub.elsevier.com/retrieve/pii/S0140673604176708 .
+Stroup, D. F. Meta-analysis of Observational Studies in EpidemiologyA Proposal for Reporting. JAMA, 283
+(15):2008, April 2000. ISSN 0098-7484. doi: 10.1001/jama.283.15.2008. URL http://jama.jamanetwork.
+com/article.aspx?doi=10.1001/jama.283.15.2008 .
+Sugiyama, M., Krauledat, M., and Müller, K.-R. Covariate shift adaptation by importance weighted cross
+validation. Journal of Machine Learning Research , 8(5), 2007a.
+Sugiyama, M., Nakajima, S., Kashima, H., Buenau, P., and Kawanabe, M. Direct Importance Estimation
+withModelSelectionandItsApplicationtoCovariateShiftAdaptation. In Advances in Neural Information
+Processing Systems , volume 20. Curran Associates, Inc., 2007b. URL https://proceedings.neurips.
+cc/paper_files/paper/2007/hash/be83ab3ecd0db773eb2dc1b0a17836a1-Abstract.html .
+Tibshirani, R. Regression Shrinkage and Selection Via the Lasso. Journal of the Royal Statistical Society:
+Series B (Methodological) , 58(1):267–288, January 1996. ISSN 0035-9246, 2517-6161. doi: 10.1111/j.
+2517-6161.1996.tb02080.x. URL https://rss.onlinelibrary.wiley.com/doi/10.1111/j.2517-6161.
+1996.tb02080.x .
+Tufanaru, C., Munn, Z., Stephenson, M., and Aromataris, E. Fixed or random effects meta-analysis?
+Commonmethodologicalissuesinsystematicreviewsofeffectiveness. JBI Evidence Implementation , 13(3):
+196, September 2015. ISSN 2691-3321. doi: 10.1097/XEB.0000000000000065. URL https://journals.
+lww.com/ijebh/fulltext/2015/09000/fixed_or_random_effects_meta_analysis__common.12.aspx .
+van Houwelingen, H. C., Arends, L. R., and Stijnen, T. Advanced methods in meta-analysis: multivari-
+ate approach and meta-regression. Statistics in Medicine , 21(4):589–624, 2002. ISSN 1097-0258. doi:
+10.1002/sim.1040. URL https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.1040 . _eprint:
+https://onlinelibrary.wiley.com/doi/pdf/10.1002/sim.1040.
+Vershynin, R. High-dimensional probability: An introduction with applications in data science , volume 47.
+Cambridge university press, 2018.
+Vo, T.V., Bhattacharyya, A., Lee, Y., andLeong, T.-Y. Anadaptivekernelapproachtofederatedlearningof
+heterogeneous causal effects. Advances in Neural Information Processing Systems , 35:24459–24473, 2022.
+Vo, T. V., lee, Y., and Leong, T.-Y. Federated Learning of Causal Effects from Incomplete Observational
+Data, August 2023. URL http://arxiv.org/abs/2308.13047 . arXiv:2308.13047 [cs, stat].
+14Wager, S.andAthey, S. EstimationandInferenceofHeterogeneousTreatmentEffectsusingRandomForests,
+July 2017. URL http://arxiv.org/abs/1510.04342 . arXiv:1510.04342 [math, stat].
+Xiong, R., Koenecke, A., Powell, M., Shen, Z., Vogelstein, J. T., and Athey, S. Federated Causal Infer-
+ence in Heterogeneous Observational Data, December 2022. URL http://arxiv.org/abs/2107.11732 .
+arXiv:2107.11732 [cs, econ, q-bio, stat].
+Yang, S.andDing, P. CombiningMultipleObservationalDataSourcestoEstimateCausalEffects. Journal of
+the American Statistical Association , 115(531):1540–1554, 2020. ISSN 0162-1459. doi: 10.1080/01621459.
+2019.1609973. URL https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7571608/ .
+Ye, T., Shao, J., and Kang, H. Debiased inverse-variance weighted estimator in two-
+sample summary-data Mendelian randomization. The Annals of Statistics , 49(4):
+2079–2100, August 2021. ISSN 0090-5364, 2168-8966. doi: 10.1214/20-AOS2027.
+URL https://projecteuclid.org/journals/annals-of-statistics/volume-49/issue-4/
+Debiased-inverse-variance-weighted-estimator-in-two-sample-summary-data/10.1214/
+20-AOS2027.full . Publisher: Institute of Mathematical Statistics.
+Zhang, S., Li, X., Zong, M., Zhu, X., and Wang, R. Efficient kNN Classification With Different Numbers of
+Nearest Neighbors. IEEE Transactions on Neural Networks and Learning Systems , 29(5):1774–1785, May
+2018. ISSN 2162-237X, 2162-2388. doi: 10.1109/TNNLS.2017.2673241. URL http://ieeexplore.ieee.
+org/document/7898482/ .
+Zhao, Q. and Percival, D. Entropy balancing is doubly robust. Journal of Causal Inference , 5(1):20160010,
+September 2017. ISSN 2193-3685, 2193-3677. doi: 10.1515/jci-2016-0010. URL http://arxiv.org/abs/
+1501.03571 . arXiv:1501.03571 [stat].
+15A Proofs
+A.1 Preliminaries
+Definition A.1. Given i.i.d. weights wiand outcomes Yi, take their weighted sum ˆG=Pn
+i=1wiYi.We call
+an estimator is “Hájek" type if it uses (Pn
+i=1wi)−1to normalize, and “Horvitz-Thompson" (HT) type if it
+uses(nE[w])−1, i.e.,
+ˆµHájek =1Pn
+i=1wiˆG µ HT=1
+nE[w]ˆG.
+We begin with relating the asymptotic behaviour of Hájek-type ipwestimator with the HT-type. In specific,
+we have that
+Lemma A.2. The “Hajek"-type weighted mean estimator is asymptotically equivalent to the centralized
+“Horvitz-Thompson"-type weighted mean estimator
+ˆµHT=µ+1
+nE[w]nX
+i=1wi(Yi−µ), (26)
+i.e., we have that√n(ˆµHájek−ˆµHT) =oP(1).
+Proof.We subtract µfrom ˆµHájekand get that
+√n(ˆµHájek−µ) =√nPn
+i=1winX
+i=1wi(Yi−µ)
+=1Pn
+i=1wi/n1√nnX
+i=1wi(Yi−µ)
+=1
+E[w]1√nnX
+i=1wi(Yi−µ) +oP(1)
+=√n(ˆµHT−µ) +oP(1).
+ThesecondtothethirdlineisbycombiningthefactthatPn
+i=1wi/n=E[w]+oP(1)andPn
+i=1wi(Yi−µ)/√n=
+OP(1), through law of large numbers and CLT.
+A.2 Proof of Proposition 1
+We first define several useful intermediate values. We use ˆGto denote un-normalized ipwsummations and
+ˆNto denote the estimated data sizes.
+ˆG(k)
+Meta=X
+i∈D(k)ZiYi
+e(k,1)(X)−(1−Zi)Yi
+e(k,0)(X),ˆG(k)
+Meta,1=X
+i∈D(k)ZiYi
+e(k,1)(X),and ˆG(k)
+Meta,0=X
+i∈D(k)(1−Zi)Yi
+e(k,0)(X).
+In the main paper, we use that
+ˆµ(k)
+Meta,1=1
+ˆN(k)
+Clb,1ˆG(k)
+Meta,1ˆµ(k)
+Meta,0=1
+ˆN(k)
+Clb,0ˆG(k)
+Meta,0.
+Proof.We first re-write ˆG(k)
+Metaas
+ˆG(k)
+Meta=NX
+i=11{Si= (k,1)}Yi
+e(k,1)(X)−1{S= (k,0)}Yi
+e(k,0)(X).
+16Use Lemma A.2, we only need to consider
+ˆτ(k)
+Meta−HT=1
+Nn1{Si= (k,1)}(Yi−µ1)
+e(k,1)(X)−1{S= (k,0)}(Yi−µ0)
+e(k,0)(X)o
++τ
+Note that
+En1{S= (k,1)}(Y−µ1)
+e(k,1)(X)−1{S= (k,0)}(Y−µ0)
+e(k,0)(X)o
+=Eh
+EhP{S= (k,1)|X}(Y1−µ1)
+e(k,1)(X)−P{S= (k,0)|X}(Y0−µ0)
+e(k,0)(X)|Xii
+=E[Y1−µ1−(Y0−µ0)] = 0 .
+We also have that
+Varn1{S= (k,1)}(Y−µ1)
+e(k,1)(X)−1{S= (k,0)}(Y−µ0)
+e(k,0)(X)o
+=Ehh1{S= (k,1)}(Y1−µ1)
+e(k,1)(X)−1{S= (k,0)}(Y0−µ0)
+e(k,0)(X)i2i
+=Eh1{S= (k,1)}(Y1−µ1)2
+e(k,1)(X)2+1{S= (k,0)}(Y0−µ0)2
+e(k,0)(X)2i
+=Eh1{S= (k,1)}(Y1−µ1)2
+e(k,1)(X)2+1{S= (k,0)}(Y0−µ0)2
+e(k,0)(X)2i
+=Eh(Y1−µ1)2
+e(k,1)(X)+(Y0−µ0)2
+e(k,0)(X)i
+.
+Therefore, using CLT, we get that
+√
+N(ˆτ(k)−τ)d→N(0,(v(k)
+Meta)2), (27)
+with
+(v(k)
+Meta)2=1
+NEh(Y1−µ1)2
+e(k,1)(X)+(Y0−µ0)2
+e(k,0)(X)i
+. (28)
+Therefore, we have that
+√
+N(ˆτMeta−τ) =KX
+k=1h
+η(k)√
+N(ˆτ(k)
+Meta−τ)id→N
+0,KX
+k=1(η(k))2
+NEh(Y1−µ1)2
+e(k,1)(X)+(Y0−µ0)2
+e(k,0)(X)i
+,
+with
+v2
+Meta=KX
+k=1(η(k))2(v(k)
+Meta)2
+N
+≥1
+NPK
+k=1Eh
+(Y1−µ1)2
+e(k,1)(X)+(Y0−µ0)2
+e(k,0)(X)i−1,
+where the equality holds if and only if η(k)∝(v(k)
+Meta)−1.
+17A.3 Proof of Theorem 2
+We first provide the entire formula for Clb-ipwestimator. We define
+ˆG(k)
+Clb,1=X
+i∈D(k)ZiYiPK
+r=1e(r,1)(Xi)ˆG(k)
+Clb,0=X
+i∈D(k)(1−Zi)YiPK
+r=1e(r,0)(Xi)
+ˆN(k)
+Clb,1=X
+i∈D(k)ZiYiPK
+r=1e(r,1)(Xi)ˆN(k)
+Clb,1=X
+i∈D(k)ZiYiPK
+r=1e(r,1)(Xi).
+Then, we have that
+ˆτClb=PK
+k=1ˆG(k)
+Clb,1PK
+k=1ˆN(k)
+Clb,1−PK
+k=1ˆG(k)
+Clb,0PK
+k=1ˆN(k)
+Clb,0,
+where in the main paper, we use that
+ˆµClb,1=1
+ˆN(k)
+Clb,1ˆG(k)
+Clb,1,and ˆµClb,0=1
+ˆN(k)
+Clb,0ˆG(k)
+Clb,0.
+Proof.We rewrite the formula as
+ˆG(k)
+Clb,1=NX
+i=11{Si= (k,1)}YiPK
+r=1e(r,1)(Xi),and ˆG(k)
+Clb,0=NX
+i=11{Si= (k,0)}YiPK
+r=1e(r,0)(Xi). (29)
+As a result, we have that
+KX
+k=1ˆGClb,1=NX
+i=1KX
+k=11{Si= (k,1)}YiPK
+r=1e(r,1)(Xi)=NX
+i=11{Z(Si) = 1}Yi
+P(Z(Si) = 1|Xi),
+KX
+k=1ˆGClb,0=NX
+i=1KX
+k=11{Si= (k,0)}YiPK
+r=1e(r,1)(Xi)=NX
+i=11{Z(Si) = 0}Yi
+P(Z(S) = 0|Xi).
+Similarly, we get
+ˆNClb,1=NX
+i=1KX
+k=11{Si= (k,1)}PK
+r=1e(r,1)(Xi)=NX
+i=11{Z(Si) = 1}
+P(Z(Si) = 1|Xi)
+ˆNClb,0=NX
+i=1KX
+k=11{Si= (k,0)}PK
+r=1e(r,0)(Xi)=NX
+i=11{Z(Si) = 0}
+P(Z(Si) = 0|Xi).
+As a result, ˆN−1
+Clb,1ˆGClb,1−ˆN−1
+Clb,0ˆGClb,0takes the form of Hájek type ipwestimator. Therefore, we could
+use Lemma A.2 and get the corresponding HT-type estimator. Since we have that
+Eh1{Z(S) = 1}
+P(Z(S) = 1|X)i
+=EhP[Z(S) = 1|X]
+P(Z(S) = 1|X)i
+= 1.
+Same result holds for the control group. The HT estimators are
+(ˆµClb,1,HT−τ) =1
+NNX
+i=1h1{Z(Si) = 1}(Yi−µ1)
+P(Z(Si) = 1|Xi)−1{Z(Si) = 0}(Yi−µ0)
+P(Z(Si) = 0|Xi)i
+18Using central limit theorem, since we have that
+Eh1{Z(S) = 1}(Y−µ1)
+P(Z(S) = 1|X)−1{Z(S) = 0}(Y−µ0)
+P(Z(S) = 0|X)i
+=EhP(Z(S) = 1|X)E[Y1−µ1|X]
+P(Z(S) = 1|X)−P(Z(S) = 0|X)E[Y0−µ0|X]
+P(Z(S) = 0|X)i
+=Eh
+E[Y1−µ1−Y0+µ0|X]i
+= 0.
+and
+Varh1{Z(S) = 1}(Y−µ1)
+P(Z(S) = 1|X)−1{Z(S) = 0}(Y−µ0)
+P(Z(S) = 0|X)i
+=Eh1{Z(S) = 1}(Y−µ1)
+P(Z(S) = 1|X)−1{Z(S) = 0}(Y−µ0)
+P(Z(S) = 0|X)i2
+=EP(Z(S) = 1|X)E[(Y1−µ1)2|X]
+P(Z(S) = 1|X)2+P(Z(S) = 0|X)E[(Y0−µ0)2|X]
+P(Z(S) = 0|X)2
+=E(Y1−µ1)2
+P(Z(S) = 1|X)+(Y0−µ0)2
+P(Z(S) = 0|X)
+.
+Use that NS/N→P(S̸=∅). We get that
+p
+NS
+ˆτClb−τd→N(0, v2
+Clb), (30)
+with
+v2
+Clb=P(S̸=∅)E(Y1−µ1)2
+P(Z(S) = 1|X)+(Y0−µ0)2
+P(Z(S) = 0|X)
+. (31)
+To compare v2
+Clbandv2
+Meta, we first prove Lemma A.3.
+Lemma A.3. The function f(t1, . . . , t K) = (t−1
+1+. . .+t−1
+K)−1with ti>0, i= 1, . . . , Kis concave.
+Proof.We directly prove it by showing that its hessian matrix is negative semi-definite. Denoting ∇2f=
+{Hkj}1≤k,j≤K, we have that
+Hkj=
+
+2t−4
+k
+(PK
+r=1t−1
+r)3−2t−3
+k
+(PK
+r=1t−1
+r)2ifk=j
+2t−2
+kt−2
+j
+(PK
+r=1t−1
+r)3 ifk̸=j.(32)
+By taking out the common factor we get that
+1
+2KX
+r=1t−1
+r3
+∇2f(t1, . . . , t K) =
+t−2
+1...
+t−2
+K
+ 
+t−2
+1. . . t−2
+K
+−(KX
+r=1t−1
+r)
+t−3
+1
+t−3
+2
+...
+t−3
+K
+.(33)
+Thesecondtermisnegativedefinite. Thefirsttermonlygetsonenon-zeroeigenvalue, withthecorresponding
+eigenvector v= (t−2
+1, . . . , t−2
+K). We only need to verify that v⊤∇2fv≤0. We have that
+1
+2KX
+r=1t−1
+r3
+v⊤∇2f(t1, . . . , t K)v⊤=KX
+k=1t−4
+k2
+−(KX
+k=1t−1
+k)(KX
+k=1t−7
+k)
+= 2X
+k<jt−4
+kt−4
+j−X
+k<j
+t−1
+kt−7
+j+t−7
+kt−1
+j
+≤0,
+19where the last line is by using the AM-GM inequality and getting that t−1
+kt−7
+j+t−1
+jt−7
+k≥2t−4
+kt−4
+j. This
+shows that ∇2fis negative semi-definite, which means that fis concave.
+We use Jensen inequality and get that
+v2
+Meta=2
+NPK
+k=1n
+Eh
+(Y1−µ1)2
+2e(k,1)(X)i
++Eh
+(Y0−µ0)2
+2e(k,0)(X)io−1
+≥1
+NPK
+k=1n
+Eh
+(Y1−µ1)2
+e(k,1)(X)io−1+1
+NPK
+k=1n
+Eh
+(Y0−µ0)2
+e(k,0)(X)io−1
+≥Eh1
+NPK
+k=1n
+(Y1−µ1)2
+e(k,1)(X)o−1i
++Eh1
+NPK
+k=1n
+(Y0−µ0)2
+e(k,0)(X)o−1i
+=Eh(Y1−µ1)2
+NPK
+k=1e(k,1)(X)i
++Eh(Y0−µ0)2
+NPK
+k=1e(k,0)(X)i
+=v2
+Clb,
+where we use Jensen twice at the second and the third lines.
+A.4 Proof of Theorem 3
+Proof.The proof relies on the definition of independence and Assumption 1. Using py,sto denote the joint
+density function for (Y(1), Y(0))andS, and py,Psas their marginal distributions, we have that
+py,s{(Y(1), Y(0)), S|X}=py{(Y(1), Y(0))|X}Ps{S|X}.
+Take expectation conditional on P(S= (k, z)|X) =e(k,z)(X), and use the tower property of cognitional
+expectation, we get that, for the L.H.S.,
+Eh
+py,s{(Y(1), Y(0)), S|X}e(k,z)(X)i
+=py,sn
+(Y(1), Y(0)), S|e(k,z)(X)o
+;
+for the R.H.S.,
+Eh
+py{(Y(1), Y(0))|X}Ps{S|X}e(k,z)(X)i
+=Eh
+py{(Y(1), Y(0))|X}e(k,z)(X)i
+e(k,z)(X)
+=pyn
+(Y(1), Y(0))|e(k,z)(X)o
+e(k,z)(X)
+=pyn
+(Y(1), Y(0))|e(k,z)(X)o
+Psn
+S|e(k,z)(X)o
+.
+This shows that
+(Y(1), Y(0))⊥ ⊥S|e(k,z)(X).
+For the second part, similarly, using tower property, we have that
+Eh
+py,z{(Y(1), Y(0)), Z(S)|X}P[Z(S)|X]i
+=py,sn
+(Y(1), Y(0)), S|P[Z(S)|X]o
+;
+for the R.H.S.,
+Eh
+py{(Y(1), Y(0))|X}Pz{Z(S)|X}Pz{Z(S)|X}i
+=Eh
+py{(Y(1), Y(0))|X}e(k,z)(X)i
+e(k,z)(X)
+=pyn
+(Y(1), Y(0))|Pz{Z(S)|X}o
+Pz{Z(S)|X}
+=pyn
+(Y(1), Y(0))|Pz{Z(S)|X}o
+Pn
+Z(S)|Pz{Z(S)|X}o
+.
+This shows that
+(Y(1), Y(0))⊥ ⊥Z(S)|P{Z(S)|X}.
+20A.5 Proof of Proposition 4 and 5
+We only provide the proof for Proposition 4. For the proof of Proposition 5, see Zhao & Percival (2017) and
+Lin et al. (2021).
+Proof.Suppose that another distribution (S′, X′, Y′
+1, Y′
+0)generates the same observed distribution p(x),
+p(x|S= (k,1)), and p(x|S= (k,0))for all k. Using Bayes’ theorem,
+P(S′= (k,1)|X′) =p(x′|S′= (k,1))P(S′= (k,1))
+p(x′)
+=p(x|S= (k,1))P(S′= (k,1))
+p(x)
+=P(S= (k,1)|X)P(S′= (k,1))
+P(S= (k,1)).
+This shows that e(k,z)(X)is identifiable up to a constant, but P(S=∅)is not identifiable.
+A.6 Proof of Theorem 6
+We first give the formulas for ˆµ(k)
+0:
+ˆδ(k)
+Meta−aipw,0=1
+ˆN(k)
+Meta,0X
+i∈D(k)(Zi)[Yi−m1(Xi)]
+e(k,1)(Xi),ˆδ(k)
+Clb−aipw,1=1
+ˆN(k)
+Clb,1X
+i∈D(k)(1−Zi)[Yi−m1(Xi)]PK
+r=1e(r,1)(Xi).
+Proof.Consider the following estimator using the true outcome and propensity score models:
+˜τClb−aipw=1
+N(t)X
+i∈D(t)h
+m1(X(t)
+i)−m0(X(t)
+i)i
++1
+ˆNClbKX
+k=1ˆN(k)
+Clb˜δ(k)
+Clb, (34)
+with
+˜δ(k)
+Clb−dr=1
+ˆN(k)
+ClbX
+i∈D(k)hZ(Si)(Yi−m1(Xi))PK
+r=1e(r,1)(Xi)−(1−Z(Si))(Yi−m0(Xi))PK
+r=1e(r,0)(Xi)i
+, (35)
+where m1, m0, and eare true models. We first prove Lemma A.4.
+Lemma A.4. We have that p
+NS(ˆτClb−aipw−˜τClb−aipw)d→0. (36)
+Proof.Similar to the proof of Theorem 2, using Lemma A.2, we have that
+√
+N(ˆτClb−aipw−ˆτClb−aipw−HT)d→0and√
+N(˜τClb−aipw−˜τClb−aipw−HT)d→0, (37)
+with
+ˆτClb−aipw−HT
+=1
+N(t)X
+i∈D(t)h
+ˆm1(X)−ˆm0(X)i
++1
+NNX
+i=1hZ(Si)(Yi−ˆm1(Xi))PK
+r=1ˆe(r,1)(Xi)−(1−Z(Si))(Yi−ˆm0(Xi))PK
+r=1ˆe(r,0)(Xi)i
+,
+and
+˜τClb−aipw−HT
+=1
+N(t)X
+i∈D(t)h
+m1(X)−m0(X)i
++1
+NNX
+i=1hZ(Si)(Yi−m1(X))
+P(Z(Si) = 1|Xi)−(1−Z(Si))(Yi−m0(X))
+P(Z(Si) = 0|Xi)i
+.
+21We decompose ˆτClb−aipw−HT−˜τClb−aipw−HT
+ˆτClb−aipw−HT−˜τClb−aipw−HT
+=1
+NNX
+i=1hZ(Si)
+P(Z(Si) = 1|Xi)−Z(Si)PK
+r=1ˆe(r,1)(Xi)i
+(Yi−ˆm1(Xi))
+−1
+NNX
+i=1h1−Z(Si)
+P(Z(Si) = 0|Xi)−1−Z(Si)PK
+r=1ˆe(r,0)(Xi)i
+(Yi−ˆm0(Xi))
++1
+NNX
+i=1nhZ(Si)
+P(Z(Si) = 1|Xi)ih
+m1(Xi)−ˆm1(Xi)i
+−Eh
+m1(Xi)−ˆm1(Xi)io
+−1
+NNX
+i=1nh1−Z(Si)
+P(Z(Si) = 0|Xi)ih
+m0(Xi)−ˆm0(Xi)i
+−Eh
+m0(Xi)−ˆm0(Xi)io
++1
+N(t)X
+i∈D(t)nh
+ˆm1(X(t)
+i)−m1(X(t)
+i)i
+−Eh
+ˆm1(X)−m1(X)io
++1
+N(t)X
+i∈D(t)nh
+ˆm0(X(t)
+i)−m0(X(t)
+i)i
+−Eh
+ˆm0(X)−m0(X)io
+.
+Denote the above terms as ∆1, . . . , ∆6. We bound each of them.
+|∆1| ≤vuuut1
+NNX
+i=1Z(Si)2h
+P(Z(Si) = 1|Xi)−PK
+r=1ˆe(r,1)(Xi)i2
+P(Z(Si) = 1|Xi)2[PK
+r=1ˆe(r,1)(Xi)]2vuut1
+NNX
+i=1h
+Yi(1)−m1(Xi)i2
+≤vuutc−2
+NNX
+i=1h
+P(Z(Si) = 1|Xi)−KX
+r=1ˆe(r,1)(Xi)i2vuut1
+NNX
+i=1h
+Yi(1)−m1(Xi)i2
+,
+By taking expectation and applying Jensen inequality, we get that
+E[√
+N|∆1|]≤√
+Nvuutc−2Eh
+P(Z(S) = 1|X)−KX
+r=1e(r,1)(X)i2r
+Enh
+Y(1)−m1(X)i2o
+≤N1/2−ξm−ξe→0,
+asN→ ∞. This shows that√
+N|∆1|P→0. We could prove that√
+N∆2P→0with the same manner. Using
+the Bernstein Inequality for bounded random variables (Vershynin, 2018), we have that
+Pn√
+N|∆3| ≥t/co
+≤Pn√
+NNX
+i=1h
+m1(Xi)−ˆm1(Xi)i
+−Eh
+m1(Xi)−ˆm1(Xi)i≥to
+≤2 exp
+−t2/2PN
+i=1Var[ ˆm1(Xi)−m1(Xi)]/N+MYt/(3√
+N)
+≤2 exp
+−t2/2
+E{[ ˆm1(X)−m1(X)]2}+MYt/(3√
+N)
+≤2 exp
+−t2/2
+N−2ξm+N−1/2MYt/3
+→0,
+for any t >0andN→ ∞. This proves that√
+N∆3P→0. We could prove that√
+N∆4P→0with the same
+22manner. At last, for ∆5, we have that
+Pn√
+N|∆3| ≥to
+≤2 exp
+−t2/2
+P
+i∈D(t)Var[ ˆm1(Xi)−m1(Xi)]/N(t)+MYt/(3√
+N(t))
+≤2 exp
+−t2/2
+E{[ ˆm1(X)−m1(X)]2}+MYt/(3√
+N(t))
+≤2 exp
+−t2/2
+(N(t))−2ξm+ (N(t))−1/2MYt/3
+→0,
+for any t >0andN→ ∞. This proves that√
+N∆5P→0. We could prove that√
+N∆6P→0with the same
+manner. Combining ∆1, . . . , ∆6with Equation (37) together, we finish the proof of Lemma A.4.
+By Lemma A.4, we only need to consider ˜τClb−aipw. Using CLT, we have that
+√
+N(˜τClb−aipw−τ)d→N(0, v2
+Clb−aipw), (38)
+since
+E(˜τClb−aipw) =Eh
+m1(X(t))−m0(X(t))i
++EhZ(S)(Y1−m1(X))
+P(Z(S) = 1|X)−(1−Z(S))(Y0−m0(X))
+P(Z(S) = 0|X)i
+=E[Y1−Y0],
+and with
+v2
+Clb−aipw= Varh√
+N(˜τClb−aipw−τ)i
+=N
+N(t)Varh
+m1(X(t))−m0(X(t))i
++N
+NVarhZ(S)(Y1−m1(X))
+P(Z(S) = 1|X)−(1−Z(S))(Y0−m0(X))
+P(Z(S) = 0|X)i
+=λ−1Eh
+[m1(X)−m0(X)]2i
+−λ−1τ2+Eh(Y1−m1(X))2
+P(Z(S) = 1|X)+(Y0−m0(X))2
+P(Z(S) = 0|X)i
+.
+This proves Theorem 6.
+A.7 Proof of Theorem 7
+It is a direct result from Appendix B.2 in Foster & Syrgkanis (2020).
+23B Experiments
+B.1 Extra Details
+Fortheincorrectscenario, usingsubscript itodenotedifferentdimensionsof X, welet X′
+1=X1X2,X′
+2=X2
+2,
+andX′
+3=X3/max{1, X′
+1}. Using X′as the regressors for misspecified propensity and outcome models.
+B.2 Ablations
+We provide the KL−MSE plots with misspecified models in Figure 3. All experiment settings are the same
+with Figure 1b, but we perturb the models. We construct false models also with X′. The results show the
+same trend with Figure 1b. It is worth noting that in Figure 3a, the aipwestimator has similar variance with
+Meta- ipwwhen KLdistance is large. We attribute this result to numerical instability, as we find there are
+occasionally divergent learned parameters due to extreme heterogeneity. The Clb-ipwestimator maintains
+low MSE against heterogeneity.
+(a) True PS; False OM
+0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+Heterogeneity0.51.01.52.02.53.03.5Mean Sqaured Error
+MetaIPW
+MetaAIPW
+ClbIPW
+ClbAIPW
+IPW in sites
+ (b) False PS; True OM
+0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+Heterogeneity0.00.51.01.52.02.53.03.54.0Mean Sqaured Error
+MetaIPW
+MetaAIPW
+ClbIPW
+ClbAIPW
+IPW in sites
+ (c) False PS; False OM
+0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+Heterogeneity2.252.502.753.003.253.503.754.00Mean Sqaured Error
+MetaIPW
+MetaAIPW
+ClbIPW
+ClbAIPW
+IPW in sites
+Figure 3: The mean squared error changing with heterogeneity. We use X′for all misspecified models. When
+both models fail to fit the data, there’s no theoretical guarantee and all estimators have huge mean squared
+error. The better performance of Meta- ipwthere is meaningless.
+24

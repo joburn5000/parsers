@@ -1,7 +1,10 @@
 # TODO:
 # test and write metrics for each parser
-    # accuracy = ""
-    # variation_robustness = ""
+    # accuracy
+        # find a similarity comparison tool
+    # variation_robustness
+        # take notes for different types of PDFs variation
+            # see notes for variation in pdfs
 # compare parsers
     # pdf_plumber
     # PyPDF2
@@ -30,8 +33,6 @@ for parser in pdf_parsers:
     parser.metrics = metrics()
 
 results = retrieve_data(test_pdf_parsers)
-
-pdf_plumber.metrics.accuracy = "Accurate, from an eyeball test. TODO: use a comparison tool to compare with a ground truth"
 
 pdf_plumber.metrics.cost = "Free"
 PyPDF2.metrics.cost = "Free"
