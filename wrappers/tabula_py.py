@@ -13,8 +13,8 @@ def extract(pdf):
     # convert PDF into CSV file
     tabula.convert_into(pdf, "tabula_output.csv", output_format="csv", pages='all')
     # notes: extracts TABLE data to a CSV format. dependency (not necessary to run it though) jpype 'pip install jpype1'
-    for text in dfs:
-        output_file.write(text)
+    for df in dfs:
+        output_file.write(str(df))
     return dfs
 
 def format_result(pdf):

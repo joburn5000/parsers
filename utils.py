@@ -49,7 +49,7 @@ def retrieve_data(test_pdf_parsers):
         tracemalloc.start()
         # track time elapsed
         timestamp = datetime.datetime.now()
-        for pdf in dataset.pdfs[:1]:
+        for pdf in dataset.pdfs[:2]:
             parser.extract(pdf)
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
