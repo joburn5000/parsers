@@ -32,7 +32,6 @@
 
 # # test PyPDF2 https://pypi.org/project/PyPDF2/
 # import PyPDF2
-# # todo: can it do tables?
 # from PyPDF2 import PdfReader as PdfReader2
 # reader = PdfReader2("dataset/Arxiv_papers/3.pdf")
 # number_of_pages = len(reader.pages)

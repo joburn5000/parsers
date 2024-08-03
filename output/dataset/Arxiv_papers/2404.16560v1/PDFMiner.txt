@@ -358,9 +358,9 @@ x
 
 {
 
-}
-
 {
+
+}
 
 0
 
@@ -557,11 +557,11 @@ i
 u−
 i |}
 
+|
+
 and one can choose the big-M as M = max
 
 Mi.
-
-|
 
 {|
 This procedure involves solving several convex optimization problems and
@@ -1112,9 +1112,9 @@ and
 
 |G|
 
-{
-
 }
+
+{
 
 τ
 
@@ -1383,9 +1383,9 @@ with the largest eigenvalue.
 
 {
 
-{
-
 }
+
+{
 
 .
 
@@ -1614,9 +1614,9 @@ and c(y, φ) = log
 
 (cid:19)(cid:19)
 
-(cid:18)
-
 (cid:19)
+
+(cid:18)
 
 (cid:18)
 
@@ -3682,13 +3682,13 @@ optimization solvers
 programming,
 doi:10.1007/s00180-021-01084-5.
 
-for
-
 A comparison of
 regression including conic
 Computational Statistics 36 (2021) 1721–1754.
 
 log-binomial
+
+for
 
 [18] E. Carrizosa, A. V. Olivares-Nadal, P. Ram´ırez-Cobo,
 

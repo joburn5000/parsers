@@ -2,10 +2,6 @@ import os
 import datetime
 import tracemalloc
 
-
-class dataset:
-    pdfs = []
-
 class metrics:
     # init TODO
     speed = ""
@@ -26,29 +22,29 @@ class pdf_parser:
     metrics = metrics()
     result = result()
 
-
 # initialize data: get pdfs from dataset folder
 def get_pdfs():
-    data = dataset()
+    pdfs = []
     Arxiv_papaers_directory = "dataset/Arxiv_papers"
     Arxiv_files = os.listdir(Arxiv_papaers_directory)
     for pdf in Arxiv_files:
-        data.pdfs.append(Arxiv_papaers_directory+"/"+pdf)
+        pdfs.append(Arxiv_papaers_directory+"/"+pdf)
     public_SEC_docs_directory = "dataset/public_SEC_docs"
     public_SEC_pdfs = os.listdir(public_SEC_docs_directory)
     for pdf in public_SEC_pdfs:
-        data.pdfs.append(public_SEC_docs_directory+"/"+pdf)
-    return data
+        pdfs.append(public_SEC_docs_directory+"/"+pdf)
+    return pdfs
 
-def retrieve_data(test_pdf_parsers):
+def retrieve_data(test_pdf_parsers, pdfs):
     #retrieve data for each pdf, track speed & memory usage
-    num_pdfs = len(dataset.pdfs)
+    num_pdfs = len(pdfs)
     for parser in test_pdf_parsers:
+        parser.metrics = metrics()
         # track memory usage
         tracemalloc.start()
         # track time elapsed
         timestamp = datetime.datetime.now()
-        for pdf in dataset.pdfs[:2]:
+        for pdf in pdfs:
             parser.extract(pdf)
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
