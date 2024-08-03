@@ -41,8 +41,7 @@ def get_pdfs():
     return data
 
 def retrieve_data(test_pdf_parsers):
-    #retrieve data for each pdf
-    
+    #retrieve data for each pdf, track speed & memory usage
     num_pdfs = len(dataset.pdfs)
     for parser in test_pdf_parsers:
         # track memory usage
@@ -59,3 +58,12 @@ def retrieve_data(test_pdf_parsers):
         # record memory usage (MB)
         parser.metrics.memory_usage = "n/a" if current < .01 else current / 10**6
     return
+
+def output_evaluations(pdf_parsers):
+    output_file = open("evaluations.txt", "w")
+    for parser in pdf_parsers:
+        output_file.write(parser.name + "\n")
+        output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
+        output_file.write("Memory Usage: " + str(parser.metrics.memory_usage) + " MB\n")
+        output_file.write("Accuracy: " + parser.metrics.accuracy + "\n")
+        output_file.write("Cost: " + parser.metrics.cost + "\n\n")

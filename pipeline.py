@@ -5,21 +5,9 @@
     # variation_robustness
         # take notes for different types of PDFs variation
             # see notes for variation in pdfs
-# compare parsers
-    # pdf_plumber
-    # PyPDF2
-    # PyPDF
-    # pdf_2_tables
-    # tabula_py
-    # PDFMiner
-    # camelot
-    # llama_parse
-    # Amazon_Textract
-    # Microsoft_Table_Transformer
-# output results in a comprehensible manner
 # TODO:
 # update requirements.txt
-
+# go through remaining TODOs
 
 from utils import *
 from wrappers import pdf_plumber, PyPDF2, PyPDF, pdf_2_tables, tabula_py, PDFMiner, camelot, llama_parse, Amazon_Textract, Microsoft_Table_Transformer
@@ -28,6 +16,7 @@ pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_T
 test_pdf_parsers = pdf_parsers
 
 data = get_pdfs()
+
 # initialize metrics for each parser
 for parser in pdf_parsers:
     parser.metrics = metrics()
@@ -45,13 +34,4 @@ llama_parse.metrics.cost = "Paid"
 Amazon_Textract.metrics.cost = "Paid"
 Microsoft_Table_Transformer.metrics.cost = "Paid"
 
-# TODO print method creation
-# TODO use a python logger - one that can also save to a file
-# TODO enable CICD on github (eventually)
-output_file = open("evaluations.txt", "w")
-for parser in pdf_parsers:
-    output_file.write(parser.name + "\n")
-    output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
-    output_file.write("Memory Usage: " + str(parser.metrics.memory_usage) + " MB\n")
-    output_file.write("Accuracy: " + parser.metrics.accuracy + "\n")
-    output_file.write("Cost: " + parser.metrics.cost + "\n\n")
+output_evaluations(pdf_parsers)
