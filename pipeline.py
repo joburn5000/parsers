@@ -1,5 +1,6 @@
 # TODO:
 # fix bug: pdf_plumber is not getting through all the pdfs
+# add evaluation notes to the python object themselves
 # test and write metrics for each parser
     # accuracy
         # how to measure F1 score: LLM model, retrieval model? (select one, define retrieval)

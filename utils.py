@@ -45,6 +45,7 @@ def retrieve_data(test_pdf_parsers, pdfs):
         # track time elapsed
         timestamp = datetime.datetime.now()
         for pdf in pdfs:
+            print(pdf)
             parser.extract(pdf)
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
