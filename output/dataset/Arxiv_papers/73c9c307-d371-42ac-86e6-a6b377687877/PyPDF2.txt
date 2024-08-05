@@ -1,0 +1,1023 @@
+arXiv:2404.16277v1  [cs.LG]  25 Apr 2024Causally Inspired Regularization Enables Domain General
+Representations
+Olawale Salaudeen∗1and Sanmi Koyejo2
+1University of Illinois at Urbana Champaign
+2Stanford University
+Abstract
+Given a causal graph representing the data-generating proc ess shared across diﬀerent domains/distributions,
+enforcing suﬃcient graph-implied conditional independen cies can identify domain-general (non-spurious)
+feature representations. For the standard input-output pr edictive setting, we categorize the set of graphs
+considered in the literature into two distinct groups: (i) t hose in which the empirical risk minimizer
+across training domains gives domain-general representat ions and (ii) those where it does not. For the
+latter case (ii), we propose a novel framework with regulari zations, which we demonstrate are suﬃ-
+cient for identifying domain-general feature representat ions without a priori knowledge (or proxies) of
+the spurious features. Empirically, our proposed method is eﬀective for both (semi) synthetic and real-
+world data, outperforming other state-of-the-art methods in average and worst-domain transfer accuracy.
+1 Introduction
+A key feature of machine learning is its capacity to generali ze across new domains. When these domains
+present diﬀerent data distributions, the algorithm must le verage shared structural concepts to achieve out-
+of-distribution (OOD) or out-of-domain generalization. T his capability is vital in numerous important real-
+world machine learning applications. For example, in safet y-critical settings such as autonomous driving,
+a lack of resilience to unfamiliar distributions could lead to human casualties. Likewise, in the healthcare
+sector, where ethical considerations are critical, an inab ility to adjust to shifts in data distribution can result
+in unfair biases, manifesting as inconsistent performance across diﬀerent demographic groups.
+An inﬂuential approach to domain generalization is Invaria nt Causal Prediction (ICP; [ Peters et al. ,
+2016]). ICP posits that although some aspects of data distributi ons (like spurious or non-causal mechanisms
+[Pearl,2010]) may change across domains, certain causal mechanisms rem ain constant. ICP suggests fo-
+cusing on these invariant mechanisms for prediction. Howev er, the estimation method for these invariant
+mechanisms suggested by [ Peters et al. ,2016] struggles with scalability in high-dimensional feature s paces.
+To overcome this, Arjovsky et al. [2019] introduced Invariant Risk Minimization (IRM), designed t o identify
+these invariant mechanisms by minimizing an objective. How ever, requires strong assumptions for identify-
+ing the desired domain-general solutions [ Ahuja et al. ,2021,Rosenfeld et al. ,2022]; for instance, observing
+a number of domains proportional to the spurious features’ d imensions is necessary, posing a signiﬁcant
+challenge in these high-dimensional settings.
+Subsequent variants of IRM have been developed with improve d capabilities for identifying domain-
+general solutions [ Ahuja et al. ,2020,Krueger et al. ,2021,Robey et al. ,2021,Wang et al. ,2022,Ahuja et al. ,
+2021]. Additionally, regularizers for Distributionally Robus t Optimization with subgroup shift have been
+proposed (GroupDRO) [ Sagawa et al. ,2019]. However, despite their solid theoretical motivation, em pirical
+evidence suggests that these methods may not consistently d eliver domain-general solutions in practice
+Gulrajani and Lopez-Paz [2020],Kaur et al. [2022],Rosenfeld et al. [2022].
+∗Contact: oes2@illinois.edu
+1Kaur et al. [2022] demonstrated that regularizing directly for conditional independencies implied by the
+generative process can give domain-general solutions, inc luding conditional independencies beyond those
+considered by IRM. However, their experimental approach in volves regularization terms that require direct
+observation of spurious features, a condition not always fe asible in real-world applications. Our proposed
+methodology also leverages regularizers inspired by the co nditional independencies indicated by causal graphs
+but, crucially, it does so without necessitating prior know ledge (or proxies) of the spurious features.
+1.1 Contributions
+In this work,
+• we outline suﬃcient properties to uniquely identify domai n-general predictors for a general set of
+generative processes that include domain-correlated spur ious features,
+• we propose regularizers to implement these constraints wi thout independent observations of the spuri-
+ous features, and
+• ﬁnally, we show that the proposed framework outperforms th e state-of-the-art on semi-synthetic and
+real-world data.
+The code for our proposed method is provided at https://github.com/olawalesalaudeen/tcri .
+Notation: Capital letters denote bounded random variables, and corre sponding lowercase letters denote
+their value. Unless otherwise stated, we represent latent d omain-general features as Zdg∈Zdg≡Rmand
+spurious latent features as Zspu∈Zspu≡Ro. LetX∈X≡Rdbe the observed feature space and the output
+space of an invertible function Γ :Zdg×Zspu/mapsto→X andY∈Y≡{ 0,1,...,K−1}be the observed label
+space for a K-class classiﬁcation task. We then deﬁne feature extractor s aimed at identifying latent features
+Φdg:X/mapsto→Rm,Φspu:X/mapsto→Roso thatΦ :X/mapsto→Rm+o/parenleftbig
+that isΦ(x) = [Φ dg(x);Φspu(x)]∀x∈X/parenrightbig
+. We deﬁne
+eas a discrete random variable denoting domains and E={Pe(Zdg,Zspu,X,Y) :e= 1,2,...}to be the set
+of possible domains. Etr⊂Eis the set of observed domains available during training.
+2 Related Work
+The source of distribution shift can be isolated to componen ts of the joint distribution. One special case
+of distribution shift is covariate shift [Shimodaira ,2000,Zadrozny ,2004,Huang et al. ,2006,Gretton et al. ,
+2009,Sugiyama et al. ,2007,Bickel et al. ,2009,Chen et al. ,2016,Schneider et al. ,2020], where only the co-
+variate distribution P(X)changes across domains. Ben-David et al. [2009] give upper-bounds on target error
+based on theH-divergence between the source and target covariate distri butions, which motivates domain
+alignment methods like the Domain Adversarial Neural Netwo rks [Ganin et al. ,2016] and others [ Long et al. ,
+2015,Blanchard et al. ,2017]. Others have followed up on this work with other notions of c ovariate distance
+for domain adaptation, such as mean maximum discrepancy (MM D) [Long et al. ,2016], Wasserstein dis-
+tance [ Courty et al. ,2017], etc. However, Kpotufe and Martinet [2018] show that these divergence metrics
+fail to capture many important properties of transferabili ty, such as asymmetry and non-overlapping support.
+Furthermore, Zhao et al. [2019] shows that even with the alignment of covariates, large dis tances between
+label distributions can inhibit transfer; they propose a la bel conditional importance weighting adjustment to
+address this limitation. Other works have also proposed con ditional covariate alignment [ des Combes et al. ,
+2020,Li et al. ,2018c,b].
+Another form of distribution shift is label shift , where only the label distribution changes across domains.
+Lipton et al. [2018] propose a method to address this scenario. Schrouﬀ et al. [2022] illustrate that many
+real-world problems exhibit more complex ’compound’ shift s than just covariate or label shifts alone.
+One can leverage domain adaptation to address distribution shifts; however, these methods are contingent
+on having access to unlabeled or partially labeled samples f rom the target domain during training. When such
+samples are available, more sophisticated domain adaptati on strategies aim to leverage and adapt spurious
+feature information to enhance performance [ Liu et al. ,2021,Zhang et al. ,2021,Kirichenko et al. ,2022].
+2However, domain generalization, as a problem, does not assu me access to such samples [ Muandet et al. ,
+2013].
+To address the domain generalization problem, Invariant Ca usal Predictors (ICP) leverage shared causal
+structure to learn domain-general predictors [ Peters et al. ,2016]. Previous works, enumerated in the intro-
+duction (Section 1), have proposed various algorithms to identify domain-gen eral predictors. Arjovsky et al.
+[2019]’s proposed invariance risk minimization (IRM) and its var iants motivated by domain invariance:
+min
+w,Φ1
+|Etr|/summationdisplay
+e∈EtrRe(w◦Φ)s.t.w∈argmin
+/tildewidewRe(/tildewidew·Φ),∀e∈Etr,
+whereRe(w◦Φ) =E/bracketleftbig
+ℓ(y,w·Φ(x))/bracketrightbig
+, with loss function ℓ, feature extractor Φ, and linear predictor w. This
+objective aims to learn a representation Φsuch that predictor wthat minimizes empirical risks on average
+across all domains also minimizes within-domain empirical risk for all domains. However, Rosenfeld et al.
+[2020],Ahuja et al. [2020] showed that this objective requires unreasonable constra ints on the number of
+observed domains at train times, e.g., observing distinct d omains on the order of the rank of spurious
+features. Follow-up works have attempted to improve these l imitations with stronger constraints on the
+problem – enumerated in the introduction section.
+Our method falls under domain generalization; however, unl ike the domain-general solutions previously
+discussed, our proposed solution leverages diﬀerent condi tions than domain invariance directly, which we
+show may be more suited to learning domain-general represen tations.
+3 Causality and Domain Generalization
+We often represent causal relationships with a causal graph . Acausal graph is a directed acyclic graph
+(DAG),G= (V,E), with nodes Vrepresenting random variables and directed edges Erepresenting causal
+relationships, i.e., parents are causes and children are eﬀ ects. A structural equation model (SEM) provides
+a mathematical representation of the causal relationships in its corresponding DAG. Each variable Y∈V
+is given by Y=fY(X)+εY, whereXdenotes the parents of YinG,fYis a deterministic function, and
+εYis an error capturing exogenous inﬂuences on Y. The main property we need here is that fYis invariant
+tointerventions toV\{Y}and is consequently invariant to changes in P(V)induced by these interventions.
+Interventions refer to changes to fZ,Z∈V\{Y}.
+In this work, we focus on domain-general predictors dgthat are linear functions of features with domain-
+general mechanisms, denoted as gdg:=w◦Φdg, wherewis a linear predictor and Φdgidentiﬁes features with
+domain-general mechanisms. We use domain-general rather t han domain-invariant since domain-invariance
+is strongly tied to the property: Y⊥⊥e|Zdg[Arjovsky et al. ,2019]. As shown in the subsequent sections,
+this work leverages other properties of appropriate causal graphs to obtain domain-general features. This
+distinction is crucial given the challenges associated wit h learning domain-general features through domain-
+invariance methods [ Rosenfeld et al. ,2020].
+Given the presence of a distribution shift, it’s essential t o identify some common structure across domains
+that can be utilized for out-of-distribution (OOD) general ization. For example, Shimodaira [2000] assume
+P(Y|X)is shared across all domains for the covariate shift problem . In this work, we consider a setting
+where each domain is composed of observed features and label s,X∈X,Y∈Y, whereXis given by an
+invertible function Γof two latent random variables: domain-general Zdg∈Zdgand spurious Zspu∈Zspu.
+By construction, the conditional expectation of the label Ygiven the domain-general features Zdgis the
+same across domains, i.e.,
+Eei[Y|Zdg=zdg] =Eej[Y|Zdg=zdg] (1)
+∀zdg∈Zdg,∀ei/\e}atio\slash=ej∈E.
+Conversely, this robustness to edoes not necessarily extend to spurious features Zspu; in other words, Zspu
+may assume values that could lead a predictor relying on it to experience arbitrarily high error rates. Then,
+a sound strategy for learning a domain-general predictor – o ne that is robust to distribution shifts – is to
+identify the latent domain-general Zdgfrom the observed features X.
+3e Zdg
+ZspuY
+X
+Figure 1: Partial Ancestral Graph representing all non-tri vial and valid generative processes (DAGs); dashed
+edges indicate that an edge may or may not exist.
+The approach we take to do this is motivated by the Reichenbach Common Cause Principle , which claims
+that if two events are correlated, there is either a causal co nnection between the correlated events that is
+responsible for the correlation or there is a third event, a s o-called (Reichenbachian) common cause, which
+brings about the correlation [ Hitchcock and Rédei ,2021,Rédei,2002]. This principle allows us to posit the
+class of generative processes or causal mechanisms that giv e rise to the correlated observed features and
+labels, where the observed features are a function of domain -general and spurious features. We represent
+these generative processes as causal graphs. Importantly, the mapping from a node’s causal parents to
+itself is preserved in all distributions generated by the caus al graph (Equation 1), and distributions can vary
+arbitrarily so long as they preserve the conditional indepe ndencies implied by the DAG (Markov Property
+[Pearl,2010]).
+We now enumerate DAGs that give observe features with spurio us correlations with the label.
+Valid DAGs. We consider generative processes, where both latent featur es,Zspu,Zdg,and observed X
+are correlated with Y, and the observed Xis a function of only ZdgandZspu(Figure 1).
+Given this setup, there is an enumerable set of valid generat ive processes. Such processes are (i) without
+cycles, (ii) are feature complete – including edges from ZdgandZsputoX, i.e.,Zdg→X←Zspu, and
+(iii) where the observed features mediate domain inﬂuence, i.e., there is no direct domain inﬂuence on the
+labele/\e}atio\slash→Y. We discuss this enumeration in detail in Appendix B. The result of our analysis is identifying
+a representative set of DAGs that describe valid generative processes – these DAGs come from orienting
+the partial ancestral graph (PAG) in Figure 1. We compare the conditional independencies implied by the
+DAGs deﬁned by Figure 1as illustrated in Figure 2, resulting in three canonical DAGs in the literature (see
+Appendix Bfor further discussion). Other DAGs that induce spurious co rrelations are outside the scope of
+this work.
+e Zdg
+ZspuY
+X
+(a) Causal [ Arjovsky et al. ,2019].e Zdg
+ZspuY
+X
+(b) Anticausal [ Rosenfeld et al. ,
+2020].e Zdg
+ZspuY
+X
+(c) Fully Informative Causal
+[Ahuja et al. ,2021].
+Figure 2: Generative Processes. Graphical models depicting the structure of possible data- generating
+processes – shaded nodes indicate observed variables. Xrepresents the observed features, Yrepresents
+observed targets, and erepresents domain inﬂuences (domain indexes in practice). There is an explicit
+separation of domain-general Zdgand domain-speciﬁc Zspufeatures; they are combined to generate observed
+X. Dashed edges indicate the possibility of an edge.
+Conditional independencies implied by identiﬁed DAGs (Fig ure2).
+4Table 1: Generative Processes and Suﬃcient Conditions for D omain-Generality
+Graphs in Figure 2
+(a) (b) (c)
+Zdg⊥⊥Zspu|{Y,e} ✓ ✓ ✗
+Identifying Zdgis necessary ✓ ✓ ✗
+Fig.2a:Zdg⊥⊥Zspu|{Y,e};Y⊥⊥e|Zdg.
+This causal graphical model implies that the mapping from Zdgto its causal child Yis preserved and
+consequently, Equation 1holds [ Pearl,2010,Peters et al. ,2016]. As an example, consider the task of
+predicting the spread of a disease. Features may include cau ses (vaccination rate and public health
+policies) and eﬀects (coughing). eis the time of month; the distribution of coughing changes de pending
+on the season.
+Fig.2b:Zdg⊥⊥Zspu|{Y,e};Zdg⊥⊥Zspu|Y;Y⊥⊥e|Zdg,Zdg⊥⊥e.
+The causal graphical model does not directly imply that Zdg→Yis preserved across domains. However,
+in this work, it represents the setting where the inverse of t he causal direction is preserved (inverse:
+Zdg→Y), and thus Equation 1holds. A context where this setting is relevant is in healthc are where
+medical conditions ( Y) cause symptoms ( Zdg), but the prediction task is often predicting conditions
+from symptoms, and this mapping Zdg→Y, opposite of the causal direction, is preserved across
+distributions. Again, we may consider eas the time of month; the distribution of coughing changes
+depending on the season.
+Fig.2c:Y⊥⊥e|Zdg;Zdg⊥⊥e.
+Similar to Figure 2a, this causal graphical model implies that the mapping from Zdgto its causal child Y
+is preserved, so Equation 1holds [ Pearl,2010,Peters et al. ,2016]. This setting is especially interesting
+because it represents a Fully Informative Invariant Features setting , that is Zspu⊥⊥Y|Zdg
+[Ahuja et al. ,2021]. Said diﬀerently, Zspudoes not induce a backdoor path from etoYthatZdgdoes
+not block. As an example of this, we can consider the task of pr edicting hospital readmission rates.
+Features may include the severity of illness, which is a dire ct cause of readmission rates, and also
+include the length of stay, which is also caused by the severi ty of illness. However, length of stay may
+not be a cause of readmission; the correlation between the tw o would be a result of the confounding
+eﬀect of a common cause, illness severity. eis an indicator for distinct hospitals.
+We call the condition Y⊥⊥e|Zdgthedomain invariance property . This condition is common to all
+the DAGs in Figure 2. We call the condition Zdg⊥⊥Zspu|{Y,e}thetarget conditioned representation
+independence (TCRI) property. This condition is common to the DAGs in Figure 2a,2b. In the settings
+considered in this work, the TCRI property is equivalently Zdg⊥⊥Zspu|Y∀e∈Esinceewill simply index
+the set of empirical distributions available at training.
+Domain generalization with conditional independencies. Kaur et al. [2022] showed that suﬃciently
+regularizing for the correct conditional independencies d escribed by the appropriate DAGs can give domain-
+general solutions, i.e., identiﬁes Zdg. However, in practice, one does not (partially) observe the latent features
+independently to regularize directly. Other works have als o highlighted the need to consider generative pro-
+cesses when designing robust algorithms to distribute shif ts [Veitch et al. ,2021,Makar et al. ,2022]. However,
+previous work has largely focused on regularizing for the do main invariance property, ignoring the conditional
+independence property Zdg⊥⊥Zspu|Y,e.
+Suﬃciency of ERM under Fully Informative Invariant Feature s.Despite the known challenges of
+learning domain-general features from the domain-invaria nce properties in practice, this approach persists,
+5likely due to it being the only property shared across all DAG s. We alleviate this constraint by observing
+that Graph (Fig. 2c) falls under what Ahuja et al. [2021] refer to as the fully informative invariant features
+settings, meaning that Zspuis redundant, having only information about Ythat is already in Zdg.Ahuja et al.
+[2021] show that the empirical risk minimizer is domain-general f or bounded features.
+Easy vs. hard DAGs imply the generality of TCRI. Consequently, we categorize the generative
+processes into easyandhardcases Table 1:(i) easy meaning that minimizing average risk gives domain-
+general solutions, i.e., ERM is suﬃcient (Fig. 2c), and (ii) hard meaning that one needs to identify Zdgto
+obtain domain-general solutions (Figs. 2a-2b). We show empirically that regularizing for Zdg⊥⊥Zspu|Y∀e∈
+Ealso gives a domain-general solution in the easy case. The generality of TCRI follows from its suﬃciency
+for identifying domain-general Zdgin the hard cases while still giving domain-general solutio ns empirically
+in the easy case.
+4 Proposed Learning Framework
+We have now clariﬁed that hard DAGs (i.e., those not solved by ERM) share the TCRI property. The
+challenge is that ZdgandZspuare not independently observed; otherwise, one could direc tly regularize.
+Existing work such as Kaur et al. [2022] empirically study semi-synthetic datasets where Zspuis (partially)
+observed and directly learn Zdgby regularizing that Φ(X)⊥⊥Zspu|Y,efor feature extractor Φ. To our
+knowledge, we are the ﬁrst to leverage the TCRI property with out requiring observation of Zspu. Next, we
+set up our approach with some key assumptions. The ﬁrst is tha t the observed distributions are Markov to
+an appropriate DAG.
+Assumption 4.1. All distributions, sources and targets, are generated by on e of the structural causal
+modelsSCM that follow:
+causal/bracehtipdownleft/bracehtipupright/bracehtipupleft/bracehtipdownright
+SCM(e):=
+
+Z(e)
+dg∼P(e)
+Zdg,
+Y(e)←/a\}bracketle{tw∗
+dg,Z(e)
+dg/a\}bracketri}ht+ηY,
+Z(e)
+spu←/a\}bracketle{tw∗
+spu,Y/a\}bracketri}ht+η(e)
+Zspu,
+X←Γ(Zdg,Zspu),(2)anticausal/bracehtipdownleft/bracehtipupright/bracehtipupleft/bracehtipdownright
+SCM(e):=
+
+Y(e)∼PY,
+Z(e)
+dg←/a\}bracketle{t/tildewidewdg,Y/a\}bracketri}ht+η(e)
+Zdg,
+Z(e)
+spu←/a\}bracketle{tw∗
+spu,Y/a\}bracketri}ht+η(e)
+Zspu,
+X←Γ(Zdg,Zspu),(3)
+FIIF/bracehtipdownleft/bracehtipupright/bracehtipupleft/bracehtipdownright
+SCM(e):=
+
+Z(e)
+dg∼P(e)
+Zdg,
+Y(e)←/a\}bracketle{tw∗
+dg,Z(e)
+dg/a\}bracketri}ht+ηY,
+Z(e)
+spu←/a\}bracketle{tw∗
+spu,Zdg/a\}bracketri}ht+η(e)
+Zspu,
+X←Γ(Zdg,Zspu),(4)
+wherePZdgis the causal covariate distribution, w’s are linear generative mechanisms, η’s are exogenous
+independent noise variables, and Γ :Zdg×Zspu→Xis an invertible function. It follows from having causal
+mechanisms that we can learn a predictor w∗
+dgforZdgthat is domain-general (Equation 2-4) –w∗
+dginverts
+the mapping /tildewidewdgin the anticausal case.
+These structural causal models (Equation 2-4) correspond to causal graphs Figures 2a-2c, respectively.
+Assumption 4.2 (Structural) .Causal Graphs and their distributions are Markov and Faithf ul [Pearl,2010].
+Given Assumption 4.2, we aim to leverage TCRI property ( Zdg⊥⊥Zspu|Y∀e∈Etr) to learn the latent
+Zdgwithout observing Zspudirectly. We do this by learning two feature extractors that , together, recover
+ZdgandZspuand satisfy TCRI (Figure 3). We formally deﬁne these properties as follows.
+Deﬁnition 4.3 (Total Information Criterion (TIC)) .Φ = Φ dg⊕Φspusatisﬁes TIC with respect to random
+variables X, Y, e if forΦ(Xe) = [Φ dg(Xe);Φspu(Xe)], there exists a linear operator Ts.t.,T(Φ(Xe)) =
+[Ze
+dg;Ze
+spu]∀e∈Etr.
+6XeΦdg
+Φspu/hatwideZdg θc
+⊕
+/hatwideZspuθe/hatwideyc
+/hatwideye
+Figure 3: Modeling approach. During training, both representations, Φdg, andΦspu, generate domain-
+general and domain-speciﬁc predictions, respectively. Ho wever, only the domain-invariant representa-
+tions/predictions are used during testing – indicated by th e solid red arrows.
+In other words, a feature extractor that satisﬁes the total i nformation criterion recovers the complete
+latent feature sets Zdg, Zspu. This allows us to deﬁne the proposed implementation of the T CRI property
+non-trivially – the conditional independence of subsets of the latents may not have the same implications
+on domain generalization. We note that X⊥⊥Y|Zdg,Zspu, soXhas no information about Ythat is not in
+Zdg,Zspu.
+Deﬁnition 4.4 (Target Conditioned Representation Independence) .Φ = Φ dg⊕Φspusatisﬁes TCRI with
+respect to random variables X, Y, e ifΦdg(X)⊥⊥Φspu(X)|Y∀e∈E.
+Proposition 4.5. Assume that Φdg(X)andΦspu(X)are correlated with Y. Given Assumptions 4.1-4.2and
+a representation Φ = Φ dg⊕Φsputhat satisﬁes TIC, Φdg(X) =Zdg⇐⇒Φsatisﬁes TCRI. (see Appendix C
+for proof).
+Proposition 4.5shows that TCRI is necessary and suﬃcient to identify Zdgfrom a set of training domains.
+We note that we can verify if Φdg(X)andΦspu(X)are correlated with Yby checking if the learned predictors
+are equivalent to chance. Next, we describe our proposed alg orithm to implement the conditions to learn
+such a feature map. Figure 3illustrates the learning framework.
+Learning Objective: The ﬁrst term in our proposed objective is
+LΦdg=Re(θc◦Φdg),
+whereΦdg:X /mapsto→Rmis a feature extractor, θc:Rm/mapsto→ Y is a linear predictor, and Re(θc◦Φdg) =
+E/bracketleftbig
+ℓ(y,θc·Φ(x))/bracketrightbig
+is the empirical risk achieved by the feature extractor and p redictor pair on samples from
+domaine.Φdgandθcare designed to capture the domain-general portion of the fr amework.
+Next, to implement the total information criterion, we use a nother feature extractor Φspu:X /mapsto→Ro,
+designed to capture the domain-speciﬁc information in Xthat is not captured by Φdg. Together, we have
+Φ = Φ dg⊕ΦspuwhereΦhas domain-speciﬁc predictors θe:Rm+o/mapsto→Yfor each training domain, allowing
+the feature extractor to utilize domain-speciﬁc informati on to learn distinct optimal domain-speciﬁc (non-
+general) predictors:
+LΦ=Re/parenleftbig
+θe◦Φ/parenrightbig
+.
+LΦaims to ensure that ΦdgandΦspucapture all of the information about YinX– total information
+criterion. Since we do not know o,m, we select them to be the same size on our experiments; o,mcould be
+treated as hyperparameters though we do not treat them as suc h.
+Finally, we implement the TCRI property (Deﬁnition 4.4). We denoteLTCRI to be a conditional
+independence penalty for ΦdgandΦspu. We utilize the Hilbert Schmidt independence Criterion (HS IC)
+[Gretton et al. ,2007] asLTCRI. However, in principle, any conditional independence pena lty can be used
+in its place. HSIC:
+LTCRI(Φdg,Φspu) =1
+2/summationdisplay
+k∈{0,1}/hatwiderHSIC/parenleftBig
+Φdg(X),Φspu(X)/parenrightBigy=k
+=1
+2/summationdisplay
+k∈{0,1}1
+n2
+ktr/parenleftBig
+KΦdgHnkKΦspuHnk/parenrightBigy=k
+,
+7wherek, indicates which class the examples in the estimate corresp ond to,Cis the number of classes, KΦdg∈
+Rnk×nk,KΦspu∈Rnk×nkare Gram matrices, Ki,j
+Φ=κ(Φdg(X)i,Φdg(X)j),Ki,j
+Φspu=ω(Φspu(X)i,Φspu(X)j)
+with kernels κ,ωare radial basis functions, Hnk=Ink−1
+n2
+k11⊤is a centering matrix, Inkis thenk×nk
+dimensional identity matrix, 1nkis thenk-dimensional vector whose elements are all 1, and⊤denotes the
+transpose. We condition on the label by taking only examples of each label and computing the empirical
+HSIC; then, we take the average.
+Taken together, the full objective to be minimized is as foll ows:
+L=1
+Etr/summationdisplay
+e∈Etr/bracketleftBigg
+Re(θc◦Φdg)+Re(θe◦Φ)+βLTCRI(Φdg,Φspu)/bracketrightBigg
+,
+whereβ >0is a hyperparameter and Etris the number of training domains. Figure 3shows the full
+framework. We note that when β= 0, this loss reduces to ERM.
+Note that while we minimize this objective with respect to Φ,θc,θ1,...,θ Etr, only the domain-general
+representation and its predictor, θc·Φdgare used for inference.
+5 Experiments
+We begin by evaluating with simulated data, i.e., with known ground truth mechanisms; we use Equation 5
+to generate our simulated data, with domain parameter σei; code is provided in the supplemental materials.
+SCM(ei):=
+
+Z(ei)
+dg∼N/parenleftbig
+0,σ2
+ei/parenrightbig
+y(ei)=Z(ei)
+dg+N/parenleftbig
+0,σ2
+y/parenrightbig
+,
+Z(ei)
+spu=Y(ei)+N/parenleftbig
+0,σ2
+ei/parenrightbig
+.
+(5)Table 2: Continuous Simulated Results – Feature Extractor
+with a dummy predictor θc= 1., i.e.,/hatwidey=x·Φdg·w, where
+x∈RN×2,Φdg,Φspu∈R2×1, w∈R. Oracle indicates the
+coeﬃcients achieved by regressing yonzcdirectly.
+Algorithm (Φdg)0 (Φdg)1
+(i.e.,Zdgweight) (i.e.,Zspuweight)
+ERM 0.29 0.71
+IRM 0.28 0.71
+TCRI 1.01 0.06
+Oracle 1.04 0.00
+We observe 2 domains with parameters σe=0= 0.1,σe=1= 0.2withσy= 0.25, 5000 samples, and linear
+feature extractors and predictors. We use partial covarian ce as our conditional independence penalty LTCRI.
+Table 2shows the learned value of Φdg, where ‘Oracle’ indicates the true coeﬃcients obtained by r egressing
+Yon domain-general Zdgdirectly. The ideal Φdgrecovers Zdgand puts zero weight on Zspu.
+Now, we evaluate the eﬃcacy of our proposed objective on non- simulated datasets.
+5.1 Semisynthetic and Real-World Datasets
+Algorithms: We compare our method to baselines corresponding to DAG prop erties: Empirical Risk Mini-
+mization ( ERM , [Vapnik ,1991]), Invariant Risk Minimization ( IRM [Arjovsky et al. ,2019]), Variance Risk
+Extrapolation ( V-REx , [Krueger et al. ,2021]), [Li et al. ,2018a ]), Group Distributionally Robust Optimiza-
+tion (GroupDRO ), [Sagawa et al. ,2019]), and Information Bottleneck methods ( IB_ERM/IB_IRM ,
+[Ahuja et al. ,2021]). Additional baseline methods are provided in the Appendi xA.
+We evaluate our proposed method on the semisynthetic Colore dMNIST [ Arjovsky et al. ,2019] and real-
+world Terra Incognita dataset [ Beery et al. ,2018]. Given observed domains Etr={e: 1,2,...,E tr}, we train
+onEtr\eiand evaluate the model on the unseen domain ei, for each e∈Etr.
+ColoredMNIST: The ColoredMNIST dataset [ Arjovsky et al. ,2019] is composed of 7000(2×28×28,1)
+images of a hand-written digit and binary-label pairs. Ther e are three domains with diﬀerent correlations
+between image color and label, i.e., the image color is spuri ously related to the label by assigning a color to
+8each of the two classes (0: digits 0-4, 1: digits 5-9). The col or is then ﬂipped with probabilities {0.1,0.2,0.9}
+to create three domains, making the color-label relationsh ip domain-speciﬁc because it changes across do-
+mains. There is also label ﬂip noise of 0.25, so we expect that the best accuracy a domain-general model
+can achieve is 75%, while a non-domain general model can achi eve higher. In this dataset, Zdgcorresponds
+to the original image, Zsputhe color, ethe label-color correlation, Ythe image label, and Xthe observed
+colored image. This DAG follows the generative process of Fi gure2a[Arjovsky et al. ,2019].
+Spurrious PACS: Variables. X: images, Y: non-urban (elephant, giraﬀe, horse) vs. urban (dog, guita r,
+house, person). Domains. {{cartoon, art painting}, {art painting, cartoon}, {photo }} [Li et al. ,2017]. The
+photo domain is the same as in the original dataset. In the {ca rtoon, art painting} domain, urban examples
+are selected from the original cartoon domain, while non-ur ban examples are selected from the original art
+painting domain. In the {art painting, cartoon} domain, urb an examples are selected from the original art
+painting domain, while non-urban examples are selected fro m the original cartoon domain. This sampling
+encourages the model to use spurious correlations (domain- related information) to predict the labels; however,
+since these relationships are ﬂipped between domains {{car toon, art painting} and {art painting, cartoon},
+these predictions will be wrong when generalized to other do mains.
+Terra Incognita: The Terra Incognita dataset contains subsets of the Caltech Camera Traps dataset
+[Beery et al. ,2018] deﬁned by [ Gulrajani and Lopez-Paz ,2020]. There are four domains representing diﬀer-
+ent locations {L100, L38, L43, L46} of cameras in the America n Southwest. There are 9 species of wild
+animals {bird, bobcat, cat, coyote, dog, empty, opossum, ra bbit, raccoon, squirrel} and a ‘no-animal’ class
+to be predicted. Like Ahuja et al. [2021], we classify this dataset as following the generative proc ess in
+Figure 2c, the Fully Informative Invariant Features (FIIF) setting. Additional details on model architecture,
+training, and hyperparameters are detailed in Appendix 5.
+Model Selection. The standard approach for model selection is a training-dom ain hold-out validation
+set accuracy. We ﬁnd that model selection across hyperparam eters using this held-out training domain
+validation accuracy often returns non-domain-general mod els in the ‘hard’ cases. One advantage of our
+model is that we can do model selection based on the TCRI condi tion (conditional independence between the
+two representations) on held-out training domain validati on examples to mitigate this challenge. In the easy
+case, we expect the empirical risk minimizer to be domain-ge neral, so selecting the best-performing training-
+domain model is sound – we additionally do this for all baseli nes (see Appendix A.1for further discussion).
+We ﬁnd that, empirically, this heuristic works in the exampl es we study in this work. Nevertheless, model
+selection under distribution shift remains a signiﬁcant bo ttleneck for domain generalization.
+5.2 Results and Discussion
+Table 3:E\etest→etest(model selection on held-out source domains validation set ). The ‘mean’ column
+indicates the average generalization accuracy over all thr ee domains as the etestdistinctly; the ‘min’ column
+indicates the worst generalization accuracy.
+ColoredMNIST Spurious PACS Terra Incognita
+Algorithm average worst-case average worst-case average worst-case
+ERM 51.6±0.1 10.0±0.1 57.2±0.7 31.2±1.3 44.2±1.8 35.1±2.8
+IRM 51.7±0.1 9.9±0.1 54.7±0.8 30.3±0.3 38.9±3.7 32.6±4.7
+GroupDRO 52.0±0.1 9.9±0.1 58.5±0.4 37.7±0.7 47.8±0.9 39.9±0.7
+VREx 51.7±0.2 10.2±0.0 58.8±0.4 37.5±1.1 45.1±0.4 38.1±1.3
+IB_ERM 51.5±0.2 10.0±0.1 56.3±1.1 35.5±0.4 46.0±1.4 39.3±1.1
+IB_IRM 51.7±0.0 9.9±0.0 55.9±1.2 33.8±2.2 37.0±2.8 29.6±4.1
+TCRI_HSIC 59.6±1.845.1±6.763.4±0.262.3±0.249.2±0.340.4±1.6
+9Table 4: Total Information Criterion: Domain General (DG) a nd Domain Speciﬁc (DS) Accuracies. The DG
+classiﬁer is shared across all training domains, and the DS c lassiﬁers are trained on each domain. The ﬁrst
+row indicates the domain from which the held-out examples ar e sampled, and the second indicates which
+domain-speciﬁc predictor is used. {+90%, +80%, -90%} indic ate domains –{0.1,0.2,0.9}digit label and
+color correlation, respectively.
+DG Classiﬁer DS Classiﬁer on +90 DS Classiﬁer on +80 DS Classiﬁer on -90
+Test Domain
+No DS clf.+90% +80% -90% +90% +80% -90% +90% +80% -90% +90% +80% -90%
++90% 68.7 69.0 68.5 - 90.1 9.8 - 79.9 20.1 - 10.4 89.9
++80% 63.1 62.4 64.4 76.3 - 24.3 70.0 - 30.4 24.5 - 76.3
+-90% 65.6 63.4 44.1 75.3 75.3 - 69.2 69.5 - 29.3 26.0 -
+Table 5: TIC ablation for ColoredMNIST.
+Algorithm average worst-case
+TCRI_HSIC (No TIC) 51.8±5.9 27.7±8.9
+TCRI_HSIC 59.6±1.845.1±6.7
+Worst-domain Accuracy. A critical implication of domain generality is stability – r obustness in worst-
+domain performance up to domain diﬃculty. While average acc uracy across domains provides some insight
+into an algorithm’s ability to generalize to new domains, th e average hides the variance of performance
+across domains. Average improvement can be increased while the worst-domain accuracy stays the same or
+decreases, leading to incorrect conclusions about domain g eneralization. Additionally, in real-world challenges
+such as algorithmic fairness where worst-group performanc e is considered, some metrics or fairness are
+analogous to achieving domain generalization [ Creager et al. ,2021].
+Results. TCRI achieves the highest average and worst-case accuracy a cross all baselines (Table 3). We
+ﬁnd no method recovers the exact domain-general model’s acc uracy of 75%. However, TCRI achieves over
+7% increase in both average accuracy and worst-case accurac y. Appendix A.2shows transfer accuracies
+with cross-validation on held-out test domain examples (or acle) and TCRI again outperforms all baselines,
+achieving an average accuracy of 70.0% ±0.4% and a worst-case accuracy of 65.7% ±1.5, showing that
+regularizing for TCRI gives very close to optimal domain-ge neral solutions.
+Similarly, for the Spurious-PACS dataset, we observe that T CRI outperforms the baselines. TRCI
+achieves the highest average accuracy of 63.4%±0.2and worst-case accuracy of 62.3%±0.1with the
+next best, VREx, achieving 58.8±1.0and33.8±0.0, respectively. Additionally, for the Terra-Incognita
+dataset, TCRI achieves the highest average and worst-case a ccuracies of 49.2% ±0.3% and 40.4%±1.6%
+with the next best, GroupDRO, achieving 47.8±0.9and39.9±0.7, respectively.
+Appendix A.2shows transfer accuracies with cross-validation held-out target domain examples (oracle)
+where we observe that TCRI also obtains the highest average a nd worst-case accuracy for Spurrious-PACS
+and Terra Incognita.
+Overall, regularizing for TCRI gives the most domain-gener al solutions compared to our baselines, achiev-
+ing the highest worst-case accuracy on all benchmarks. Addi tionally, TCRI achieves the highest average
+accuracy on ColoredMNIST and Spurious-PAC and the second hi ghest on Terra Incognita, where we expect
+the empirical risk minimizer to be domain-general.
+Additional results are provided in the Appendix A.
+The Eﬀect of the Total Information Criterion. Without the TIC loss term, our proposed method is
+less eﬀective. Table 5shows that for Colored MNIST, the hardest ‘hard’ case we enco unter, removing the
+TIC criteria, performs worse in average and worst case accur acy, dropping over 8% and 18, respectively.
+Separation of Domain General and Domain Speciﬁc Features . In the case of Colored MNIST, we
+can reason about the extent of feature disentanglement from the accuracies achieved by the domain-general
+and domain-speciﬁc predictors. Table 4shows how much each component of Φ,ΦdgandΦspu, behaves as
+10expected. For each domain, we observe that the domain-speci ﬁc predictors’ accuracies follow the same trend
+as the color-label correlation, indicating that they captu re the color-label relationship. The domain-general
+predictor, however, does not follow such a trend, indicatin g that it is not using color as the predictor.
+For example, when evaluating the domain-speciﬁc predictor s from the +90% test domain experiment
+(row +90%) on held-out examples from the +80% training domai n (column "DS Classiﬁer on +80%"), we
+ﬁnd that the +80% domain-speciﬁc predictor achieves an accu racy of nearly 79.9% – exactly what one
+would expect from a predictor that uses a color correlation w ith the same direction ‘+’. Conversely, the
+-90% predictor achieves an accuracy of 20.1%, exactly what o ne would expect from a predictor that uses a
+color correlation with the opposite direction ‘-’. The -90% domain has the opposite label-color pairing, so a
+color-based classiﬁer will give the opposite label in any ‘+ ’ domain.
+Another advantage of this method, exempliﬁed by Table 4, is that if one believes a particular domain is
+close to one of the training domains, one can opt to use the clo se domain’s domain-speciﬁc predictor and
+leverage spurious information to improve performance.
+On Benchmarking Domain Generalization. Previous work on benchmarking domain generalization
+showed that across standard benchmarks, the domain-unawar e empirical risk minimizer outperforms or
+achieves equivalent performance to the state-of-the-art d omain generalization methods [ Gulrajani and Lopez-Paz ,
+2020]. Additionally, Rosenfeld et al. [2022] gives results that show weak conditions that deﬁne regimes where
+the empirical risk minimizer across domains is optimal in bo th average and worst-case accuracy. Conse-
+quently, to accurately evaluate our work and baselines, we f ocus on settings where it is clear that (i) the
+empirical risk minimizer fails, (ii) spurious features, as we have deﬁned them, do not generalize across the
+observed domains, and (iii) there is room for improvement vi a better domain-general predictions. We discuss
+this point further in the Appendix A.1.
+Oracle Transfer Accuracies. While model selection is an integral part of the machine lear ning develop-
+ment cycle, it remains a non-trivial challenge when there is a distribution shift. While we have proposed a
+selection process tailored to our method that can be general ized to other methods with an assumed causal
+graph, we acknowledge that model selection under distribut ion shift is still an important open problem. Con-
+sequently, we disentangle this challenge from the learning problem and evaluate an algorithm’s capacity to
+give domain-general solutions independently of model sele ction. We report experimental reports using held-
+out test-set examples for model selection in Appendix ATable 6. We ﬁnd that our method, TCRI_HSIC,
+also outperforms baselines in this setting.
+6 Conclusion and Future Work
+We reduce the gap in learning domain-general predictors by l everaging conditional independence properties
+implied by generative processes to identify domain-genera l mechanisms. We do this without independent
+observations of domain-general and spurious mechanisms an d show that our framework outperforms other
+state-of-the-art domain-generalization algorithms on re al-world datasets in average and worst-case across
+domains. Future work includes further improvements to the f ramework to fully recover the strict set of
+domain-general mechanisms and model selection strategies that preserve desired domain-general properties.
+Acknowledgements
+OS was partially supported by the UIUC Beckman Institute Gra duate Research Fellowship, NSF-NRT
+1735252. This work is partially supported by the NSF III 2046 795, IIS 1909577, CCF 1934986, NIH
+1R01MH116226-01A, NIFA award 2020-67021-32799, the Alfre d P. Sloan Foundation, and Google Inc.
+References
+Kartik Ahuja, Karthikeyan Shanmugam, Kush Varshney, and Am it Dhurandhar. Invariant risk minimization
+games. In International Conference on Machine Learning , pages 145–155. PMLR, 2020.
+11Kartik Ahuja, Ethan Caballero, Dinghuai Zhang, Jean-Chris tophe Gagnon-Audet, Yoshua Bengio, Ioan-
+nis Mitliagkas, and Irina Rish. Invariance principle meets information bottleneck for out-of-distribution
+generalization. Advances in Neural Information Processing Systems , 34:3438–3450, 2021.
+Martín Arjovsky, L. Bottou, Ishaan Gulrajani, and David Lop ez-Paz. Invariant risk minimization. ArXiv ,
+abs/1907.02893, 2019.
+Sara Beery, Grant Van Horn, and Pietro Perona. Recognition i n terra incognita. In Proceedings of the
+European conference on computer vision (ECCV) , pages 456–473, 2018.
+Shai Ben-David, John Blitzer, K. Crammer, A. Kulesza, Ferna ndo C Pereira, and Jennifer Wortman Vaughan.
+A theory of learning from diﬀerent domains. Machine Learning , 79:151–175, 2009.
+Steﬀen Bickel, Michael Brückner, and Tobias Scheﬀer. Discr iminative learning under covariate shift. Journal
+of Machine Learning Research , 10(9), 2009.
+Gilles Blanchard, Aniket Anand Deshmukh, Urun Dogan, Gyemi n Lee, and Clayton Scott. Domain general-
+ization by marginal transfer learning. arXiv preprint arXiv:1711.07910 , 2017.
+Xiangli Chen, Mathew Monfort, Anqi Liu, and Brian D Ziebart. Robust covariate shift regression. In
+Artiﬁcial Intelligence and Statistics , pages 1270–1279. PMLR, 2016.
+Nicolas Courty, Rémi Flamary, Amaury Habrard, and Alain Rak otomamonjy. Joint distribution optimal
+transportation for domain adaptation. Advances in Neural Information Processing Systems , 30, 2017.
+Elliot Creager, Jörn-Henrik Jacobsen, and Richard Zemel. E nvironment inference for invariant learning. In
+International Conference on Machine Learning , pages 2189–2200. PMLR, 2021.
+Rémi Tachet des Combes, Han Zhao, Yu-Xiang Wang, and Geoﬀrey J. Gordon. Domain adaptation with
+conditional distribution matching and generalized label s hift.ArXiv , abs/2003.04475, 2020.
+Yaroslav Ganin, Evgeniya Ustinova, Hana Ajakan, Pascal Ger main, Hugo Larochelle, François Laviolette,
+Mario Marchand, and Victor Lempitsky. Domain-adversarial training of neural networks. The journal of
+machine learning research , 17(1):2096–2030, 2016.
+A. Gretton, K. Fukumizu, C. Teo, Le Song, B. Schölkopf, and Al ex Smola. A kernel statistical test of
+independence. In NIPS, 2007.
+Arthur Gretton, Alex Smola, Jiayuan Huang, Marcel Schmittf ull, Karsten Borgwardt, and Bernhard
+Schölkopf. Covariate shift by kernel mean matching. Dataset shift in machine learning , 3(4):5, 2009.
+Ishaan Gulrajani and David Lopez-Paz. In search of lost doma in generalization. CoRR , abs/2007.01434,
+2020. URL https://arxiv.org/abs/2007.01434 .
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep r esidual learning for image recognition. In
+Proceedings of the IEEE conference on computer vision and pat tern recognition , pages 770–778, 2016.
+Christopher Hitchcock and Miklós Rédei. Reichenbach’s Com mon Cause Principle. In Edward N. Zalta,
+editor, The Stanford Encyclopedia of Philosophy . Metaphysics Research Lab, Stanford University, Summer
+2021 edition, 2021.
+Jiayuan Huang, Arthur Gretton, Karsten Borgwardt, Bernhar d Schölkopf, and Alex Smola. Correcting
+sample selection bias by unlabeled data. Advances in Neural Information Processing Systems , 19, 2006.
+Jivat Neet Kaur, Emre Kiciman, and Amit Sharma. Modeling the data-generating process is necessary for
+out-of-distribution generalization. arXiv preprint arXiv:2206.07837 , 2022.
+Polina Kirichenko, Pavel Izmailov, and Andrew Gordon Wilso n. Last layer re-training is suﬃcient for
+robustness to spurious correlations. arXiv preprint arXiv:2204.02937 , 2022.
+12Samory Kpotufe and Guillaume Martinet. Marginal singulari ty, and the beneﬁts of labels in covariate-shift.
+In Sébastien Bubeck, Vianney Perchet, and Philippe Rigolle t, editors, Proceedings of the 31st Conference
+On Learning Theory , volume 75 of Proceedings of Machine Learning Research , pages 1882–1886. PMLR,
+06–09 Jul 2018. URL https://proceedings.mlr.press/v75/kpotufe18a.html .
+David Krueger, Ethan Caballero, Joern-Henrik Jacobsen, Am y Zhang, Jonathan Binas, Dinghuai Zhang,
+Remi Le Priol, and Aaron Courville. Out-of-distribution ge neralization via risk extrapolation (rex). In
+International Conference on Machine Learning , pages 5815–5826. PMLR, 2021.
+Da Li, Yongxin Yang, Yi-Zhe Song, and Timothy M Hospedales. D eeper, broader and artier domain gen-
+eralization. In Proceedings of the IEEE international conference on computer vision , pages 5542–5550,
+2017.
+Da Li, Yongxin Yang, Yi-Zhe Song, and Timothy M Hospedales. L earning to generalize: Meta-learning for
+domain generalization. In Thirty-Second AAAI Conference on Artiﬁcial Intelligence , 2018a.
+Haoliang Li, Sinno Jialin Pan, Shiqi Wang, and Alex C. Kot. Do main generalization with adversarial feature
+learning. In 2018 IEEE/CVF Conference on Computer Vision and Pattern Recog nition , pages 5400–5409,
+2018b. doi: 10.1109/CVPR.2018.00566.
+Ya Li, Xinmei Tian, Mingming Gong, Yajing Liu, Tongliang Liu , Kun Zhang, and D. Tao. Deep domain
+generalization via conditional invariant adversarial net works. In ECCV , 2018c.
+Zachary Chase Lipton, Yu-Xiang Wang, and Alex Smola. Detect ing and correcting for label shift with black
+box predictors. ArXiv , abs/1802.03916, 2018.
+Evan Z Liu, Behzad Haghgoo, Annie S Chen, Aditi Raghunathan, Pang Wei Koh, Shiori Sagawa, Percy Liang,
+and Chelsea Finn. Just train twice: Improving group robustn ess without training group information. In
+International Conference on Machine Learning , pages 6781–6792. PMLR, 2021.
+Mingsheng Long, Yue Cao, Jianmin Wang, and Michael I. Jordan . Learning transferable features with deep
+adaptation networks. ArXiv , abs/1502.02791, 2015.
+Mingsheng Long, Han Zhu, Jianmin Wang, and Michael I Jordan. Unsupervised domain adaptation with
+residual transfer networks. Advances in neural information processing systems , 29, 2016.
+Maggie Makar, Ben Packer, Dan Moldovan, Davis Blalock, Yoni Halpern, and Alexander D’Amour. Causally
+motivated shortcut removal using auxiliary labels. In Gust au Camps-Valls, Francisco J. R. Ruiz, and Isabel
+Valera, editors, Proceedings of The 25th International Conference on Artiﬁcial Intelligence and Statistics ,
+volume 151 of Proceedings of Machine Learning Research , pages 739–766. PMLR, 28–30 Mar 2022. URL
+https://proceedings.mlr.press/v151/makar22a.html .
+Krikamol Muandet, David Balduzzi, and Bernhard Schölkopf. Domain generalization via invariant feature
+representation. In International conference on machine learning , pages 10–18. PMLR, 2013.
+J. Pearl. Causal inference. In NIPS Causality: Objectives and Assessment , 2010.
+Jonas Peters, Peter Bühlmann, and Nicolai Meinshausen. Cau sal inference by using invariant prediction:
+identiﬁcation and conﬁdence intervals. Journal of the Royal Statistical Society. Series B (Statistic al
+Methodology) , pages 947–1012, 2016.
+Miklós Rédei. Reichenbach’s Common Cause Principle and Quantum Correlatio ns, pages 259–270. Springer
+Netherlands, Dordrecht, 2002. ISBN 978-94-010-0385-8. do i: 10.1007/978-94-010-0385-8_17. URL
+https://doi.org/10.1007/978-94-010-0385-8_17 .
+Alexander Robey, George J Pappas, and Hamed Hassani. Model- based domain generalization. Advances in
+Neural Information Processing Systems , 34:20210–20229, 2021.
+Elan Rosenfeld, Pradeep Ravikumar, and Andrej Risteski. Th e risks of invariant risk minimization. arXiv
+preprint arXiv:2010.05761 , 2020.
+13Elan Rosenfeld, Pradeep Ravikumar, and Andrej Risteski. An online learning approach to interpolation
+and extrapolation in domain generalization. In International Conference on Artiﬁcial Intelligence and
+Statistics , pages 2641–2657. PMLR, 2022.
+Shiori Sagawa, Pang Wei Koh, Tatsunori B Hashimoto, and Perc y Liang. Distributionally robust neural
+networks for group shifts: On the importance of regularizat ion for worst-case generalization. arXiv preprint
+arXiv:1911.08731 , 2019.
+Steﬀen Schneider, Evgenia Rusak, Luisa Eck, Oliver Bringma nn, Wieland Brendel, and Matthias Bethge.
+Improving robustness against common corruptions by covari ate shift adaptation. Advances in Neural
+Information Processing Systems , 33:11539–11551, 2020.
+Jessica Schrouﬀ, Natalie Harris, Oluwasanmi Koyejo, Ibrah im Alabdulmohsin, Eva Schnider, Krista Opsahl-
+Ong, Alex Brown, Subhrajit Roy, Diana Mincu, Christina Chen , et al. Maintaining fairness across distri-
+bution shift: do we have viable solutions for real-world app lications? arXiv preprint arXiv:2202.01034 ,
+2022.
+Hidetoshi Shimodaira. Improving predictive inference und er covariate shift by weighting the log-likelihood
+function. Journal of statistical planning and inference , 90(2):227–244, 2000.
+Masashi Sugiyama, Shinichi Nakajima, Hisashi Kashima, Pau l Buenau, and Motoaki Kawanabe. Direct
+importance estimation with model selection and its applica tion to covariate shift adaptation. Advances in
+Neural Information Processing Systems , 20, 2007.
+Vladimir Vapnik. Principles of risk minimization for learn ing theory. In NIPS, volume 91, pages 831–840,
+1991.
+Victor Veitch, Alexander D’Amour, Steve Yadlowsky, and Jac ob Eisenstein. Counterfactual invariance to
+spurious correlations: Why and how to pass stress tests. arXiv preprint arXiv:2106.00545 , 2021.
+Haoxiang Wang, Haozhe Si, Bo Li, and Han Zhao. Provable domai n generalization via invariant-feature
+subspace recovery. In ICML , 2022.
+Bianca Zadrozny. Learning and evaluating classiﬁers under sample selection bias. In Proceedings of the
+twenty-ﬁrst international conference on Machine learning , page 114, 2004.
+Marvin Zhang, Henrik Marklund, Nikita Dhawan, Abhishek Gup ta, Sergey Levine, and Chelsea Finn. Adap-
+tive risk minimization: Learning to adapt to domain shift. Advances in Neural Information Processing
+Systems , 34, 2021.
+H. Zhao, Rémi Tachet des Combes, Kun Zhang, and Geoﬀrey J. Gor don. On learning invariant representa-
+tions for domain adaptation. In ICML , 2019.
+14A Additional Results and Discussion
+A.1 On Benchmarking Domain Generalization
+Table 6: Oracle (model selection on held-out target domain v alidation set)E\etest→etest. The ‘mean’
+column indicates the average generalization accuracy over all three domains as the etestdistinctly; the ‘min’
+column indicates the worst generalization accuracy.
+ColoredMNIST Spurious PACS Terra Incognita
+Algorithm average worst-case average worst-case average worst-case
+ERM 57.8±0.2 38.4±1.4 59.2±1.3 38.4±1.452.9±0.8 42.0±0.6
+IRM 68.9±1.6 62.0±4.9 67.5±5.8 53.9±6.6 42.6±4.0 42.7±1.2
+GroupDRO 61.1±1.3 37.6±3.6 61.8±1.8 40.0±1.6 50.7±1.0 42.7±1.2
+VREx 68.0±2.5 59.4±7.3 62.8±2.4 38.7±0.9 43.2±2.0 34.9±4.2
+IB_ERM 65.0±0.1 50.6±0.3 67.3±3.7 53.1±8.0 49.0±0.3 39.9±0.8
+IB_IRM 68.4±1.0 58.5±2.8 69.0±1.362.3±0.3 32.8±6.6 20.4±7.5
+TCRI_HSIC 70.4±0.465.7±1.569.5±1.162.3±0.2 51.2±0.143.0±0.4
+Oracle Transfer Accuracies. While model selection is an integral part of the machine lear ning develop-
+ment cycle, it remains a non-trivial challenge when there is a distribution shift. While we have proposed a
+selection process tailored to our method that can be general ized to other methods with an assumed causal
+graph, we acknowledge that model selection under distribut ion shift is still an important open problem.
+Consequently, we disentangle this challenge from the learn ing problem and evaluate an algorithm’s capacity
+to give domain-general solutions independently of model se lection. We report experimental reports using
+held-out test-set examples for model selection in Appendix ATable 6.
+In this case, we ﬁnd that there is indeed a separation between ERM and some domain-generalization
+algorithms, suggesting that model selection might be a subs tantial bottleneck for learning domain-general
+predictors. Nevertheless, we still ﬁnd that our method, TCR I_HSIC, also outperforms baselines in this
+setting.
+Challenges of Benchmarking Domaing Generalization. We show some results below that illustrate
+the challenge of accurately evaluating the eﬃcacy of an algo rithm for domain generalization. We ﬁrst note
+that we expect ERM (naive) to perform poorly in domain genera lization tasks, certainly so when we observe
+worst-case shifts at test time. However, like other works [ Gulrajani and Lopez-Paz ,2020], we observe that
+ERM performs as well as other baselines during transfer on va rious benchmark datasets. Previous theoretical
+results [ Rosenfeld et al. ,2022] suggest that this observation is indicative of properties of the benchmark
+domains that may be suﬃcient for ERM to give domain-general s olutions - speciﬁcally that the distribution
+(and equivalently the loss) of the target domain can be writt en as a convex combination of the those in the
+source domains.
+To further investigate this, we develop additional experim ents motivated by the ColoredMNIST [ Arjovsky et al. ,
+2019] – since its generative process is well understood. We note t hat in the +90%, +80%, and -90% domains
+of ColoredMNIST, the -90% domain has the opposite relations hip between the spurious correlation and the
+label, so the use of spurious correlations from {+90%, +80%} generalizes catastrophically to the -90% do-
+main. In this setting, the baseline algorithms we present, i ncluding ERM, achieve poor accuracy in the -90%
+domain while maintaining high accuracy in the +90% and +80% d omains. Consequently, we investigate two
+settings, setting a : observe {+90%, +80%, +70%, -90%} domains and setting b : observe {+90%, +80%,
+-80%, -90%} domains – we focus on generalizing to the -90% dom ain. In setting a , we add another domain
+with the majority direction in the relationship between spu rious correlation and labels. In setting b , we
+add another domain with the minority direction. Note that in setting a , the closest domain to -90% that
+can be generated with a convex combination of the other domai ns still has a ‘+’ correlation between the
+color and label. In setting b , however, one can generate a domain with a ‘-’ correlation be tween color and
+label with a convex combination of the other domains. Thus, w e expect the empirical risk minimizer to give
+domain-general solutions in setting b but not in setting a.
+15We use Oracle model selection (held-out target data) to remo ve the eﬀect of model selection for all
+methods in the results. We ﬁnd that in setting a, where we add a domain (+70%), we observe that the
+generalization accuracy to the -90% domain is still very diﬀ erent from the other domains (Table 7).
+Table 7: ColoredMNIST setting a . Columns {+90%, +80%, +70%, -90%} indicate domains –
+{0.1,0.2,0.3,0.9}digit label and color correlation, respectively. We report domain accuracies over 3 tri-
+als each. We use the oracle selection method – held out target data.E\etest→etest.
+Algorithm +90% +80% +70% -90%
+ERM 72.8±0.3 74.7±0.3 73.3±0.1 16.3±1.5
+IRM 49.0±0.1 54.2±2.0 50.3±0.3 43.8±2.8
+GroupDRO 71.0±0.6 72.2±0.3 70.7±0.9 36.4±4.2
+VREx 74.1±1.3 72.6±0.5 72.1±0.5 19.5±5.5
+TCRI_HSIC 72.1±1.5 73.6±0.4 72.6±0.4 49.9±0.3
+However, in setting b, where we add a domain (-80%), we observ e that the generalization accuracy to
+the -90% domain is on par with the other domains (Table 8).
+Table 8: ColoredMNIST setting b . Columns {+90%, +80%, -80%, -90%} indicate domains –
+{0.1,0.2,0.8,0.9}digit label and color correlation, respectively. We report the average domain accuracies
+over 3 trials each. We use the oracle selection method – held o ut target data.E\etest→etest.
+Algorithm +90% +80% -80% -90%
+ERM 58.4±1.3 67.0±0.5 64.2±2.0 52.6±3.2
+IRM 56.7±3.3 56.6±2.8 51.6±0.7 51.7±0.7
+GroupDRO 69.7±0.8 71.7±0.3 72.0±0.2 71.4±1.9
+VREx 67.4±1.9 70.4±0.1 71.2±0.2 59.4±4.3
+TCRI_HSIC 62.2±4.4 70.0±1.3 67.9±1.4 65.4±2.8
+This illustrates the challenge of accurately evaluating an algorithm’s ability to give domain-general pre-
+dictions. We note that it is generally diﬃcult to distinguis h between setting a andsetting b . The pri-
+mary signature we see is some consistency between the empiri cal risk minimizer and the other baselines.
+Gulrajani and Lopez-Paz [2020] observe a similar trend for standard benchmarks for domain generalization.
+Hence, we focus our empirical evaluations in this work on set tings where we know that the ERM solution
+fails by design.
+A.2 ColoredMNIST
+ColoredMNIST: The ColoredMNIST dataset [ Arjovsky et al. ,2019] is composed of 7000(2×28×28,1) images
+of a hand-written digit and binary-label pairs. There are th ree domains with diﬀerent correlations between
+image color and label, i.e., the image color is spuriously re lated to the label by assigning a color to each of the
+two classes (0: digits 0-4, 1: digits 5-9). The color is then ﬂ ipped with probabilities {0.1,0.2,0.9}to create
+three domains, making the color-label relationship domain -speciﬁc because it changes across domains. There
+is also label ﬂip noise of 0.25, so we expect that the best accuracy a domain-general model c an achieve is
+75%, while a non-domain general model can achieve higher. In this dataset, Zdgcorresponds to the original
+image,Zsputhe color, ethe label-color correlation, Ythe image label, and Xthe observed colored image.
+This DAG follows the generative process of Figure 2a
+We use MNIST-ConvNet [ Gulrajani and Lopez-Paz ,2020] backbones for the MNIST datasets (Table 10).
+BothΦdgandΦspuare linear layers of size 128×128that are appended to the backbone. The predictors
+(classiﬁcation hyperplanes) θc,{θ1, θ2}are also parameterized to be linear and appended to the ΦdgandΦ,
+respectively.
+We do a random search to select hyperparameters using the sam e scheme as Gulrajani and Lopez-Paz
+[2020] (https://github.com/facebookresearch/DomainBed ). We select 25 hyperparameters with 5 random
+restarts each to generate error bars.
+16Table 9: ColoredMNIST Hyperparameters. Additional hyperp arameters are provided in
+https://github.com/olawalesalaudeen/tcri .
+Algorithm Hyperparameter Default Random Distribution
+AllLearning Rate 1−310Uniform (−4.5,−2.5)
+Batch Size 64 2Uniform (3,9)
+TCRIβpenalty weight 100 10Uniform(−1,5)
+annealing steps 500 10Uniform(2.5,5)
+Table 10: MNIST ConvNet architecture. All convolutions use 3×3 kernels and "same" padding.
+# Layer
+1 Conv2D (in=d, out=64)
+2 ReLU
+3 GroupNorm (groups=8)
+4Conv2D (in=64, out=128, stride=2)
+5 ReLU
+6 GroupNorm (groups=8)
+7 Conv2D (in=128, out=128)
+8 ReLU
+9 GroupNorm (groups=8)
+10 Conv2D (in=128, out=128)
+11 ReLU
+12 GroupNorm (8 groups)
+13 Global average-pooling
+We show transfer accuracies with both source and target doma in validation for model selection in Tables
+11-12. We ﬁnd that TCRI outperforms all baselines in average and wo rst-case accuracy.
+Table 11: ColoredMNIST Transfer Accuracy – model selection on held-out source validation set. Columns
+{+90%, +80%, -90%} indicate domains – {0.1,0.2,0.9}digit label and color correlation, respectively.
+E\etest→etest.
+Domains Domain Accuracy Statistics
+Algorithm +90% +80% -90% Avg Std Min
+ERM 71.6±0.3 73.1±0.1 10.0±0.1 51.6±0.1 29.4±0.1 10.0±0.1
+IRM 72.1±0.1 73.0±0.3 9.9±0.1 51.7±0.1 29.5±0.1 9.9±0.1
+GroupDRO 72.6±0.2 73.4±0.2 9.9±0.1 52.0±0.1 29.8±0.1 9.9±0.1
+VREx 72.2±0.2 72.7±0.3 10.2±0.0 51.7±0.2 29.3±0.1 10.2±0.0
+IB_ERM 71.0±0.4 73.4±0.3 10.0±0.1 51.5±0.2 29.4±0.1 10.0±0.1
+IB_IRM 71.7±0.2 73.4±0.1 9.9±0.0 51.7±0.0 29.5±0.0 9.9±0.0
+TCRI_HSIC 67.2±2.3 65.6±3.4 45.9±6.959.6±1.8 11.4±3.3 45.1±6.7
+A.3 Spurrious PACS
+Spurious–PACS. Variables. X: images, Y: non-urban (elephant, giraﬀe, horse) vs. urban (dog, guita r,
+house, person). Domains. {{cartoon, art painting}, {art painting, cartoon}, {photo }} [Li et al. ,2017]. The
+photo domain is the same as in the original dataset. In the {ca rtoon, art painting} domain, urban examples
+are selected from the original cartoon domain, while non-ur ban examples are selected from the original art
+painting domain. In the {art painting, cartoon} domain, urb an examples are selected from the original art
+painting domain, while non-urban examples are selected fro m the original cartoon domain. This sampling
+encourages the model to use spurious correlations (domain- related information) to predict the labels; however,
+since these relationships are ﬂipped between domains {{car toon, art painting} and {art painting, cartoon},
+17Table 12: Oracle ColoredMNIST Transfer Accuracy – model sel ection on held-out target validation set
+accuracy. Columns {+90%, +80%, -90%} indicate domains – {0.1,0.2,0.9}digit label and color correlation,
+respectively.E\etest→etest.
+ColoredMNIST Spurious PACS Terra Incognita
+Algorithm average worst-case average worst-case average worst-case
+ERM 57.8±0.2 38.4±1.4 59.2±1.3 38.4±1.452.9±0.8 42.0±0.6
+IRM 68.9±1.6 62.0±4.9 67.5±5.8 53.9±6.6 42.6±4.0 42.7±1.2
+GroupDRO 61.1±1.3 37.6±3.6 61.8±1.8 40.0±1.6 50.7±1.0 42.7±1.2
+VREx 68.0±2.5 59.4±7.3 62.8±2.4 38.7±0.9 43.2±2.0 34.9±4.2
+IB_ERM 65.0±0.1 50.6±0.3 67.3±3.7 53.1±8.0 49.0±0.3 39.9±0.8
+IB_IRM 68.4±1.0 58.5±2.8 69.0±1.362.3±0.3 32.8±6.6 20.4±7.5
+TCRI_HSIC 70.4±0.465.7±1.569.5±1.162.3±0.2 51.2±0.143.0±0.4
+these predictions will be wrong when generalized to other do mains.
+Table 13: Spurrious PACS Hyperparameters. Additional hype rparameters provided in
+https://github.com/olawalesalaudeen/tcri .
+Algorithm Hyperparameter Default Range
+AllLearning Rate 1−310Uniform (−4.5,−2.5)
+Batch Size 64 2Uniform (3,9)
+TCRIβpenalty weight 100 10Uniform(−1,5)
+annealing steps 500 10Uniform(2.5,5)
+We use a ResNet-50 backbone [ He et al. ,2016].ΦdgandΦspuare linear layers of size 2048×2048that
+are appended to the backbone. The predictors (classiﬁcatio n hyperplanes) θc,{θ1,θ2,θ3}are linear and
+appended to ΦdgandΦlayers, respectively.
+Hyperparameters: We do a random search to select hyperparameters using the sam e scheme as Gulrajani and Lopez-Paz
+[2020] (https://github.com/facebookresearch/DomainBed ). We select 5 hyperparameters with 3 random
+restarts each to generate error bars.
+We show transfer accuracies with both source and target doma in validation for model selection in Tables
+14-15. We ﬁnd that TCRI outperforms all baselines in average and wo rst-case accuracy.
+Table 14: Spurious–PACS Transfer Accuracy – model selectio n on held-out source validation set. E\etest→
+etest.
+Domains Domain Accuracy Statistics
+Algorithm C x A A x C P mean std min
+ERM 31.2±1.3 42.8±0.7 97.6±0.2 57.2±0.7 29.0±0.4 31.2±1.3
+IRM 30.3±0.3 39.0±1.3 94.9±1.4 54.7±0.8 28.6±0.8 30.3±0.3
+GroupDRO 37.7±0.7 42.1±1.6 95.7±0.5 58.5±0.4 26.4±0.3 37.7±0.
+VREx 37.5±1.1 43.0±0.5 95.7±1.5 58.8±0.4 26.2±1.0 37.5±1.1
+IB_ERM 35.5±0.4 48.6±3.3 84.8±0.6 56.3±1.1 20.8±0.6 35.5±0.4
+IB_IRM 33.8±2.2 38.8±3.0 95.1±1.5 55.9±1.2 27.8±1.5 33.8±0.4
+TCRI_HSIC 62.8±0.1 62.3±0.2 65.0±0.463.4±0.2 1.2±0.2 62.3±0.2
+18Table 15: Oracle Spurious–PACS Transfer Accuracy – model se lection on held-out target validation set.
+E\etest→etest.
+Domains Domain Accuracy Statistics
+Algorithm C x A A x C P mean std min
+ERM 38.4±1.4 43.4±1.9 95.9±0.6 59.2 26.0 38.4
+IRM 62.8±0.1 53.9±6.6 85.8±8.2 67.5 13.4 53.9
+GroupDRO 40.0±1.6 49.7±2.9 95.7±0.6 61.8 24.3 40.0
+VREx 55.8±5.5 38.7±0.9 93.8±0.8 62.8 23.0 38.7
+IB_ERM 53.1±8.0 55.4±5.7 93.5±1.8 67.3 18.5 53.1
+IB_IRM 62.8±0.1 62.3±0.3 81.8±7.0 69.0 9.1 62.3
+TCRI_HSIC 64.0±0.7 62.3±0.2 82.4±5.7 69.5 9.1 62.3
+A.4 Terra Incognita
+The Terra Incognita dataset contains subsets of the Caltech Camera Traps dataset [ Beery et al. ,2018] deﬁned
+by [Gulrajani and Lopez-Paz ,2020]. Four domains represent diﬀerent locations {L100, L38, L4 3, L46} of
+cameras in the American Southwest. There are 10 diﬀerent spe cies of wild animals {bird, bobcat, cat, coyote,
+dog, empty, opossum, rabbit, raccoon, squirrel} (classes) to be predicted. Like Ahuja et al. [2021], we classify
+this dataset as following the generative process in Figure 2c, the Fully Informative Invariant Features (FIIF)
+setting.
+Table 16: Terra Incognita Hyperparameters. Additional hyp erparameters provided in
+https://github.com/olawalesalaudeen/tcri .
+Algorithm Hyperparameter Default Range
+AllLearning Rate 1−310Uniform (−4.5,−2.5)
+Batch Size 64 2Uniform (3,9)
+TCRIβpenalty weight 100 10Uniform(−1,5)
+annealing steps 500 10Uniform(0,4)
+We use a ResNet-50 backbone [ He et al. ,2016].ΦdgandΦspuare linear layers of size 2048×2048that
+are appended to the backbone. The predictors (classiﬁcatio n hyperplanes) θc,{θ1,θ2,θ3,θ4}are linear and
+appended to ΦdgandΦlayers, respectively.
+Hyperparameters: We do a random search to select hyperparameters using the sam e scheme as Gulrajani and Lopez-Paz
+[2020] (https://github.com/facebookresearch/DomainBed ). We select 5 hyperparameters with 3 random
+restarts each to generate error bars.
+We show transfer accuracies with both source and target doma in validation for model selection in Tables
+17-18. We ﬁnd that TCRI outperforms all baselines except ERM on ave rage and outperforms all baselines
+in worst-case accuracy.
+19Table 17: Terra Incognita Transfer Accuracy – model selecti on on held-out source validation set. E\etest→
+etest.
+Domains Domain Accuracy Statistics
+Algorithm L100 L38 L43 L46 Avg Std Min
+ERM 43.6±3.9 45.2±0.6 53.0±1.2 35.1±2.8 44.2±1.8 6.8±1.0 35.1±2.8
+IRM 43.9±3.3 35.7±4.0 37.7±7.8 38.3±2.4 38.9±3.75.4±1.8 32.6±4.7
+GroupDRO 53.8±4.6 40.5±0.7 55.3±1.5 41.8±1.1 47.8±0.9 7.7±0.9 39.9±0.7
+VREx 48.8±2.0 38.1±1.3 54.4±0.6 39.0±1.4 45.1±0.4 7.0±0.9 38.1±1.3
+IB_ERM 46.1±4.5 40.7±0.7 55.2±0.8 42.2±1.1 46.0±1.4 6.4±0.8 39.3±1.1
+IB_IRM 39.7±7.3 40.8±2.3 34.7±4.3 32.9±2.6 37.0±2.8 6.7±1.3 29.6±4.1
+TCRI_HSIC 54.6±2.4 48.6±2.0 53.2±1.0 40.4±1.649.2±0.3 6.1±1.140.4±1.6
+Table 18: Oracle Terra Incognita Transfer Accuracy – model s election on held-out target validation set.
+E\etest→etest.
+Domains Domain Accuracy Statistics
+Algorithm L100 L38 L43 L46 Avg Std Min
+ERM 58.5±1.8 52.0±1.3 59.2±0.2 42.0±0.652.9±0.8 7.0±0.5 42.0±0.6
+IRM 53.0±0.9 48.0±1.8 36.3±9.6 33.2±3.9 42.6±4.0 9.6±1.7 30.8±5.4
+GroupDRO 56.2±3.0 45.2±2.3 58.0±0.2 43.3±0.7 50.7±1.0 6.9±0.9 42.7±1.2
+VREx 43.2±1.5 49.3±1.2 41.5±7.8 38.9±1.1 43.2±2.0 6.5±1.8 34.9±4.2
+IB_ERM 55.6±1.7 47.2±1.1 53.4±0.7 39.9±0.8 49.0±0.3 6.4±0.5 39.9±0.8
+IB_IRM 40.2±8.2 31.9±11.8 29.4±4.4 29.7±3.8 32.8±6.6 8.2±1.0 20.4±7.5
+TCRI_HSIC 57.7±1.8 50.1±1.8 54.1±0.6 43.0±0.4 51.2±0.15.8±0.7 43.0±0.4
+B DAGs
+e Zdg
+ZspuY
+X
+Figure 4: Partial Ancestral Graph (PAG). Dashed edges indic ate that the edge may or may not exist. The
+combination of Y→Zdg→Zspu, andY→Zdg,e→Zdgis not allowed.
+B.1 On Valid DAGS:
+We consider other edges that could be introduced to Figure 4whereZdg/\e}atio\slash⊥⊥Zspu|Y,e,Zspu/\e}atio\slash⊥⊥Y|Zdg, or
+are not included in Figure 5. We then show that these edges either make the problem intrac table or require
+new assumptions about the generative process – note we do not discuss edges that induce a cycle, thus, are
+invalid.
+(i)e−Y: we cannot have a direct edge in either direction ebetween Yotherwise, Yis always dependent
+oneand the problem becomes intractable.
+(ii)e−X: we cannot have a direct edge from e−Xwithout making additional parametric assumptions
+about the role of einΓ(Zdg,Zspu,e).
+(iii)Zspu→Y: we cannot have both Zdg→YandZspu→Y, since then, both mechanisms are domain
+general. WLOG, we let Zspudenote the features that never have domain-general mechani sms toY.
+20(iv)Y→Zdg→ZspuandY→Zdg←e: conditioning on Zdgand/orZspumakeYdependent on e, soY
+is always dependent on eand the problem becomes intractable.
+e Zdg
+ZspuY
+X
+(a)e Zdg
+ZspuY
+X
+(b)e Zdg
+ZspuY
+X
+(c)
+Figure 5: Generative Processes. Graphical model depicting the structure of our data-genera ting process -
+shaded nodes indicate observed variables. Xrepresents the observed features, Yrepresents observed targets,
+anderepresents domain inﬂuences. There is an explicit separati on of domain-general Zdgand domain-
+speciﬁcZspufeatures combined to generate observed X. Dashed edges indicate the possibility of an edge.
+Table 19: Generative Processes and Suﬃcient Conditions for Domain-Generality
+Graphs in Figure 5
+(a) (b) (c)
+Zdg⊥⊥Zspu|{Y,e} ✓ ✓ ✗
+Identifying Zdgis necessary ✓ ✓ ✗
+Table 20: Generative Processes and Suﬃcient Algorithms
+Graphs in Figure 5
+(a) (b) (c)
+Solved by ERM ✗ ✗ ✓
+Solved by TCRI ✓ ✓ ✓
+B.2 Fully Informative Invariant Features
+We brieﬂy summarize Ahuja et al. [2021]’s results on minimax-optimality of Empirical Risk Minimi zation in
+the Fully Informative Invariant Features setting (their Le mma 4). First, we informally state their assump-
+tions.
+Assumption 2: Linear structural equation model.
+Assumption 3-4: Bounded Features.
+Assumption 8: wdgpartitionsZup to noise ηY.
+These assumptions are implied by our Assumption 4.1.
+B.2.1 Proof Suﬃciency of ERM [ Ahuja et al. ,2021]
+If Assumptions 2, 4, and 8 hold, then there exists a classiﬁer that puts a non-zero weight on the spurious
+feature and continues to be Bayes optimal in all the training environments.
+21Proof. Choose an arbitrary non-zero vector and derive a bound on the margin of ( wdg, γ), where wdgis
+the true (optimal) linear predictor of YfromZdg. Recall domain-general and domain-speciﬁc features
+zdg∈Zdg, zspu∈Zspu, respectively. Let y∗= sign(wdg·zdg). The margin of ( wdg, γ)) at point (zdg, zspu)
+with respect to y∗is deﬁned as:
+y∗(wdg·zdg)+y∗(γ·zspu).
+Using Cauchy-Schwartz inequality, we get
+|y∗(γ·zspu)|=|γ·zspu|≤/bardbl/bardblγ/bardblzspu/bardbl.
+SinceZspuis bounded, one can set γsuﬃciently small enough to control y∗(γ·Zspu). If/bardblγ/bardbl≤c
+2zsup, then
+|γ·zspu|≤c
+2, wherezsupsatisﬁes that/bardblz/bardbl≤zsup∀z∈Zspu. From Assumption 8, ∃c >0s.t.,
+y∗(wdg·zdg)≥c.
+Using|γ·zspu|≤c
+2, the margin becomes
+y∗(wdg·zdg)+y∗(γ·zspu)≥c−|γ·zspu|≥c
+2.
+From the above equation, it follows that sign/parenleftbig
+(wdg,γ)·(zdg,zspu)/parenrightbig
+= sign/parenleftbig
+(wdg,0)·(zdg,zspu)/parenrightbig
+∀zdg∈
+Zdg, zspu∈Zspu.
+Now, this condition is used to compute the error of a spurious classiﬁer, i.e., based on (,γ). Deﬁne
+gspu=I◦(wdg,γ)◦Γ−1, whereI(·)is an indicator function that returns 1 if its input is ≥0. The error
+achieved by gspuis
+Re(gspu) =E/bracketleftbig
+Ye⊕I((wdg,γ)·(zdg,zspu)/bracketrightbig
+=E/bracketleftBig
+I/parenleftbig
+(wdg,0)·(zdg,zspu)/parenrightbig
+⊕ηy⊕I/parenleftbig
+(wdg,γ)·(zdg,zspu)/parenrightbig/bracketrightBig
+=E[ηy].
+The error achieved by gspuis then due to the noise in observed Yand is, therefore, optimal in all
+domains.
+It follows from above that since gspuis Bayes optimal in every domain, it is also the empirical ris k
+minimizer (ERM) as it minimizes the sum of risks across train ing domains.
+C Proof of Proposition 4.5
+Assume that Φdg(X)andΦspu(X)are correlated with Y. Given Assumptions 4.1-4.2and a representation
+Φ = Φ dg⊕Φsputhat satisﬁes TIC, Φdg(X) =Zdg⇐⇒Φsatisﬁes TCRI.
+Proof. ‘only if’. Assume that Φdg(X) =Zdg. By the Total Information Criterion, we have that Φspu(X) =
+Zspu. We observe the following paths from ZdgtoZspu: (i)Zdg→Y→Zspu, (ii)Zdg←e→Zspu, and
+(iii)Zdg→X→Zspu. Conditioning on Y,eblocks both paths (i) and path (ii); path (iii) contains a col lider
+(ZdgandZspuare common causes of X), so this path is blocked when Xis not in the conditioning set. So,
+Zspu⊥⊥Zdg|Y,eand therefore Φdg(X)⊥⊥Φspu(X)|Y,e, which completes this direction.
+‘if’. Assume that Φsatisﬁes TCRI. We proceed by contradiction. Let Φ = [Φ dg;Φspu]. We consider the
+following scenario for Φdg/\e}atio\slash=Zdg.
+Scenario 1 (causal aggregation) : Assume that Φdg(X)⊂Zdg. From TIC, we have that Z†
+dg⊂Φspu(X),
+whereZ†
+dg⊂Zdgis the subset of Zdgnot captured by Φdg. SinceΦdg(X)andZ†
+dgare colliders on Y, given
+both are subsets of Zdg,Φdg(X)/\e}atio\slash⊥⊥Φspu(X)|Y,e, violating TCRI and giving a contradiction. So, Zdg⊂Φ(X)
+Scenario 2 (anticausal exclusion) : Assume that Φdg(X)⊂Zspu. From TIC, we have that Z†
+spu⊂Φspu(X),
+whereZ†
+spu⊂Zspuis the subset of Zspunot captured by Φdg. From Assumption 4.2(faithfulness), we have
+thatΦdg(X)/\e}atio\slash⊥⊥Φspu(X)|Y,e, violating TCRI and giving a contradiction. So, Zspu/\e}atio\slash⊂Φdg(X).
+Combining scenarios 1-2, it follows that Φdg(X) =Zdg.
+22

@@ -2199,9 +2199,9 @@ use Lemma A.2 and get the corresponding HT-type estimator. Since we have that
 
 ˆGClb,1 − ˆN −1
 
-Clb,0
-
 Clb,1
+
+Clb,0
 
 E
 

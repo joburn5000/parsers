@@ -1,0 +1,125 @@
+                                                    1  ... Unnamed: 1
+0                                                   2  ...        NaN
+1                                                   3  ...        NaN
+2                                                 NaN  ...        NaN
+3                                                 NaN  ...        NaN
+4                                                   4  ...        NaN
+5                                                   5  ...        NaN
+6                                                   6  ...        NaN
+7   NUMBER OF\rSHARES\rBENEFICIALLY\rOWNED BY EACH...  ...        NaN
+8                                                 NaN  ...        NaN
+9                                                 NaN  ...        NaN
+10                                                NaN  ...        NaN
+11                                                 11  ...        NaN
+12                                                 12  ...        NaN
+13                                                 13  ...        NaN
+14                                                 14  ...        NaN
+
+[15 rows x 4 columns]                                                    1  ... Unnamed: 1
+0                                                   2  ...        NaN
+1                                                   3  ...        NaN
+2                                                 NaN  ...        NaN
+3                                                 NaN  ...        NaN
+4                                                   4  ...        NaN
+5                                                   5  ...        NaN
+6                                                   6  ...        NaN
+7   NUMBER OF\rSHARES\rBENEFICIALLY\rOWNED BY EACH...  ...        NaN
+8                                                 NaN  ...        NaN
+9                                                 NaN  ...        NaN
+10                                                NaN  ...        NaN
+11                                                 11  ...        NaN
+12                                                 12  ...        NaN
+13                                                 13  ...        NaN
+14                                                 14  ...        NaN
+
+[15 rows x 4 columns]   99.1                             Joint Filing Agreement
+0   NaN                                                NaN
+1  99.2                          Limited Power of Attorney
+2   NaN                                                NaN
+3  99.3        Voting Trust Agreement dated April 17, 2024
+4   NaN                                                NaN
+5  99.4  RVMTP Shares Purchase Agreement dated April 17...   99.1                             Joint Filing Agreement
+0   NaN                                                NaN
+1  99.2                          Limited Power of Attorney
+2   NaN                                                NaN
+3  99.3        Voting Trust Agreement dated April 17, 2024
+4   NaN                                                NaN
+5  99.4  RVMTP Shares Purchase Agreement dated April 17...Empty DataFrame
+Columns: [Brian T. Moynihan, Unnamed: 0, Chairman of the Board, Chief Executive Officerand Director, Unnamed: 1, Chairman of the Board and Chief Executive Officer of Bank of AmericaCorporation]
+Index: []Empty DataFrame
+Columns: [Paul M. Donofrio, Unnamed: 0, Vice Chair, Unnamed: 1, Vice Chair of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [Thong M. Nguyen, Unnamed: 0, Vice Chair, Head of Global Strategy &Enterprise Platforms, Unnamed: 1, Vice Chair, Head of Global Strategy & Enterprise Platforms of Bank ofAmerica Corporation]
+Index: []Empty DataFrame
+Columns: [Catherine P. Bessant, Unnamed: 0, Vice Chair, Global Strategy, Unnamed: 1, Vice Chair, Global Strategy of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [Bruce R. Thompson, Unnamed: 0, Vice Chair, Head of Enterprise Credit, Unnamed: 1, Vice Chair, Head of Enterprise Credit of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [Dean C. Athanasia, Unnamed: 0, President, Regional Banking, Unnamed: 1, President, Regional Banking of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [James P. DeMare, Unnamed: 0, President, Global Markets, Unnamed: 1, President, Global Markets of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [Kathleen A. Knox, Unnamed: 0, President, The Private Bank, Unnamed: 1, President, The Private Bank of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [Matthew M. Koder, Unnamed: 0, President, Global Corporate and InvestmentBanking, Unnamed: 1, President, Global Corporate and Investment Banking of Bank of AmericaCorporation]
+Index: []Empty DataFrame
+Columns: [Bernard A. Mensah, Unnamed: 0, President, International; CEO, Merrill LynchInternational, Unnamed: 1, President, International of Bank of America Corporation and CEO, MerrillLynch International]
+Index: []Empty DataFrame
+Columns: [Lindsay DeNardo Hans, Unnamed: 0, President, Co-Head Merrill Wealth Management, Unnamed: 1, President, Co-Head Merrill Wealth Management of Bank of AmericaCorporation]
+Index: []Empty DataFrame
+Columns: [Eric Schimpf, Unnamed: 0, President, Co-Head Merrill Wealth Management, Unnamed: 1, President, Co-Head Merrill Wealth Management of Bank of AmericaCorporation]
+Index: []Empty DataFrame
+Columns: [Aditya Bhasin, Unnamed: 0, Chief Technology and Information Officer, Unnamed: 1, Chief Technology and Information Officer of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [D. Steve Boland, Unnamed: 0, Chief Administrative Officer, Unnamed: 1, Chief Administrative Officer of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [lastair Borthwick, Unnamed: 0, Chief Financial Officer, Unnamed: 1, Chief Financial Officer of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [heri Bronstein, Unnamed: 0, Chief Human Resources Officer, Unnamed: 1, Chief Human Resources Officer of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [eoffrey Greener, Unnamed: 0, Chief Risk Officer, Unnamed: 1, Chief Risk Officer of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [homas M. Scrivener, Unnamed: 0, Chief Operations Executive, Unnamed: 1, Chief Operations Executive of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [auren A. Mogensen, Unnamed: 0, Global General Counsel, Unnamed: 1, Global General Counsel of Bank of America Corporation]
+Index: []Empty DataFrame
+Columns: [ionel L. Nowell, III, Unnamed: 0, Lead Independent Director, Unnamed: 1, Lead Independent Director, Bank of America Corporation; Former SeniorVice President and Treasurer, PepsiCo, Inc.]
+Index: []Empty DataFrame
+Columns: [haron L. Allen, Unnamed: 0, Director, Unnamed: 1, Former Chairman of Deloitte LLP]
+Index: []Empty DataFrame
+Columns: [ose E. Almeida, Unnamed: 0, Director, Unnamed: 1, Chairman, President and Chief Executive Officer of Baxter InternationalInc.]
+Index: []Empty DataFrame
+Columns: [ierre J.P. de Weck1, Unnamed: 0, Director, Unnamed: 1, Former Chairman and Global Head of Private Wealth Management,Deutsche Bank AG]
+Index: []Empty DataFrame
+Columns: [rnold W. Donald, Unnamed: 0, Director, Unnamed: 1, Former President and Chief Executive Officer, Carnival Corporation &Carnival plc]
+Index: []Empty DataFrame
+Columns: [inda P. Hudson, Unnamed: 0, Director, Unnamed: 1, Former Executive Officer, The Cardea Group, LLC and Former Presidentand Chief Executive Officer of BAE Systems, Inc.]
+Index: []Empty DataFrame
+Columns: [onica C. Lozano, Unnamed: 0, Director, Unnamed: 1, Lead Independent Director, Target Corporation; Former Chief ExecutiveOfficer, Former College Futures Foundation and Former Chairman, USHispanic Media Inc.]
+Index: []Empty DataFrame
+Columns: [enise L. Ramos, Unnamed: 0, Director, Unnamed: 1, Former Chief Executive Officer and President of ITT Inc.]
+Index: []Empty DataFrame
+Columns: [layton S. Rose, Unnamed: 0, Director, Unnamed: 1, Baker Foundation Professor of Management Practice at Harvard BusinessSchool]
+Index: []Empty DataFrame
+Columns: [ichael D. White, Unnamed: 0, Director, Unnamed: 1, Former Chairman, President, and Chief Executive Officer of DIRECTV]
+Index: []Empty DataFrame
+Columns: [Thomas D. Woods2, Unnamed: 0, Director, Unnamed: 1, Former Vice Chairman and Senior Executive Vice President of CanadianImperial Bank of Commerce; Former Chairman, Hydro One Limited]
+Index: []Empty DataFrame
+Columns: [Maria T. Zuber, Unnamed: 0, Director, Unnamed: 1, Vice President for Research and E.A., Griswold Professor of Geophysics,MIT]
+Index: []Empty DataFrame
+Columns: [John J. Lawlor, Unnamed: 0, Director and President, Unnamed: 1, Managing Director, Municipal Markets and Public Sector BankingExecutive of BofA Securities, Inc. and Bank of America, NationalAssociation]
+Index: []Empty DataFrame
+Columns: [Edward H. Curland, Unnamed: 0, Director and Managing Director, Unnamed: 1, Managing Director, Municipal Markets Executive for Trading of BofASecurities, Inc. and Bank of America, National Association]
+Index: []Empty DataFrame
+Columns: [James Duffy, Unnamed: 0, Managing Director, Unnamed: 1, Director; MBAM BFO, The CFO Groupof  Bank of America, National Association]
+Index: []Empty DataFrame
+Columns: [Michael I. Jentis, Unnamed: 0, Managing Director, Unnamed: 1, Managing Director, Head of Sales – Public Finance of BofA Securities, Inc.and Bank of America, National Association]
+Index: []Empty DataFrame
+Columns: [Mona Payton, Unnamed: 0, Managing Director, Unnamed: 1, Managing Director, Municipal Markets Executive for Short-Term Tradingof BofA Securities, Inc. and Bank of America, National Association]
+Index: []Empty DataFrame
+Columns: [Edward J. Sisk, Unnamed: 0, Director and Managing Director, Unnamed: 1, Managing Director, Public Finance Executive of BofA Securities, Inc. andBank of America, National Association]
+Index: []Empty DataFrame
+Columns: [John B. Sprung, Unnamed: 0, Director, Unnamed: 1, Corporate Director]
+Index: []Empty DataFrame
+Columns: [David A. Stephens, Unnamed: 0, Director and Managing Director, Unnamed: 1, Managing Director, Executive for Public Finance and Public Sector CreditProducts of BofA Securities, Inc. and Bank of America, NationalAssociation]
+Index: []

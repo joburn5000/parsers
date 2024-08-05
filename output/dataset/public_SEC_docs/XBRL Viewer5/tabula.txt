@@ -1,0 +1,14 @@
+                                 Title of each class Trading Symbol(s) Name of each exchange on which registered
+0            Common Stock, par value $0.01 per share               BAC                   New York Stock Exchange
+1  Depositary Shares, each representing a 1/1,000...           BAC PrE                   New York Stock Exchange
+2                          Preferred Stock, Series E               NaN                                       NaN                                      April 24, 2024
+0                        BANK OF AMERICA CORPORATION
+1  (Exact name of registrant as specified in its ...
+2                                             1-6523
+3      corporation) (Commission File Number) (IRS Em
+4                             100 North Tryon Street
+5                    Charlotte, North Carolina 28255
+6           (Address of principal executive offices)
+7                                     (704) 386-5681
+8  (Registrant’s telephone number, including area...
+9                                     Not Applicable

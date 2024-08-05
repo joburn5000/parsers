@@ -1,0 +1,43 @@
+Inline XBRL HTML Form is over 7.5MB, performance may be affected. 
+Using Google Chrome  can help alleviate some of these performance issues. 
+UNITED STATES
+SECURITIES AND EXCHANGE COMMISSION
+Washington, D.C. 20549
+FORM 10-Q
+(Mark One)
+☑ QUARTERLY REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES
+EXCHANGE  ACT OF 1934
+For the Quarterly Period Ended Septembe r 30, 2023
+or
+☐ TRANSITION REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES
+EXCHANGE  ACT OF 1934
+For the transition period from          to
+Commission file number:
+1-6523
+Exact name of registrant as specified in its charter:
+Bank of America Corporation
+State or other jur isdiction of incorporation or organization:
+De laware
+IRS Employer Identification No.:
+56-0906609
+Address of principal executive offices:
+Bank of America Corporate Center
+100 N. Tryon Street
+Charlotte, North Carolina 28255
+Registrant’s telephone number, including area code:
+(704) 386-5681
+Former name, f ormer address and f ormer fiscal y ear , if c hanged since las t repor t:
+Securities registered pursua nt to Section 12(b) of the Act:
+Title of each class Trading Symbol(s) Name of each exchange on which registered
+Common Stock, par value $0.01 per sh are BAC New York Stock Exchange
+De positary Shares, each represe nting a 1/1,000th interest in a sh are BAC PrE New York Stock Exchange
+ of Floating Rate Non-Cumulative Preferre d Stock, Series E
+De positary Shares, each represe nting a 1/1,000th interest in a sh are BAC PrB New York Stock Exchange
+ of 6.000% Non-Cumulative Preferre d Stock, Series GG
+De positary Shares, each represe nting a 1/1,000th interest in a sh are BAC PrK New York Stock Exchange
+ of 5.875% Non-Cumulative Preferre d Stock, Series HH
+7.25% Non-Cumulative Perpetual Convertible Preferre d Stock, Series L BAC PrL New York Stock Exchange
+De positary Shares, each represe nting a 1/1,200th interest in a sh are BML PrG New York Stock Exchange
+of Bank of America Corporation Floating Rate
+Non-Cumulative Preferre d Stock, Series 14/28/24, 4:30 PM XBRL Viewer
+https://www.sec.gov/ix?doc=/Archives/edgar/data/70858/000007085823000272/bac-20230930.htm 1/1

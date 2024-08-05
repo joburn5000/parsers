@@ -1,0 +1,82 @@
+           { ca }u}sal {  Unnamed: 0                      Z   Y  ...  Unnamed: 10 Unnamed: 11      ,.1  Unnamed: 12
+0  SCM( ) :=          Ze         NaN   Zspu ← 〈wspu, Y 〉+ η    ...       dg( )Z         NaN  (3)espu            ,
+
+[1 rows x 31 columns]   Algorithm     average  worst-case   average.1 worst-case.1   average.2 worst-case.2
+0        ERM  51.6 ± 0.1  10.0 ± 0.1  57.2 ± 0.7   31.2 ± 1.3  44.2 ± 1.8   35.1 ± 2.8
+1        IRM  51.7 ± 0.1   9.9 ± 0.1  54.7 ± 0.8   30.3 ± 0.3  38.9 ± 3.7   32.6 ± 4.7
+2   GroupDRO  52.0 ± 0.1   9.9 ± 0.1  58.5 ± 0.4   37.7 ± 0.7  47.8 ± 0.9   39.9 ± 0.7
+3       VREx  51.7 ± 0.2  10.2 ± 0.0  58.8 ± 0.4   37.5 ± 1.1  45.1 ± 0.4   38.1 ± 1.3
+4     IB_ERM  51.5 ± 0.2  10.0 ± 0.1  56.3 ± 1.1   35.5 ± 0.4  46.0 ± 1.4   39.3 ± 1.1
+5     IB_IRM  51.7 ± 0.0   9.9 ± 0.0  55.9 ± 1.2   33.8 ± 2.2  37.0 ± 2.8   29.6 ± 4.1
+6  TCRI_HSIC  59.6 ± 1.8  45.1 ± 6.7  63.4 ± 0.2   62.3 ± 0.2  49.2 ± 0.3   40.4 ± 1.6  Test Domain  +90%  +80%  -90% +90%.1 +80%.1 -90%.1 +90%.2 +80%.2 -90%.2 +90%.3 +80%.3 -90%.3
+0  No DS clf.   NaN   NaN   NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN
+1        +90%  68.7  69.0  68.5      -   90.1    9.8      -   79.9   20.1      -   10.4   89.9
+2        +80%  63.1  62.4  64.4   76.3      -   24.3   70.0      -   30.4   24.5      -   76.3
+3        -90%  65.6  63.4  44.1   75.3   75.3      -   69.2   69.5      -   29.3   26.0      -   Algorithm     average  worst-case   average.1 worst-case.1   average.2 worst-case.2
+0        ERM  57.8 ± 0.2  38.4 ± 1.4  59.2 ± 1.3   38.4 ± 1.4  52.9 ± 0.8   42.0 ± 0.6
+1        IRM  68.9 ± 1.6  62.0 ± 4.9  67.5 ± 5.8   53.9 ± 6.6  42.6 ± 4.0   42.7 ± 1.2
+2   GroupDRO  61.1 ± 1.3  37.6 ± 3.6  61.8 ± 1.8   40.0 ± 1.6  50.7 ± 1.0   42.7 ± 1.2
+3       VREx  68.0 ± 2.5  59.4 ± 7.3  62.8 ± 2.4   38.7 ± 0.9  43.2 ± 2.0   34.9 ± 4.2
+4     IB_ERM  65.0 ± 0.1  50.6 ± 0.3  67.3 ± 3.7   53.1 ± 8.0  49.0 ± 0.3   39.9 ± 0.8
+5     IB_IRM  68.4 ± 1.0  58.5 ± 2.8  69.0 ± 1.3   62.3 ± 0.3  32.8 ± 6.6   20.4 ± 7.5
+6  TCRI_HSIC  70.4 ± 0.4  65.7 ± 1.5  69.5 ± 1.1   62.3 ± 0.2  51.2 ± 0.1   43.0 ± 0.4  Algorithm   Hyperparameter Default   Random Distribution
+0       NaN    Learning Rate     1−3  10Uniform(−4.5,−2.5)
+1       All              NaN     NaN                   NaN
+2       NaN       Batch Size      64         2Uniform(3,9)
+3       NaN   penalty weight     100      10Uniform(−1, 5)
+4    TCRI β              NaN     NaN                   NaN
+5       NaN  annealing steps     500     10Uniform(2.5, 5)     #                              Layer
+0    1              Conv2D (in=d, out=64)
+1    2                               ReLU
+2    3               GroupNorm (groups=8)
+3    4  Conv2D (in=64, out=128, stride=2)
+4    5                               ReLU
+5    6               GroupNorm (groups=8)
+6    7           Conv2D (in=128, out=128)
+7    8                               ReLU
+8    9               GroupNorm (groups=8)
+9   10           Conv2D (in=128, out=128)
+10  11                               ReLU
+11  12               GroupNorm (8 groups)
+12  13             Global average-pooling   Algorithm        +90%        +80%        -90%         Avg         Std         Min
+0        ERM  71.6 ± 0.3  73.1 ± 0.1  10.0 ± 0.1  51.6 ± 0.1  29.4 ± 0.1  10.0 ± 0.1
+1        IRM  72.1 ± 0.1  73.0 ± 0.3   9.9 ± 0.1  51.7 ± 0.1  29.5 ± 0.1   9.9 ± 0.1
+2   GroupDRO  72.6 ± 0.2  73.4 ± 0.2   9.9 ± 0.1  52.0 ± 0.1  29.8 ± 0.1   9.9 ± 0.1
+3       VREx  72.2 ± 0.2  72.7 ± 0.3  10.2 ± 0.0  51.7 ± 0.2  29.3 ± 0.1  10.2 ± 0.0
+4     IB_ERM  71.0 ± 0.4  73.4 ± 0.3  10.0 ± 0.1  51.5 ± 0.2  29.4 ± 0.1  10.0 ± 0.1
+5     IB_IRM  71.7 ± 0.2  73.4 ± 0.1   9.9 ± 0.0  51.7 ± 0.0  29.5 ± 0.0   9.9 ± 0.0
+6  TCRI_HSIC  67.2 ± 2.3  65.6 ± 3.4  45.9 ± 6.9  59.6 ± 1.8  11.4 ± 3.3  45.1 ± 6.7   Algorithm     average  worst-case   average.1 worst-case.1   average.2 worst-case.2
+0        ERM  57.8 ± 0.2  38.4 ± 1.4  59.2 ± 1.3   38.4 ± 1.4  52.9 ± 0.8   42.0 ± 0.6
+1        IRM  68.9 ± 1.6  62.0 ± 4.9  67.5 ± 5.8   53.9 ± 6.6  42.6 ± 4.0   42.7 ± 1.2
+2   GroupDRO  61.1 ± 1.3  37.6 ± 3.6  61.8 ± 1.8   40.0 ± 1.6  50.7 ± 1.0   42.7 ± 1.2
+3       VREx  68.0 ± 2.5  59.4 ± 7.3  62.8 ± 2.4   38.7 ± 0.9  43.2 ± 2.0   34.9 ± 4.2
+4     IB_ERM  65.0 ± 0.1  50.6 ± 0.3  67.3 ± 3.7   53.1 ± 8.0  49.0 ± 0.3   39.9 ± 0.8
+5     IB_IRM  68.4 ± 1.0  58.5 ± 2.8  69.0 ± 1.3   62.3 ± 0.3  32.8 ± 6.6   20.4 ± 7.5
+6  TCRI_HSIC  70.4 ± 0.4  65.7 ± 1.5  69.5 ± 1.1   62.3 ± 0.2  51.2 ± 0.1   43.0 ± 0.4   Algorithm       C x A       A x C           P        mean         std         min
+0        ERM  31.2 ± 1.3  42.8 ± 0.7  97.6 ± 0.2  57.2 ± 0.7  29.0 ± 0.4  31.2 ± 1.3
+1        IRM  30.3 ± 0.3  39.0 ± 1.3  94.9 ± 1.4  54.7 ± 0.8  28.6 ± 0.8  30.3 ± 0.3
+2   GroupDRO  37.7 ± 0.7  42.1 ± 1.6  95.7 ± 0.5  58.5 ± 0.4  26.4 ± 0.3   37.7 ± 0.
+3       VREx  37.5 ± 1.1  43.0 ± 0.5  95.7 ± 1.5  58.8 ± 0.4  26.2 ± 1.0  37.5 ± 1.1
+4     IB_ERM  35.5 ± 0.4  48.6 ± 3.3  84.8 ± 0.6  56.3 ± 1.1  20.8 ± 0.6  35.5 ± 0.4
+5     IB_IRM  33.8 ± 2.2  38.8 ± 3.0  95.1 ± 1.5  55.9 ± 1.2  27.8 ± 1.5  33.8 ± 0.4
+6  TCRI_HSIC  62.8 ± 0.1  62.3 ± 0.2  65.0 ± 0.4  63.4 ± 0.2    1.2± 0.2  62.3 ± 0.2  Algorithm   Hyperparameter Default                 Range
+0       NaN    Learning Rate     1−3  10Uniform(−4.5,−2.5)
+1       All              NaN     NaN                   NaN
+2       NaN       Batch Size      64         2Uniform(3,9)
+3       NaN   penalty weight     100      10Uniform(−1, 5)
+4    TCRI β              NaN     NaN                   NaN
+5       NaN  annealing steps     500     10Uniform(2.5, 5)  Unnamed: 0     Domains  Unnamed: 1 Domain Accuracy Statistics Unnamed: 2
+0  Algorithm       C x A       A x C                 P mean std        min
+1        ERM  38.4 ± 1.4  43.4 ± 1.9       95.9 ± 0.6 59.2 26.0       38.4
+2        IRM  62.8 ± 0.1  53.9 ± 6.6       85.8 ± 8.2 67.5 13.4       53.9
+3   GroupDRO  40.0 ± 1.6  49.7 ± 2.9       95.7 ± 0.6 61.8 24.3       40.0
+4       VREx  55.8 ± 5.5  38.7 ± 0.9       93.8 ± 0.8 62.8 23.0       38.7
+5     IB_ERM  53.1 ± 8.0  55.4 ± 5.7       93.5 ± 1.8 67.3 18.5       53.1
+6     IB_IRM  62.8 ± 0.1  62.3 ± 0.3        81.8 ± 7.0 69.0 9.1       62.3
+7  TCRI_HSIC  64.0 ± 0.7  62.3 ± 0.2        82.4 ± 5.7 69.5 9.1       62.3  Algorithm   Hyperparameter Default                 Range
+0       NaN    Learning Rate     1−3  10Uniform(−4.5,−2.5)
+1       All              NaN     NaN                   NaN
+2       NaN       Batch Size      64         2Uniform(3,9)
+3       NaN   penalty weight     100      10Uniform(−1, 5)
+4    TCRI β              NaN     NaN                   NaN
+5       NaN  annealing steps     500       10Uniform(0, 4)

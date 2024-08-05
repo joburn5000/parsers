@@ -1,0 +1,2814 @@
+4
+2
+0
+2
+
+r
+p
+A
+5
+2
+
+]
+L
+M
+
+.
+t
+a
+t
+s
+[
+
+1
+v
+8
+2
+3
+6
+1
+.
+4
+0
+4
+2
+:
+v
+i
+X
+r
+a
+
+Distributionally Robust Safe Screening
+
+Hiroyuki Hanada∗†
+
+Satoshi Akahane‡
+
+Tatsuya Aoyama‡
+
+Tomonari Tanaka‡
+
+Yoshito Okura‡
+
+Yu Inatsu§
+
+Noriaki Hashimoto∗
+
+Taro Murayama¶
+
+Lee Hanju¶
+
+Shinya Kojima¶
+
+Ichiro Takeuchi‡∗‖
+
+April 26, 2024
+
+Abstract
+
+1
+
+Introduction
+
+In this study, we propose a method Distributionally
+Robust Safe Screening (DRSS), for identifying unnec-
+essary samples and features within a DR covariate
+shift setting. This method effectively combines DR
+learning, a paradigm aimed at enhancing model ro-
+bustness against variations in data distribution, with
+safe screening (SS), a sparse optimization technique
+designed to identify irrelevant samples and features
+prior to model training. The core concept of the DRSS
+method involves reformulating the DR covariate-shift
+problem as a weighted empirical risk minimization
+problem, where the weights are subject to uncertainty
+within a predetermined range. By extending the SS
+technique to accommodate this weight uncertainty,
+the DRSS method is capable of reliably identifying
+unnecessary samples and features under any future
+distribution within a specified range. We provide a
+theoretical guarantee of the DRSS method and vali-
+date its performance through numerical experiments
+on both synthetic and real-world datasets.
+
+∗RIKEN, Wako, Saitama, Japan
+†hiroyuki.hanada@riken.jp
+‡Nagoya University, Nagoya, Aichi, Japan
+§Nagoya Institute of Technology, Nagoya, Aichi, Japan
+¶DENSO CORPORATION, Kariya, Aichi, Japan
+‖ichiro.takeuchi@mae.nagoya-u.ac.jp
+
+1
+
+In this study, we consider the problem of identi-
+fying unnecessary samples and features in a class
+of supervised learning problems within dynamically
+changing environments. Identifying unnecessary sam-
+ples/features offers several benefits. It helps in de-
+creasing the storage space required for keeping the
+training data for updating the machine learning (ML)
+models in the future. Moreover, in situations demand-
+ing real-time adaptation of ML models to quick envi-
+ronmental changes, the use of fewer samples/features
+enables more efficient learning.
+
+Our basic idea to tackle this problem is to effectively
+combine distributionally robust (DR) learning and safe
+screening (SS). DR learning is a ML paradigm that
+focuses on developing models robust to variations in
+the data distribution, providing performance guaran-
+tees across different distributions (see, e.g., [1]). On
+the other hand, SS refers to sparse optimization tech-
+niques that can identify irrelevant samples/features
+before model training, ensuring computational effi-
+ciency by avoiding unnecessary computations on cer-
+tain samples/features which do not contribute to the
+final solution [2, 3]. The key technical idea of SS is
+to identify a bound of the optimal solution before
+solving the optimization problem. This allows for the
+identification of unnecessary samples/features, even
+without knowing the optimal solution.
+
+As a specific scenario of dynamically changing en-
+vironment, we consider covariate shift setting [4, 5]
+with unknown test distribution. In this setting, the
+
+ 
+ 
+ 
+ 
+ 
+ 
+distribution of input features in the training data may
+undergo changes in the test phase, yet the actual
+nature of these changes remains unknown. A ML
+problem (e.g., regression/classification problem) in
+covariate shift setting can be formulated as a weighted
+empirical risk minimization (weighted ERM) problem,
+where weights are assigned based on the density ratio
+of each sample in the training and test distributions.
+Namely, by assigning higher weights to training sam-
+ples that are important in the test distribution, the
+model can focus on learning from relevant samples
+and mitigate the impact of distribution differences
+between the training and the test phases. If the distri-
+bution during the test phase is known, the weights can
+be uniquely fixed. However, if the test distribution
+is unknown, it is necessary to solve a weighted ERM
+problem with unknown weights.
+
+Our main contribution is to propose a DRSS
+method for covariate shift setting with unknown test
+distribution. The proposed method can identify un-
+necessary samples/features regardless of how the dis-
+tribution changes within a certain range in the test
+phase. To address this problem, we extend the exist-
+ing SS methods in two stages. The first is to extend
+the SS for ERM so that it can be applied to weighted
+ERM. The second is to further extend the SS so that
+it can be applied to weighted ERM when the weights
+are unknown. While the first extension is relatively
+straightforward, the second extension presents a non-
+trivial technical challenge (Figure 1). To overcome
+this challenge, we derive a novel bound of the optimal
+solutions of the weighted ERM problem, which prop-
+erly accounts for the uncertainty in weights stemming
+from the uncertainty of the test distribution.
+
+In this study, we consider DRSS for samples in
+sample-sparse models such as SVM [6], and that for
+features for feature-sparse models such as Lasso [7].
+We denote the DRSS for samples as distributionally
+robust safe sample screening (DRSsS) and that for fea-
+tures as distributionally robust safe feature screening
+(DRSfS), respectively.
+
+Our contributions in this study are summarized
+as follows. First, by effectively combining DR and
+SS, we introduce a framework for identifying unnec-
+essary samples/features under dynamically changing
+uncertain environment. Second, We consider a DR
+
+Figure 1: Schematic illustration of the proposed Dis-
+tributionally Robust Safe Screening (DRSS) method.
+Panel A displays the training samples, each assigned
+equal weight, as indicated by the uniform size of the
+points. Panel B depicts various unknown test distri-
+butions, highlighting how the significance of training
+samples varies with different realizations of the test
+distribution. Panel C shows the outcomes of safe
+sample screening (SsS) across multiple realizations
+of test distributions. Finally, Panel D presents the
+results of the proposed DRSS method, demonstrating
+its capability to identify redundant samples regardless
+of the observed test distribution.
+
+covariate-shift setting where the input distribution
+of an ERM problem changes within a certain range.
+In this setting, we propose a novel method called
+DRSS method that can identify samples/features that
+are guaranteed not to affect the optimal solution, re-
+gardless of how the distribution changes within the
+specified range. Finally, through numerical exper-
+iments, we verify the effectiveness of the proposed
+DRSS method. Although the DRSS method is devel-
+oped for convex ERM problems, in order to demon-
+strate the applicability to deep learning models, we
+also present results where the DRSS method is ap-
+plied in a problem setting where the final layer of the
+model is fine-tuned according to changes in the test
+distribution.
+
+2
+
+Safe Sample ScreeningUnknownTest DistributionDRSS Method (Proposed)DistributionallyRobustSafe ScreeningABCD1.1 Related Works
+
+The DR setting has been explored in various ML prob-
+lems, aiming to enhance model robustness against
+data distribution variations. A DR learning problem
+is typically formulated as a worst-case optimization
+problem since the goal of DR learning is to ensure
+model performance under the worst-case data dis-
+tribution within a specified range. Hence, a variety
+of optimization techniques tailored to DR learning
+have been investigated within both the ML and opti-
+mization communities [8, 9, 1]. The proposed DRSS
+method is one of such DR learning methods, focusing
+specifically on the problem of sample/feature deletion.
+The ability to identify irrelevant samples/features is
+of practical significance. For example, in the context
+of continual learning (see, e.g., [10]), it is crucial to
+effectively manage data by selectively retaining and
+discarding samples/features, especially in anticipa-
+tion of changes in future data distributions. Incorrect
+deletion of essential data can lead to catastrophic for-
+getting [11], a phenomenon where a ML model, after
+being trained on new data, quickly loses information
+previously learned from older datasets. The proposed
+DRSS method tackles this challenge by identifying
+samples/features that, regardless of future data dis-
+tribution shifts, will not have any influence on all
+possible newly trained model in the future.
+
+SS refers to optimization techniques in sparse
+learning that identify and exclude irrelevant sam-
+ples or features from the learning process. SS can
+reduce computational cost without changing the fi-
+nal trained model. Initially, SfS was introduced by
+[2] for the Lasso. Subsequently, SsS was proposed
+by [3] for the SVM. Among various SS methods de-
+veloped so far, the most commonly used is based
+on the duality gap [12, 13]. Our proposed DRSS
+method also adopts this approach. Over the past
+decade, SS has seen diverse developments, including
+methodological improvements and expanded applica-
+tion scopes [14, 15, 16, 17, 18, 19, 20, 21]. Unlike
+other SS studies that primarily focused on reducing
+computational costs, this study adopts SS for a dif-
+ferent purpose. We employ SS across scenarios where
+data distribution varies within a defined range, aim-
+ing to discard unnecessary samples/features. To our
+
+Table 1: Notations used in the paper. R: all real num-
+bers, N: all positive integers, n, m, p ∈ N: integers,
+f : Rn → R ∪ {+∞}: convex function, M ∈ Rn×m:
+matrix, v ∈ Rn: vector.
+mij ∈ R (small case of matrix variable)
+
+the element at the ith row and
+the jth column of M
+
+vi ∈ R (nonbold font of vector variable)
+
+Mi: ∈ R1×n
+M:j ∈ Rm×1
+[n]
+R≥0
+⊗
+diag(v) ∈ Rn×n
+
+v×□M ∈ Rn×m
+0n ∈ Rn
+1n ∈ Rn
+∥v∥p ∈ R≥0
+∂f (v) ⊆ Rn
+
+Z[f ] ⊆ Rn
+f ∗(v) ∈ R ∪ {+∞}
+
+“f is κ-strongly
+
+convex” (κ > 0)
+
+“f is µ-smooth”
+
+(µ > 0)
+
+the ith element of v
+the ith row of M
+the jth column of M
+{1, 2, . . . , n}
+all nonnegative real numbers
+elementwise product
+diagonal matrix; (diag(v))ii = vi
+and (diag(v))ij = 0 (i ̸= j)
+diag(v)M
+[0, 0, . . . , 0]⊤ (vector of size n)
+[1, 1, . . . , 1]⊤ (vector of size n)
+((cid:80)n
+i )1/p (p-norm)
+all g ∈ Rn s.t. “for any v′ ∈ Rn,
+f (v′) − f (v) ≥ g⊤(v′ − v)”
+(subgradient)
+{v′ ∈ Rn | ∂f (v′) = {0n}}
+supv′∈Rn (v⊤v′ − f (v′))
+(convex conjugate)
+f (v) − κ∥v∥2
+respect to v
+
+2 is convex with
+
+i=1 vp
+
+∥f (v) − f (v′)∥2 ≤ µ∥v − v′∥2
+
+for any v, v′ ∈ Rn
+
+knowledge, no existing studies have utilized SS within
+the DR learning framework.
+
+2 Preliminaries
+
+Notations used in this paper are described in Table 1.
+
+3
+
+2.1 Weighted Regularized Empiri-
+cal Risk Minimization (Weighted
+RERM) for Linear Prediction
+
+we have the following dual problem of (1):
+
+α∗(w) := argmax
+
+α∈Rn
+
+Dw(α), where
+
+We mainly assume the weighted regularized empirical
+risk minimization (weighted RERM) for linear pre-
+diction. This may include kernelized versions, which
+are discussed in Appendix C. Suppose that we learn
+the model parameters as linear prediction coefficients,
+that is, learn β∗(w) ∈ Rd such that the outcome for a
+sample x ∈ Rd is predicted as x⊤β∗(w).
+
+Definition 2.1. Given n training samples of d-
+dimensional input variables, scalar output variables
+and scalar sample weights, denoted by X ∈ Rn×d,
+y ∈ Rn and w ∈ Rn
+≥0, respectively, the training com-
+putation of weighted RERM for linear prediction is
+formulated as follows:
+
+Pw(β), where
+
+β∗(w) := argmin
+β∈Rd
+n
+(cid:88)
+
+Pw(β) :=
+
+wiℓyi( ˇXi:β) + ρ(β).
+
+(1)
+
+i=1
+
+Here, ℓy : R → R is a convex loss function1, ρ : Rd →
+R is a convex regularization function, and ˇX ∈ Rn×d
+is a matrix calculated from X and y and determined
+depending on ℓ. In this paper, unless otherwise noted,
+we consider binary classifications (y ∈ {−1, +1}n)
+with ˇX := y×□X. For regressions (y ∈ Rn) we usually
+set ˇX := X.
+
+Remark 2.2. We add that, we adopt the formulation
+X:d = 1n so that β∗(w)
+(the last element) represents
+the common coefficient for any sample (called the
+intercept).
+
+d
+
+Since ℓ and ρ are convex, we can easily confirm that
+
+Pw(β) is convex with respect to β.
+
+Applying Fenchel’s duality theorem (Appendix A.2),
+
+Dw(α) :=
+n
+(cid:88)
+
+−
+
+wiℓ∗
+yi
+
+(−γiαi) − ρ∗(((γ ⊗ w)×□ ˇX)⊤α),
+
+(2)
+
+i=1
+
+where γ is a positive-valued vector. The relationship
+between the original problem (1) (called the primal
+problem) and the dual problem (2) are described as
+follows:
+
+Pw(β∗(w)) = Dw(α∗(w)),
+β∗(w) ∈ ∂ρ∗(((γ ⊗ w)×□ ˇX)⊤α∗(w)),
+∀i ∈ [n] : −γiα∗(w)
+
+∈ ∂ℓyi( ˇXi:β∗(w)).
+
+i
+
+(3)
+
+(4)
+
+(5)
+
+2.2 Sparsity-inducing Loss Functions
+and Regularization Functions
+
+In weighted RERM, we call that a loss function ℓ
+induces sample-sparsity if elements in α∗(w) are easy
+to become zero. Due to (5), this can be achieved by ℓ
+such that {t ∈ R | 0 ∈ ∂ℓy(t)} is not a point but an
+interval.
+
+Similarly, we call that a regularization function ρ
+induces feature-sparsity if elements in β∗(w) are easy
+to become zero. Due to (4), this can be achieved by
+ρ such that {v ∈ Rd | ∃j ∈ [d − 1] : 0 ∈ [∂ρ∗(v)]j} is
+not a point but a region.
+
+For example, the hinge loss ℓy(t) = max{0, 1 − t}
+(y ∈ {−1, +1}) is a sample-sparse loss function since
+{t ∈ R | 0 ∈ ∂ℓy(t)} = [1, +∞). Similarly, the L1-
+regularization ρ(v) = λ (cid:80)d−1
+j=1 |vj| (λ > 0: hyperpa-
+rameter) is a feature-sparse regularization function
+since {v ∈ Rd | ∃j ∈ [d − 1] : 0 ∈ [∂ρ∗(v)]j} = {v ∈
+Rd | ∃j ∈ [d − 1] :
+|vj| ≤ λ, vd = 0}. See Section 4
+for examples of using them.
+
+3 Distributionally Robust Safe
+
+Screening
+
+1For ℓy(t), we assume that only t is a variable of the function
+(y is assumed to be a constant) when we take its subgradient
+or convex conjugate.
+
+In this section we show DRSS rules for weighted
+RERM with two steps. First, in Sections 3.1 and
+
+4
+
+3.2, we show SS rules for weighted RERM but not
+DR setup. To do this, we extended existing SS rules
+in [13, 15]. Then we derive DRSS rules in Section 3.3.
+
+3.1 (Non-DR) Safe Sample Screening
+
+3.2 (Non-DR) Safe Feature Screening
+
+We consider identifying j ∈ [d] such that β∗(w)
+= 0,
+that is, identifying that the jth feature is not used in
+the prediction, even when the sample weights w are
+changed.
+
+j
+
+i
+
+We consider identifying training samples that do not
+affect the training result β∗(w). Due to the relation-
+ship (4), if there exists i ∈ [n] such that α∗(w)
+= 0,
+then the ith row (sample) in ˇX does not affect β∗(w).
+However, since computing α∗(w) is as costly as β∗(w),
+it is difficult to use the relationship as it is. To solve
+the problem, the SsS first considers identifying the
+possible region B∗(w) ⊂ Rd such that β∗(w) ∈ B∗(w)
+is assured. Then, with B∗(w) and (5), we can conclude
+that the ith training sample do not affect the training
+result β∗(w) if (cid:83)
+
+β∈B∗(w) ∂ℓyi( ˇXi:β) = {0}.
+
+For simplicity, suppose that the regularization func-
+tion ρ is decomposable, that is, ρ is represented as
+ρ(β) := (cid:80)d
+j=1 σj(βj) (σ1, σ2, . . . , σd: R → R). Then,
+since ρ∗(v) = (cid:80)d
+j (vj) and therefore [∂ρ∗(v)]j =
+∂σ∗
+
+j (vj), from (4) we have
+
+j=1 σ∗
+
+β∗(w)
+j
+
+where
+
+∈ ∂σ∗
+
+j ((γ ⊗ w ⊗ ˇX:j)⊤α∗(w))
+j ( ˇˇX (γ,w)⊤
+
+α∗(w)),
+
+:j
+:= γ ⊗ w ⊗ ˇX:j.
+
+= ∂σ∗
+ˇˇX (γ,w)
+
+:j
+
+First we show how to compute B∗(w). In this paper
+we adopt the computation methods that is available
+when the regularization function ρ in Pw (and also
+Pw itself) of (1) are strongly convex.
+
+If we know α∗(w), we can identify whether β∗(w)
+= 0
+holds. However, like SsS (Section 3.1), we would like
+to check the condition without computing α∗(w) or
+β∗(w).
+
+j
+
+Lemma 3.1. Suppose that ρ in Pw (and also Pw
+itself ) of (1) are κ-strongly convex. Then, for any
+ˆβ ∈ Rd and ˆα ∈ Rn, we can assure β∗(w) ∈ B∗(w) by
+taking
+
+B∗(w) :=
+
+(cid:110)
+
+β
+
+(cid:12)
+(cid:12) ∥β − ˆβ∥2 ≤ r(w, γ, κ, ˆβ, ˆα)
+(cid:12)
+(cid:114) 2
+κ
+
+r(w, γ, κ, ˆβ, ˆα) :=
+
+(cid:111)
+
+,
+
+[Pw( ˆβ) − Dw( ˆα)].
+
+where
+
+The proof is presented in Appendix A.3. The
+amount Pw( ˆβ) − Dw( ˆα) is known as the duality gap,
+which must be nonnegative due to (3). So we ob-
+tain the following gap safe sample screening rule from
+Lemma 3.1:
+
+Lemma 3.2. Under the same assumptions as Lemma
+3.1, α∗(w)
+= 0 is assured (i.e., the ith training sample
+i
+does not affect the training result β∗(w)) if there exists
+ˆβ ∈ Rd and ˆα ∈ Rn such that
+
+[ ˇXi:
+
+ˆβ − ∥ ˇXi:∥2r(w, γ, κ, ˆβ, ˆα),
+ˇXi:
+
+ˆβ + ∥ ˇXi:∥2r(w, γ, κ, ˆβ, ˆα)] ⊆ Z[ℓyi].
+
+The proof is presented in Appendix A.4.
+
+So, like SsS, SfS first considers identifying the pos-
+sible region A∗(w) ⊂ Rn such that α∗(w) ∈ A∗(w) is
+assured. Then we can conclude that β∗(w)
+= 0 is
+assured if (cid:83)
+
+j ( ˇˇX (γ,w)⊤
+:j
+Then we show how to compute A∗(w). With Lemma
+A.3, we can calculate A∗(w) as follows, if the loss
+function ℓy in Pw of (1) is smooth:
+
+α∈A∗(w) ∂σ∗
+
+α) = {0}.
+
+j
+
+Lemma 3.3. Suppose that ℓy in Pw of (1) is µ-
+smooth. Then, for any ˆβ ∈ Rd and ˆα ∈ Rn, we can
+assure α∗(w) ∈ A∗(w) by taking
+
+A∗(w) :=
+
+(cid:110)
+
+α
+
+(cid:12)
+(cid:111)
+(cid:12) ∥α − ˆα∥2 ≤ ¯r(w, γ, µ, ˆβ, ˆα)
+(cid:12)
+
+,
+
+where
+
+¯r(w, γ, µ, ˆβ, ˆα) :=
+(cid:115)
+
+2µ
+mini∈[n] wiγ2
+i
+
+[Pw( ˆβ) − Dw( ˆα)].
+
+The proof is presented in Appendix A.5. Similar to
+Lemma 3.2, we obtain the gap safe feature screening
+rule from Lemma 3.3:
+
+Lemma 3.4. Under the same assumptions as Lemma
+3.3, β∗(w)
+= 0 is assured (i.e., the jth feature does
+j
+
+5
+
+not affect prediction results) if there exists ˆβ ∈ Rd
+and ˆα ∈ Rn such that
+
+[ ˇˇX (γ,w)⊤
+
+:j
+
+ˆα − ∥ ˇˇX (γ,w)
+
+:j
+
+∥2¯r(w, γ, µ, ˆβ, ˆα),
+
+ˇˇX (γ,w)⊤
+
+:j
+
+ˆα + ∥ ˇˇX (γ,w)
+
+:j
+
+∥2¯r(w, γ, µ, ˆβ, ˆα)] ⊆ Z[σ∗
+j ].
+
+The proof is almost same as Lemma 3.2.
+
+3.3 Application to Distributionally Ro-
+
+bust Setup
+
+In Sections 3.1 and 3.2 we showed the conditions when
+samples or features are screened out. In this section
+we show how to use the conditions for the change of
+sample weights w.
+
+Definition 3.5 (weight-changing safe screening
+(WCSS)). Given X ∈ Rn×d, y ∈ Rn, ˜w ∈ Rn
+≥0 and
+w ∈ Rn
+≥0, suppose that β∗( ˜w) in Definition 2.1 (and
+also α∗( ˜w)) are already computed, but β∗(w) not.
+Then WCSsS (resp. WCSfS) from ˜w to w is de-
+fined as finding i ∈ [n] satisfying Lemma 3.2 (resp.
+j ∈ [d − 1] satisfying Lemma 3.4).
+
+Definition 3.6 (Distributionally robust safe screening
+(DRSS)). Given X ∈ Rn×d, y ∈ Rn, ˜w ∈ Rn
+≥0 and
+W ⊂ Rn
+≥0, suppose that β∗( ˜w) in Definition 2.1 (and
+also α∗( ˜w)) are already computed. Then the DRSsS
+(resp. DRSfS) for W is defined as finding i ∈ [n]
+satisfying Lemma 3.2 (resp. j ∈ [d − 1] satisfying
+Lemma 3.4) for any w ∈ W.
+
+For Definition 3.5, we have only to apply SS rules
+in Lemma 3.2 or 3.4 by setting ˆβ ← β∗( ˜w) and ˆα ←
+α∗( ˜w). On the other hand, for Definition 3.6, we need
+to maximize or minimize the interval in Lemma 3.2
+or 3.4 in w ∈ W.
+
+Theorem 3.7. The DRSsS rule for W is calculated
+as:
+
+[ ˇXi:β∗( ˜w) − ∥ ˇXi:∥2R, ˇXi:β∗( ˜w) + ∥ ˇXi:∥2R] ⊆ Z[ℓyi],
+
+where R := maxw∈W r(w, γ, κ, β∗( ˜w), α∗( ˜w)).
+
+6
+
+Similarly, the DRSfS rule for W is calculated as:
+
+[L − N R, L + N R] ⊆ Z[σ∗
+ˇˇX (γ,w)⊤
+
+L := min
+w∈W
+
+:j
+
+j ], where
+
+L := max
+w∈W
+
+ˇˇX (γ,w)⊤
+
+:j
+
+α∗( ˜w) = min
+w∈W
+α∗( ˜w) = max
+w∈W
+
+(γ ⊗ ˇX:j ⊗ α∗( ˜w))⊤w,
+
+(γ ⊗ ˇX:j ⊗ α∗( ˜w))⊤w,
+
+N := max
+w∈W
+
+R := max
+w∈W
+
+∥ ˇˇX (γ,w)
+
+:j
+
+∥2 =
+
+(cid:114)
+
+max
+w∈W
+
+∥w ⊗ γ ⊗ ˇX:j∥2
+2,
+
+¯r(w, γ, µ, β∗( ˜w), α∗( ˜w)).
+
+Thus, solving the maximizations and/or minimiza-
+tions in Theorem 3.7 provides DRSsS and DRSfS
+rules. However, how to solve it largely depends on the
+choice of ℓ, ρ and W. In Section 4 we show specific
+calculations of Theorem 3.7 for some typical setups.
+
+4 DRSS for Typical ML Setups
+
+In this section we show DRSS rules derived in Section
+3.3 for two typical ML setups: DRSsS for L1-loss L2-
+regularized SVM (Section 4.1) and DRSfS for L2-loss
+L1-regularized SVM (Section 4.2) under W := {w |
+∥w − ˜w∥2 ≤ S}.
+
+In the processes, we need to solve constrained max-
+imizations of convex functions. Although maximiza-
+tions of convex functions are not easy in general (min-
+imizations are easy), we show that the maximizations
+need in the processes can be algorithmically solved in
+Section 4.3.
+
+4.1 DRSsS for L1-loss L2-regularized
+
+SVM
+
+L1-loss L2-regularized SVM is a sample-sparse model
+for binary classification (y ∈ {−1, +1}n) that satisfies
+the preconditions to apply SsS (Lemma 3.1). Detailed
+calculations are presented in Appendix B.1.
+
+For L1-loss L2-regularized SVM, we set ρ and ℓ as:
+
+ρ(β) :=
+
+λ
+2
+
+∥β∥2
+2
+
+(λ > 0 : hyperparameter),
+
+ℓy(t) := max{0, 1 − t}
+
+(where y ∈ {−1, +1}).
+
+Then ρ is λ-strongly convex. Setting γ = 1n, the dual
+objective function is described as
+
+4.2 DRSfS for L2-loss L1-regularized
+
+SVM
+
+Dw(α) =
+
+(cid:80)n
+
+
+
+
+−∞.
+
+i=1 wiαi − 1
+
+2λ α⊤(w×□ ˇX)(w×□ ˇX)⊤α,
+(∀i ∈ [n] : 0 ≤ αi ≤ 1)
+(otherwise)
+
+L2-loss L1-regularized SVM is a feature-sparse model
+for binary classification (y ∈ {−1, +1}n) that satisfies
+the preconditions to apply SfS (Lemma 3.3). Detailed
+calculations are presented in Appendix B.2.
+
+(6)
+
+Here, in the viewpoint of minimization, we may con-
+sider this problem as a maximization with the con-
+straint “∀i ∈ [n] : 0 ≤ αi ≤ 1”.
+
+Optimality conditions (4) and (5) are described as:
+
+β∗(w) =
+
+1
+λ
+
+(w×□ ˇX)⊤α∗(w),
+
+∀i ∈ [n] : α∗(w)
+
+i
+
+∈
+
+(7)
+
+(8)
+
+( ˇXi:β∗(w) ≤ 1)
+( ˇXi:β∗(w) = 1)
+( ˇXi:β∗(w) ≥ 1)
+
+
+
+
+
+
+{1},
+[0, 1],
+{0}.
+
+Noticing that Z[ℓyi] = (1, +∞), by Theorem 3.7,
+
+the DRSsS rule for W is calculated as:
+
+ˇXi:β∗( ˜w) − ∥ ˇXi:∥2 max
+w∈W
+
+r(w, γ, κ, β∗( ˜w), α∗( ˜w)) > 1,
+
+where
+
+r(w, γ, κ, β∗( ˜w), α∗( ˜w))
+
+(cid:114) 2
+κ
+
+:=
+
+[Pw(β∗( ˜w)) − Dw(α∗( ˜w))],
+
+Pw(β∗( ˜w)) − Dw(α∗( ˜w))
+
+n
+(cid:88)
+
+:=
+
+wi[ℓyi( ˇXi:β∗( ˜w)) − α∗( ˜w)
+
+i
+
+] + λ∥β∗( ˜w)∥2
+2
+
+i=1
+1
+2λ
+
++
+
+w⊤(α∗( ˜w)×□ ˇX)(α∗( ˜w)×□ ˇX)⊤w.
+
+Here, we can find that Pw(β∗( ˜w))−Dw(α∗( ˜w)), which
+we need to maximize in reality, is the sum of linear
+function and convex quadratic function with respect
+to w ∈ W. (Since (α∗( ˜w)×□ ˇX)(α∗( ˜w)×□ ˇX)⊤ is positive
+semidefinite, we know that it is convex quadratic). Al-
+though constrained maximization of a convex function
+is difficult in general, for this case we can algorithmi-
+cally maximize it (Section 4.3).
+
+For L2-loss L1-regularized SVM, we set σj (and
+
+consequently ρ) and ℓ as:
+
+∀j ∈ [d − 1] : σj(βj) := λ|βj|
+σd(βd) := 0,
+ℓy(t) := (max{0, 1 − t})2
+
+(where y ∈ {−1, +1}).
+
+(λ > 0 : hyperparameter),
+
+Notice that σd(βd) is not defined as λ|βd| but 0: we
+rarely regularize the intercept with L1-regularization.
+
+Setting γ = λ1n, the dual objective function is
+
+described as
+
+Dw(α) =
+
+(cid:40)
+
+−λ (cid:80)n
+−∞,
+
+i=1 wi
+
+λα2
+
+i −4αi
+4
+
+,
+
+((11)–(13) are met)
+(otherwise)
+
+(9)
+
+where αi ≥ 0,
+
+|(w ⊗ ˇX:j)⊤α| ≤ 1,
+∀j ∈ [d − 1] :
+(w ⊗ ˇX:d)⊤α = (w ⊗ y)⊤α = 0.
+
+(10)
+
+(11)
+
+(12)
+
+(13)
+
+Optimality conditions (4) and (5) are described as
+
+∀j ∈ [d − 1] :
+
+|(w ⊗ ˇX:j)⊤α∗(w)| < 1 ⇒ β∗(w)
+
+j
+
+= 0,
+
+(14)
+
+∀i ∈ [n] : α∗(w)
+
+i
+
+=
+
+2
+λ
+
+max{0, 1 − ˇXi:β∗(w)}.
+
+(15)
+
+Noticing that Z[σ∗
+
+j ] = (−λ, λ), by Theorem 3.7, the
+
+DRSfS rule for W is calculated as:
+
+L − N R > −λ, L + N R < λ,
+
+7
+
+where
+
+problems:
+
+L := λ min
+w∈W
+
+( ˇX:j ⊗ α∗( ˜w))⊤w,
+
+( ˇX:j ⊗ α∗( ˜w))⊤w,
+
+L := λ max
+w∈W
+(cid:114)
+
+N := λ
+
+max
+w∈W
+
+∥w ⊗ ˇX:j∥2
+2
+
+(cid:114)
+
+= λ
+
+max
+w∈W
+
+{w⊤diag( ˇX:j ⊗ ˇX:j)w},
+
+R := max
+w∈W
+
+¯r(w, γ, µ, β∗( ˜w), α∗( ˜w)),
+
+¯r(w, γ, µ, β∗( ˜w), α∗( ˜w))
+
+(cid:115)
+
+:=
+
+2µ
+mini∈[n] wiγ2
+i
+
+[Pw(β∗( ˜w)) − Dw(α∗( ˜w))],
+
+Pw(β∗( ˜w)) − Dw(α∗( ˜w))
+
+n
+(cid:88)
+
+(cid:34)
+ℓyi( ˇXi:β∗( ˜w)) + λ
+
+wi
+
+=
+
+i=1
++ ρ(β∗( ˜w)).
+
+i − 4α∗( ˜w)
+λ(α∗( ˜w))2
+4
+
+i
+
+Here, the expressions in L and L are linear with
+respect to w, and the expression in N inside the square
+root is convex and quadratic with respect to w. Also,
+2µ
+R is decomposed to two maximizations
+mini∈[n] wiγ2
+i
+and Pw(β∗(w)) − Dw(α∗(w)), where the former is
+easily computed while the latter is linear with respect
+to w. So, similar to L1-loss L2-regularized SVM, we
+can obtain the maximization result by maximizing
+or minimizing the linear terms by Lemma A.4 in
+Appendix A, and maximizing the convex quadratic
+function by the method of Section 4.3.
+
+4.3 Maximizing Linear and Convex
+Quadratic Functions in Hyperball
+Constraint
+
+To derive DRSS rules of Sections 4.1 and 4.2, we
+need to compute the following forms of optimization
+
+w⊤Aw + 2b⊤w,
+
+max
+w∈W
+where W := {w ∈ Rn | ∥w − ˜w∥2 ≤ S},
+
+(16)
+
+b ∈ Rn,
+
+˜w ∈ Rn,
+A ∈ Rn×n : symmetric, positive semidefinite,
+
+nonzero.
+
+Lemma 4.1. The maximization (16) is achieved by
+the following procedure. First, we define Q ∈ Rn×n
+and Φ := diag(ϕ1, ϕ2, . . . , ϕn) as the eigendecompo-
+sition of A such that A = Q⊤ΦQ, Q is orthogonal
+(QQ⊤ = Q⊤Q = I). Also, let ξ := −ΦQ ˜w−Qb ∈ Rn,
+and
+
+T (ν) =
+
+n
+(cid:88)
+
+(cid:18) ξi
+
+ν − ϕi
+
+i=1
+
+(cid:19)2
+
+.
+
+(17)
+
+(cid:35)
+
+Then, the maximization (16) is equal to the largest
+value among them:
+
+• For each ν such that T (ν) = S2 (see Lemma 4.2),
+the value νS2 + (ν ˜w + b)⊤Q⊤(Φ − νI)−1ξ + b⊤ ˜w,
+and
+
+• For each ν ∈ {ϕ1, ϕ2, . . . , ϕn} (duplication re-
+moved) such that “∀i ∈ [n] : ϕi = ν ⇒ ξi = 0”,
+the value
+
+[νS2 + (ν ˜w + b)⊤Q⊤τ + b⊤ ˜w],
+
+max
+τ ∈Rn
+
+subject to ∀i ∈ Fν :
+
+τi =
+
+,
+
+ξi
+ϕi − ν
+(cid:88)
+τ 2
+i ,
+
+i∈Fν
+
+(cid:88)
+
+i∈Uν
+
+i = S2 −
+τ 2
+
+where Uν := {i | i ∈ [n], ϕi = ν}, Fν := [n] \ Uν.
+
+(Note that the maximization is easily computed
+by Lemma A.4.)
+
+The proof is presented in Appendix A.6.
+
+Lemma 4.2. Under the same definitions as Lemma
+4.1, The equation T (ν) = S2 can be solved by the
+following procedure: Let e := [e1, e2, . . . , eN ] (N ≤ n,
+k ̸= k′ ⇒ ek ̸= ek′) be a sequence of indices such that
+
+8
+
+Figure 2: An example of the expression T (ν) (black
+solid line) in Lemmas 4.1 and 4.2. Colored dash
+lines denote terms in the summation (ξek /(ν − ϕek ))2.
+We can see that, given an interval (ϕek , ϕek+1) (k ∈
+[N − 1]), the function is convex.
+
+1. ek ∈ [n] for any k ∈ [N ],
+
+2. i ∈ [n] is included in e if and only if ξi ̸= 0, and
+
+3. ϕe1 ≤ ϕe2 ≤ · · · ≤ ϕeN .
+
+Note that, if ϕek < ϕek+1 (k ∈ [N − 1]), then T (ν)
+is a convex function in the interval (ϕek , ϕek+1) with
+limν→ϕek +0 = limν→ϕek+1 −0 = +∞. Then, unless
+N = 0, each of the following intervals contains just
+one solution of T (ν) = S2:
+
+• Intervals (−∞, ϕe1) and (ϕeN , +∞).
+
+• Let ν#(k) := argminϕek <ν<ϕek+1
+
+T (ν). For each
+
+k ∈ [N − 1] such that ϕek < ϕek+1,
+
+– intervals (ϕek , ν#(k)) and (ν#(k), ϕek+1) if
+
+T (ν#(k)) < S2,
+
+– interval
+
+[ν#(k), ν#(k)]
+
+(i.e.,
+
+point)
+
+if
+
+T (ν#(k)) = S2.
+
+Figure 3: Concept of how to apply SS for deep learning.
+SS is applied to the last layer for the final prediction.
+
+5 Application to Deep Learning
+
+So far, our discussion of SS rules has primarily focused
+on ML models with linear predictions and convex loss
+and regularization functions. However, there may be
+scenarios where we would like to employ more complex
+ML models, such as deep learning (DL).
+
+For DL models, deriving SS rules for the entire
+model can be challenging due to the complexity of
+bounding the change in model parameters against
+changes in sample weights. However, we can simplify
+the process by focusing on the fact that each layer of
+DL is often represented as a convex function. There-
+fore, we propose applying SS rules specifically to the
+last layer of DL models.
+
+In this formulation, the layers preceding the last one
+are considered as a fixed feature extraction process,
+even when the sample weights change (see Figure
+3). We believe that this approach is valid when the
+change in sample weights is not significant. We plan
+to experimentally evaluate the effectiveness of this
+formulation in Section 6.3.
+
+6 Numerical Experiment
+
+It follows that T (ν) = S2 has at most 2n solutions.
+
+6.1 Experimental Settings
+
+By Lemma 4.2, in order to compute the solution of
+T (ν) = S2, we have only to compute ν#(k) by Newton
+method or the like, and to compute the solution for
+each interval by Newton method or the like. We show
+an example of T (ν) in Figure 2, and the proof in
+Appendix A.7.
+
+We evaluate the performances of DRSsS and DRSfS
+across different values of acceptable weight changes
+S and hyperparameters for regularization strength λ.
+Performance is measured using safe screening rates,
+representing the ratio of screened samples or features
+to all samples or features. We consider three setups:
+
+9
+
+𝜙𝑒1𝜙𝑒2𝜙𝑒3𝜙𝑒4𝜙𝑒𝑁𝜈𝑆2Final prediction (Convex function)Feature extraction(Assumed to be fixed afterinitial learning)𝑥1𝑥2𝑥𝑑𝑦DRSsS with L1-loss L2-regularized SVM (Section 4.1),
+DRSfS with L2-loss L1-regularized SVM (Section 4.2),
+and DRSsS with deep learning (Section 5) where
+the last layer incorporates DRSsS with L1-loss L2-
+regularized SVM.
+
+In these experiments, we set initialize the sample
+weights before change ( ˜w) as ˜w = 1n. Then, we set
+S in DRSS for W := {w | ∥w − ˜w∥2 ≤ S} (Section
+4) as follows:
+
+• First we assume the weight change that the
+weights for positive samples ({i | yi = +1}) from
+1 to a, while retaining the weights for negative
+samples ({i | yi = −1}) as 1.
+
+• Then, we defined S as the size of weight change
+n+|a − 1|
+above; specifically, we set S =
+(n+: number of positive samples in the train-
+ing dataset).
+
+√
+
+We vary a within the range 0.9 ≤ a ≤ 1.1, assuming
+a maximum change of up to 10% per sample weight.
+
+6.2 Relationship between the Weight
+Changes and Safe Screening Rate
+
+First, we present safe screening rates for two SVM
+setups. The datasets used in these experiments are
+detailed in Table 2.
+In this experiment, we adapt
+the regularization hyperparameter λ based on the
+characteristics of the data. These details are described
+in Appendix D.1.
+
+As an example, for the “sonar” dataset, we show
+the DRSsS result in Figure 4 and the DRSfS result in
+Figure 5. Results for other datasets are presented in
+Appendix D.2.
+
+These plots allow us to assess the tolerance for
+changes in sample weights. For instance, with a = 0.98
+(weight of each positive sample is reduced by two per-
+cent, or equivalent weight change in L2-norm), the
+sample screening rate is 0.31 for L1-loss L2-regularized
+SVM with λ = 6.58e + 1, and the feature screen-
+ing rate is 0.29 for L2-loss L1-regularized SVM with
+λ = 3.47e + 1. This implies that, even if the weights
+are changed in such ranges, a number of samples or
+features are still identified as redundant in the sense
+of prediction.
+
+Table 2: Datasets for DRSsS/DRSfS experiments.
+All are binary classification datasets from LIBSVM
+dataset [22]. The mark † denotes datasets with one
+feature removed due to computational constraints.
+See Appendix D.1 for details.
+
+Task
+DRSsS
+
+Name
+
+australian
+breast-cancer
+heart
+ionosphere
+sonar
+splice (train)
+svmguide1 (train)
+
+DRSsS madelon (train)
+sonar
+splice (train)
+
+n
+690
+683
+270
+351
+208
+1000
+3089
+2000
+208
+1000
+
+n+
+307
+239
+120
+225
+97
+517
+2000
+1000
+97
+517
+
+d
+15
+11
+14
+35
+61
+61
+5
+† 500
+† 60
+61
+
+6.3 Safe Sample Screening for Deep
+
+Learning Model
+
+We applied DRSsS to DL models (Section 5), assuming
+that all layers are fixed except for the last layer.
+
+We utilized a neural network architecture compris-
+ing the following components: firstly, ResNet50 [23]
+with an output of 2,048 features, followed by a fully
+connected layer to reduce the features to 10, and
+finally, L1-loss L2-regularized SVM (Section 4.1) ac-
+companied by the intercept feature (Remark 2.2).
+
+For the experiment, we employed the CIFAR-10
+dataset [24], a well-known benchmark dataset for
+image classification tasks. We configured the net-
+work to classify images into two classes: “airplane”
+and “automobile”. Given that there are 5,000 im-
+ages for each class, we split the dataset into train-
+ing:validation:testing=6:2:2, resulting in a total of
+6,000 images in the training dataset.
+
+The resulting safe sample screening rates are illus-
+trated in Figure 6. We observed similar outcomes to
+those obtained with ordinary SVMs in Section 6.2.
+
+This experiment validates the feasibility of apply-
+ing DRSsS to DL models, demonstrating consistent
+results with traditional SVM setups.
+
+10
+
+7 Conclusion
+
+In this paper, we discussed DR-SS, considering the
+possible changes in sample weights to represent DR
+setup. We developed a method for calculating SS
+that can handle changes in sample weights by intro-
+ducing nontrivial computational techniques, such as
+constrained maximization of certain convex functions
+(Section 4.3). Additionally, to address the constraint
+of SS, which typically applies to ML by minimizing
+convex functions, we provided an application to DL
+by applying SS to the last layer of DL model. While
+this approach is an approximation, it holds certain
+validity.
+
+For the future work, we aim to explore different
+environmental changes. In this paper, we focused on
+weight constraint by L2-norm ∥w − ˜w∥2 ≤ S (Section
+4) due to computational considerations. However,
+when interpreting changes in weights, the constraint
+of L1-norm ∥w − ˜w∥1 ≤ S may be more appropri-
+ate, as it reflects changes in weights by altering the
+number of samples. Furthermore, in the context of
+DR-SS for DL, we are interested in loosening the
+constraint of fixing the network except for the last
+layer. Investigating this aspect could provide valuable
+insights into the flexibility of DR-SS methodologies
+in DL applications.
+
+Software and Data
+
+The code and the data to reproduce the experiments
+are available as the attached file.
+
+Potential Broader Impact
+
+This paper contributes to machine learning in dynam-
+ically changing environments, a scenario increasingly
+prevalent in real-world data analyses. We believe
+that, in such situations, ensuring prediction perfor-
+mance against environmental changes and minimizing
+storage requirements for expanding datasets will be
+beneficial. The method does not present significant
+ethical concerns or foreseeable societal consequences
+because this work is theoretical and, as of now, has
+
+no direct applications that might impact society or
+ethical considerations.
+
+Acknowledgements
+
+This work was partially supported by MEXT KAK-
+ENHI (20H00601), JST CREST (JPMJCR21D3 in-
+cluding AIP challenge program, JPMJCR22N2), JST
+Moonshot R&D (JPMJMS2033-05), JST AIP Acceler-
+ation Research (JPMJCR21U2), NEDO (JPNP18002,
+JPNP20006) and RIKEN Center for Advanced Intel-
+ligence Project.
+
+References
+
+[1] Ruidi Chen and Ioannis Ch. Paschalidis. Dis-
+tributionally robust learning. arXiv Preprint,
+2021.
+
+[2] Laurent El Ghaoui, Vivian Viallon, and Tarek
+Rabbani. Safe feature elimination for the lasso
+and sparse supervised learning problems. Pacific
+Journal of Optimization, 8(4):667–698, 2012.
+
+[3] Kohei Ogawa, Yoshiki Suzuki, and Ichiro
+Takeuchi. Safe screening of non-support vectors
+in pathwise svm computation. In Proceedings of
+the 30th International Conference on Machine
+Learning, pages 1382–1390, 2013.
+
+[4] Hidetoshi Shimodaira. Improving predictive in-
+ference under covariate shift by weighting the
+log-likelihood function. Journal of statistical plan-
+ning and inference, 90(2):227–244, 2000.
+
+[5] Masashi Sugiyama, Matthias Krauledat, and
+Klaus-Robert M¨uller. Covariate shift adaptation
+by importance weighted cross validation. Journal
+of Machine Learning Research, 8(35):985–1005,
+2007.
+
+[6] C. Cortes and V. Vapnik. Support-vector net-
+works. Machine Learning, 20:273–297, 1995.
+
+[7] Robert Tibshirani. Regression shrinkage and
+selection via the lasso. Journal of the Royal Sta-
+
+11
+
+tistical Society Series B: Statistical Methodology,
+58(1):267–288, 1996.
+
+[8] Joel Goh and Melvyn Sim. Distributionally
+robust optimization and its tractable approxi-
+mations. Operations Research, 58(4-1):902–917,
+2010.
+
+[9] Erick Delage and Yinyu Ye. Distributionally
+robust optimization under moment uncertainty
+with application to data-driven problems. Oper-
+ations Research, 58(3):595–612, 2010.
+
+[10] Liyuan Wang, Xingxing Zhang, Kuo Yang,
+Longhui Yu, Chongxuan Li, Lanqing HONG,
+Shifeng Zhang, Zhenguo Li, Yi Zhong, and Jun
+Zhu. Memory replay with data compression for
+continual learning. In International Conference
+on Learning Representations, 2022.
+
+[11] James Kirkpatrick, Razvan Pascanu, Neil Rabi-
+nowitz, Joel Veness, Guillaume Desjardins, An-
+drei A. Rusu, Kieran Milan, John Quan, Tiago
+Ramalho, Agnieszka Grabska-Barwinska, Demis
+Hassabis, Claudia Clopath, Dharshan Kumaran,
+and Raia Hadsell. Overcoming catastrophic for-
+getting in neural networks. Proceedings of the Na-
+tional Academy of Sciences, 114(13):3521–3526,
+2017.
+
+[12] Olivier Fercoq, Alexandre Gramfort, and Joseph
+Salmon. Mind the duality gap: safer rules for the
+lasso. In Proceedings of the 32nd International
+Conference on Machine Learning, pages 333–342,
+2015.
+
+[13] Eugene Ndiaye, Olivier Fercoq, Alexandre Gram-
+fort, and Joseph Salmon. Gap safe screening rules
+for sparse multi-task and multi-class models. In
+Advances in Neural Information Processing Sys-
+tems, pages 811–819, 2015.
+
+[14] Shota Okumura, Yoshiki Suzuki, and Ichiro
+Takeuchi. Quick sensitivity analysis for incre-
+mental data modification and its application to
+leave-one-out cv in linear classification problems.
+In Proceedings of the 21th ACM SIGKDD In-
+ternational Conference on Knowledge Discovery
+and Data Mining, pages 885–894, 2015.
+
+[15] Atsushi Shibagaki, Masayuki Karasuyama, Ko-
+hei Hatano, and Ichiro Takeuchi. Simultaneous
+safe screening of features and samples in doubly
+sparse modeling. In International Conference on
+Machine Learning, pages 1577–1586, 2016.
+
+[16] Kazuya Nakagawa, Shinya Suzumura, Masayuki
+Karasuyama, Koji Tsuda, and Ichiro Takeuchi.
+Safe pattern pruning: An efficient approach for
+predictive pattern mining. In Proceedings of the
+22nd ACM SIGKDD International Conference
+on Knowledge Discovery and Data Mining, pages
+1785–1794. ACM, 2016.
+
+[17] Shaogang Ren, Shuai Huang, Jieping Ye, and
+Xiaoning Qian. Safe feature screening for gen-
+eralized lasso. IEEE Transactions on Pattern
+Analysis and Machine Intelligence, 40(12):2992–
+3006, 2018.
+
+[18] Jiang Zhao, Yitian Xu, and Hamido Fujita. An
+improved non-parallel universum support vec-
+tor machine and its safe sample screening rule.
+Knowledge-Based Systems, 170:79–88, 2019.
+
+[19] Zhou Zhai, Bin Gu, Xiang Li, and Heng Huang.
+Safe sample screening for robust support vector
+machine. In Proceedings of the AAAI Conference
+on Artificial Intelligence, volume 34, pages 6981–
+6988, 2020.
+
+[20] Hongmei Wang and Yitian Xu. A safe double
+screening strategy for elastic net support vec-
+tor machine. Information Sciences, 582:382–397,
+2022.
+
+[21] Takumi Yoshida, Hiroyuki Hanada, Kazuya Nak-
+agawa, Kouichi Taji, Koji Tsuda, and Ichiro
+Takeuchi. Efficient model selection for predictive
+pattern mining model by safe pattern pruning.
+Patterns, 4(12):100890, 2023.
+
+[22] Chih-Chung Chang and Chih-Jen Lin. Libsvm: A
+library for support vector machines. ACM Trans-
+actions on Intelligent Systems and Technology
+(TIST), 2(3):27, 2011. Datasets are provided in
+authors’ website: https://www.csie.ntu.edu.
+tw/~cjlin/libsvmtools/datasets/.
+
+12
+
+[23] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and
+Jian Sun. Deep residual learning for image recog-
+nition. In Proceedings of the IEEE Conference
+on Computer Vision and Pattern Recognition
+(CVPR), June 2016.
+
+[24] Alex Krizhevsky. The cifar-10 dataset, 2009.
+
+[25] Ralph Tyrell Rockafellar. Convex analysis.
+
+Princeton university press, 1970.
+
+[26] Jean-Baptiste Hiriart-Urruty
+
+and Claude
+Lemar´echal. Convex Analysis and Minimization
+Algorithms II: Advanced Theory and Bundle
+Methods. Springer, 1993.
+
+Figure 4: Ratio of screened samples by DRSsS for
+dataset “sonar”.
+
+Figure 5: Ratio of screened features by DRSfS for
+dataset “sonar”.
+
+Figure 6: Ratio of screened samples by DRSsS
+for dataset with CIFAR-10 dataset and DL model
+ResNet50.
+
+13
+
+0.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=0.208=0.657=2.08=6.577=20.8=65.77=2080.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened features=7.48e1=1.61e+0=3.47e+0=7.48e+0=1.61e+1=3.47e+1=7.48e+10.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=6.00e+0=1.90e+1=6.00e+1=1.90e+2=6.00e+2=1.90e+3=6.00e+3A Proofs
+
+A.1 General Lemmas
+
+Lemma A.1. For a convex function f : Rd → R ∪ {+∞}, f ∗∗ is equivalent to f if f is convex, proper (i.e.,
+∃v ∈ Rd : f (v) < +∞) and lower-semicontinuous.
+
+Proof. See Section 12 of [25] for example.
+
+Lemma A.1 is known as Fenchel-Moreau theorem. Especially, Lemma A.1 holds if f is convex and
+
+∀v ∈ Rd : f (v) < +∞.
+
+Lemma A.2. For a convex function f : Rd → R ∪ {+∞},
+
+• f ∗ is (1/ν)-strongly convex if f is proper and ν-smooth.
+
+• f ∗ is (1/κ)-smooth if f is proper, lower-semicontinuous and κ-strongly convex.
+
+Proof. See Section X.4.2 of [26] for example.
+
+Lemma A.3. Suppose that f : Rd → R∪{+∞} is a κ-strongly convex function, and let v∗ = argminv∈Rd f (v)
+be the minimizer of f . Then, for any v ∈ Rd, we have
+(cid:114) 2
+κ
+
+∥v − v∗∥2 ≤
+
+[f (v) − f (v∗)].
+
+Proof. See [13] for example.
+
+Lemma A.4. For any vector a, c ∈ Rn and S > 0,
+
+min
+v∈Rn: ∥v−c∥2≤S
+
+a⊤v = a⊤c − S∥a∥2,
+
+max
+v∈Rn: ∥v−c∥2≤S
+
+a⊤v = a⊤c + S∥a∥2.
+
+Proof. By Cauchy-Schwarz inequality,
+
+− ∥a∥2∥v − c∥2 ≤ a⊤(v − c) ≤ ∥a∥2∥v − c∥2.
+
+Noticing that the first inequality becomes equality if ∃ω > 0 : a = −ω(v − c), while the second inequality
+becomes equality if ∃ω′ > 0 : a = ω′(v − c). Moreover, since ∥v − c∥2 ≤ S,
+
+− S∥a∥2 ≤ a⊤(v − c) ≤ S∥a∥2
+
+also holds, with the equality holds if ∥v − c∥2 = S.
+
+On the other hand, if we take v that satisfies both of the equality conditions of Cauchy-Schwarz inequality
+
+above, that is,
+
+• (for the first inequality being equality) v = c − (S/∥a∥2)a,
+
+• (for the second inequality being equality) v = c + (S/∥a∥2)a,
+
+then the inequalities become equalities. This proves that −S∥a∥2 and S∥a∥2 are surely the minimum and
+maximum of a⊤(v − c), respectively.
+
+14
+
+A.2 Derivation of Dual Problem by Fenchel’s Duality Theorem
+
+As the formulation of Fenchel’s duality theorem, we follow the one in Section 31 of [25].
+
+Lemma A.5 (A special case of Fenchel’s duality theorem: f, g < +∞). Let f : Rn → R and g : Rd → R be
+convex functions, and A ∈ Rn×d be a matrix. Moreover, we define
+
+v∗ := min
+v∈Rd
+u∗ := max
+u∈Rn
+
+[f (Av) + g(v)],
+
+[−f ∗(−u) − g∗(A⊤u)].
+
+Then Fenchel’s duality theorem assures that
+
+f (Av∗) + g(v∗) = −f ∗(−u∗) − g∗(A⊤u∗),
+− u∗ ∈ ∂f (Av∗),
+v∗ ∈ ∂g∗(A⊤u∗).
+
+Sketch of the proof. Introducing a dummy variable ψ ∈ Rn and a Lagrange multiplier u ∈ Rn, we have
+
+(18)
+
+(19)
+
+(20)
+
+min
+v∈Rd
+
+[f (Av) + g(v)] = max
+u∈Rn
+
+min
+v∈Rd, ψ∈Rn
+
+[f (ψ) + g(v) − u⊤(Av − ψ)]
+
+= − min
+u∈Rn
+
+= − min
+u∈Rn
+
+max
+v∈Rd, ψ∈Rn
+[f ∗(−u) + g∗(A⊤u)] = max
+u∈Rn
+
+[−f (ψ) − g(v) + u⊤(Av − ψ)] = − min
+u∈Rn
+[−f ∗(−u) − g∗(A⊤u)].
+
+max
+v∈Rd, ψ∈Rn
+
+[{(−u)⊤ψ − f (ψ)} + {(A⊤u)⊤v − g(v)}]
+
+(21)
+
+Moreover, by the optimality condition of a problem with a Lagrange multiplier (20), the optima of it, denoted
+by v∗, ψ∗ and u∗, must satisfy
+
+Av∗ = ψ∗, A⊤u∗ ∈ ∂g(v∗), −u∗ ∈ ∂f (ψ∗) = ∂f (Av∗).
+
+On the other hand, introducing a dummy variable ϕ ∈ Rd and a Lagrange multiplier v ∈ Rd for (21), we have
+
+max
+u∈Rn
+
+[−f ∗(−u) − g∗(A⊤u)] = min
+v∈Rd
+
+max
+u∈Rn,ϕ∈Rd
+[{(Av)⊤(−u) − f ∗(−u)} + {v⊤ϕ − g∗(ϕ)}]
+
+= min
+v∈Rd
+
+= min
+v∈Rd
+
+max
+u∈Rn,ϕ∈Rd
+[f ∗∗(Av) + g∗∗(v)] = min
+v∈Rd
+
+[f (Av) + g(v)].
+
+(∵ Lemma A.1)
+
+[−f ∗(−u) − g∗(ϕ) − v⊤(A⊤u − ϕ)]
+
+(22)
+
+Likely above, by the optimality condition of a problem with a Lagrange multiplier (22), the optima of it,
+denoted by u∗, ϕ∗ and v∗, must satisfy
+
+A⊤u∗ = ϕ∗,
+
+v∗ ∈ ∂g∗(ϕ∗) = ∂g∗(A⊤u∗), Av∗ ∈ ∂f (−u∗).
+
+Lemma A.6 (Dual problem of weighted regularized empirical risk minimization (weighted RERM)). For
+the minimization problem
+
+β∗(w) := argmin
+β∈Rd
+
+Pw(β), where Pw(β) :=
+
+n
+(cid:88)
+
+i=1
+
+wiℓyi( ˇXi:β) + ρ(β),
+
+((1) restated)
+
+15
+
+we define the dual problem as the one obtained by applying Fenchel’s duality theorem (Lemma A.5), which is
+defined as
+
+α∗(w) := argmax
+
+α∈Rn
+
+Dw(α), where Dw(α) := −
+
+n
+(cid:88)
+
+i=1
+
+Moreover, β∗(w) and α∗(w) must satisfy
+
+wiℓ∗
+yi
+
+(−γiαi) + ρ∗(((γ ⊗ w)×□ ˇX)⊤α).
+
+((2) restated)
+
+Pw(β∗(w)) = Dw(α∗(w)),
+β∗(w) ∈ ∂ρ∗(((γ ⊗ w)×□ ˇX)⊤α∗(w)),
+∀i ∈ [n] : −γiα∗(w)
+
+∈ ∂ℓyi( ˇXi:β∗(w)).
+
+i
+
+((3) restated)
+
+((4) restated)
+
+((5) restated)
+
+Proof. To apply Fenchel’s duality theorem, we have only to set f , g and A in Lemma A.5 as
+
+f (u) :=
+
+n
+(cid:88)
+
+i=1
+
+wiℓyi(ui),
+
+g(β) := ρ(β), A := ˇX.
+
+Here, noticing that
+
+f ∗(u) = sup
+u′∈Rn
+
+[u⊤u′ −
+
+n
+(cid:88)
+
+i=1
+
+wiℓyi(u′
+
+i)] = sup
+u′∈Rn
+
+n
+(cid:88)
+
+i=1
+
+[uiu′
+
+i − wiℓyi(u′
+
+i)]
+
+= sup
+u′∈Rn
+
+n
+(cid:88)
+
+i=1
+
+wi
+
+(cid:20) ui
+wi
+
+u′
+i − ℓyi(u′
+i)
+
+(cid:21)
+
+=
+
+n
+(cid:88)
+
+i=1
+
+wiℓ∗
+yi
+
+(cid:19)
+
+,
+
+(cid:18) ui
+wi
+
+from (19) we have
+
+−f ∗(−u) − g∗(A⊤u) = −
+
+n
+(cid:88)
+
+i=1
+
+wiℓ∗
+yi
+
+(cid:19)
+
+(cid:18)
+
+−
+
+ui
+wi
+
+− ρ∗( ˇX ⊤u).
+
+Replacing ui ← γiwiαi, that is, u ← (γ ⊗ w ⊗ α), we have the dual problem (2).
+
+The relationships between the primal and the dual problem are described as follows:
+− u∗ ∈ ∂f (Av∗) ⇒ − γ ⊗ w ⊗ α∗(w) ∈ ∂f ( ˇXβ∗(w)) ⇒ − γiwiα∗(w)
+⇒ −γiα∗(w)
+v∗ ∈ ∂g∗(A⊤u∗) ⇒ β∗(w) ∈ ∂g∗( ˇX ⊤γ ⊗ w ⊗ α∗(w)) = ∂g∗(((γ ⊗ w)×□ ˇX)⊤α∗(w)).
+
+∈ ∂ℓyi( ˇXi:β∗(w)),
+
+i
+
+i
+
+∈ wi∂ℓyi( ˇXi:β∗(w))
+
+A.3 Proof of Lemma 3.1
+
+Proof. [13]
+
+∥ ˆβ − β∗(w)∥2 ≤
+
+=
+
+≤
+
+(cid:114) 2
+λ
+(cid:114) 2
+λ
+(cid:114) 2
+λ
+
+[Pw( ˆβ) − Pw(β∗(w))]
+
+(∵ setting f ← Pw in Lemma A.3)
+
+[Pw( ˆβ) − Dw(α∗(w))]
+
+(∵ (3))
+
+[Pw( ˆβ) − Dw( ˆα)].
+
+(∵ α∗(w) is a maximizer of Dw)
+
+16
+
+A.4 Proof of Lemma 3.2
+Proof. Due to (5), if ∂ℓyi( ˇXi:β∗(w)) = {0} is assured, then α∗(w)
+but know B∗(w) (Lemma 3.1), we can assure α∗(w)
+that ∂ℓyi is monotonically increasing2, we have
+
+i
+= 0 if (cid:83)
+
+i
+
+= 0 is assured. Since we do not know β∗(w)
+β∈B∗(w) ∂ℓyi( ˇXi:β) = {0} is assured. Noticing
+
+(cid:91)
+
+∂ℓyi( ˇXi:β) = {0} ⇔
+
+(cid:91)
+
+β∈B∗(w)
+
+⇔
+
+(cid:104) ˇXi:
+
+β∈B∗(w)
+ˆβ − ∥ ˇXi:∥2r(w, γ, κ, ˆβ, ˆα), ˇXi:
+
+ˇXi:β ⊆ Z[ℓyi] ⇔ [ min
+β∈B∗(w)
+
+ˇXi:β, max
+β∈B∗(w)
+
+ˇXi:β] ⊆ Z[ℓyi]
+
+(cid:105)
+ˆβ + ∥ ˇXi:∥2r(w, γ, κ, ˆβ, ˆα)
+
+⊆ Z[ℓyi].
+
+(∵ Lemma A.4)
+
+A.5 Proof of Lemma 3.3
+
+Proof. The proof is almost the same as that for Lemma 3.1 (see Appendix A.3), but we additionally need to
+show that −Dw is ((mini∈[n] wiγ2
+i )/µ)-strongly convex (in this case Dw is called strongly concave).
+As discussed in Lemma A.2, −ℓ∗
+yi
+(−γiαi) − (1/2µ)(γiαi)2 is convex with respect to αi,
+
+(t) is (1/µ)-strongly convex, that is, −ℓ∗
+yi
+
+(t) − (1/2µ)t2 is convex. Thus,
+
+• −ℓ∗
+yi
+
+i /2µ)α2
+
+(−γiαi) − (wiγ2
+
+• −wiℓ∗
+yi
+• − (cid:80)n
+(−γiαi) − (cid:80)n
+i=1 wiℓ∗
+yi
+So, − (cid:80)n
+(−γiαi) is convex with respect to α even subtracted by (cid:80)n
+i=1 wiℓ∗
+yi
+i /µ)]∥α∥2
+(1/2)[mini∈[n](wiγ2
+2.
+
+i is convex with respect to αi,
+
+i is convex with respect to α.
+
+i=1(wiγ2
+
+i /2µ)α2
+
+k=1[mini∈[n](wiγ2
+
+i /2µ)]α2
+
+k =
+
+A.6 Proof of Lemma 4.1
+
+Lemma A.7. For the optimization problem
+
+w⊤Aw + 2b⊤w,
+
+max
+w∈W
+subject to W := {w ∈ Rn | ∥w − ˜w∥2 ≤ S},
+b ∈ Rn,
+where
+
+˜w ∈ Rn,
+A ∈ Rn×n : symmetric, positive semidefinite, nonzero,
+
+((16) restated)
+
+its stationary points are obtained as the solution of the following equations with respect to w and ν ∈ R:
+
+Aw + b − ν(w − ˜w) = 0,
+∥w − ˜w∥2 = S.
+
+(23)
+
+(24)
+
+Also, when both (23) and (24) are satisfied, the function to be maximized is calculated as
+
+w⊤Aw + 2b⊤w = νS2 + (ν ˜w + b)⊤(w − ˜w) + ˜w⊤b.
+(25)
+2Since ∂ℓyi is a multi-valued function, the monotonicity must be defined accordingly: we call a multi-valued function
+
+F : R → 2R is monotonically increasing if, for any t < t′, F must satisfy “∀s ∈ F (t), ∀s′ ∈ F (t′): s ≤ s′”.
+
+17
+
+Proof. First, w⊤Aw + 2b⊤w is convex and not constant. Then we can show that (16) is optimized in
+{w ∈ Rn | ∥w − ˜w∥2 = S}, that is, at the surface of the hyperball W (Theorem 32.1 of [25]). This proves
+(24). Moreover, with the fact, we write the Lagrangian function with Lagrange multiplier ν ∈ R as:
+
+L(w, ν) := w⊤Aw + 2b⊤w − ν(∥w − ˜w∥2
+
+2 − S2).
+
+Then, due to the property of Lagrange multiplier, the stationary points of (16) are obtained as
+
+∂L
+∂w
+∂L
+∂ν
+
+= 2Aw + 2b − 2ν(w − ˜w) = 0,
+
+= ∥w − ˜w∥2
+
+2 − S2 = 0,
+
+where the former derives (23).
+
+Finally we show (25). If both (23) and (24) are satisfied,
+
+w⊤Aw + 2b⊤w = w⊤(ν(w − ˜w) − b) + 2b⊤w
+
+(∵ (23))
+
+= νw⊤(w − ˜w) + b⊤w
+= ν(w − ˜w)⊤(w − ˜w) + ν ˜w⊤(w − ˜w) + b⊤(w − ˜w) + b⊤ ˜w
+= νS2 + ν ˜w⊤(w − ˜w) + b⊤(w − ˜w) + b⊤ ˜w
+= νS2 + (ν ˜w + b)⊤(w − ˜w) + b⊤ ˜w
+
+(∵ (24))
+
+((25) restated)
+
+Proof of Lemma 4.1. The condition (23) is calculated as
+
+Aw + b = ν(w − ˜w),
+(A − νI)(w − ˜w) = −A ˜w − b.
+
+Here, let us apply eigendecomposition of A, denoted by A = Q⊤ΦQ, where Q ∈ Rn×n is orthogonal
+(QQ⊤ = Q⊤Q = I) and Φ := diag(ϕ1, ϕ2, . . . , ϕn) is a diagonal matrix consisting of eigenvalues of A. Such a
+decomposition is assured to exist since A is assumed to be symmetric and positive semidefinite. Then,
+
+(Q⊤ΦQ − νI)(w − ˜w) = −Q⊤ΦQ ˜w − b,
+Q⊤(Φ − νI)Q(w − ˜w) = −Q⊤ΦQ ˜w − b,
+(Φ − νI)τ = ξ,
+
+(where τ := Q(w − ˜w),
+
+∀i ∈ [n] :
+
+(ϕi − ν)τi = ξi.
+
+ξ := −ΦQ ˜w − Qb ∈ Rn, )
+
+Note that we have to be also aware of the constraint
+
+S = ∥τ ∥2 =
+
+√
+
+τ ⊤τ =
+
+(cid:113)
+
+(w − ˜w)⊤Q⊤Q(w − ˜w) = ∥w − ˜w∥2.
+
+(26)
+
+(27)
+
+(28)
+
+Here, we consider these two cases.
+
+18
+
+1. First, consider the case when (Φ−νI) is nonsingular, that is, when ν is different from any of ϕ1, ϕ2, . . . , ϕn.
+
+Then, from (28) we have
+
+S2 = ∥τ ∥2 =
+
+n
+(cid:88)
+
+i=1
+
+τ 2
+i =
+
+n
+(cid:88)
+
+(cid:18) ξi
+
+(cid:19)2
+
+ν − ϕi
+
+i=1
+
+(cid:0)=: T (ν)(cid:1).
+
+(29)
+
+So, values of (16) for all stationary points with respect to w and ν (on condition that (Φ − νI) is
+nonsingular) can be obtained by computing (25) for each ν satisfying (29), that is,
+
+• for such ν computing τ by (27), and
+• computing (25) as νS2 + (ν ˜w + b)⊤(w − ˜w) + b⊤ ˜w = νS2 + (ν ˜w + b)⊤Q⊤τ + b⊤ ˜w.
+
+2. Secondly, consider the case when (Φ − νI) is nonsingular, that is, when ν is equal to one of ϕ1, ϕ2, . . . , ϕn.
+First, given ν, let Uν := {i | i ∈ [n], ϕi = ν} be the indices of {ϕi}i equal to ν (this may include more
+than one indices), and Fν := [n] \ Uν. Note that, by assumption, Uν is not empty. Then, all stationary
+points of (16) with respect to w and ν (on condition that (Φ − νI) is singular) can be found by computing
+the followings for each ν ∈ {ϕ1, ϕ2, . . . , ϕn} (duplication excluded):
+
+• If ξi ̸= 0 for at least one i ∈ Uν, the equation (27) cannot hold.
+• If ξi = 0 for all i ∈ Nν, the equation (27) may hold. So we calculate τ that maximizes (16) as
+
+follows:
+
+– Fix τi = ξi/(ϕi − ν) for i ∈ Fν.
+– Set the constraint (cid:80)
+τ 2
+i (due to (28)).
+– Maximize (16) with respect to {τi}i∈Uν under the constraints above. Here, by (25) we have
+
+i = S2 − (cid:80)
+τ 2
+
+i∈Fν
+
+i∈Uν
+
+only to calculate
+
+[νS2 + (ν ˜w + b)⊤(w − ˜w) + b⊤ ˜w],
+
+max
+τ ∈Rn
+
+(30)
+
+subject to ∀i ∈ Fν :
+
+τi =
+
+,
+
+ξi
+ϕi − ν
+(cid:88)
+τ 2
+i ,
+
+i∈Fν
+
+(cid:88)
+
+i∈Uν
+
+i = S2 −
+τ 2
+
+which is easily computed by Lemma A.4. The value of the maximization result is equal to that
+of (16) on condition that ν is specified above.
+
+So, collecting these result and taking the largest one, the maximization (on condition that (Φ − νI)
+is singular) is completed.
+
+Taking the maximum of the two cases, we have the maximization result of (16).
+
+A.7 Proof of Lemma 4.2
+
+Proof. We show the statements in the lemma that, if ϕek < ϕek+1 (k ∈ [N −1]), then T (ν) is a convex function
+in the interval (ϕek , ϕek+1) with limν→ϕek +0 = limν→ϕek+1 −0 = +∞. Then the conclusion immediately follows.
+
+19
+
+The latter statement clearly holds. The former statement is proved by directly computing the derivative.
+
+d
+dν
+
+T (ν) =
+
+d
+dν
+
+n
+(cid:88)
+
+(cid:18) ξi
+
+(cid:19)2
+
+n
+(cid:88)
+
+= −2
+
+ν − ϕi
+
+ξ2
+i
+(ν − ϕi)3 .
+
+i=1
+It is an increasing function with respect to ν, as long as ν does not match any of {ϕi}n
+So it is convex in the interval ϕek < ν < ϕek+1.
+
+i=1
+
+i=1 such that ξi ̸= 0.
+
+B Detailed Calculations
+
+In this appendix we describe detailed calculations omitted in the main paper.
+
+B.1 Calculations for L1-loss L2-regularized SVM (Section 4.1)
+
+For this setup, we can calculate as
+
+ρ∗(β) :=
+
+1
+2λ
+
+∥β∥2
+2,
+
+ℓ∗
+y(t) :=
+
+(cid:40)
+
+t,
++∞,
+
+(−1 ≤ t ≤ 0)
+(otherwise)
+
+∂ρ∗(β) :=
+
+(cid:27)
+
+β
+
+,
+
+(cid:26) 1
+λ
+
+∂ℓy(t) :=
+
+
+
+
+
+
+{−1},
+[−1, 0],
+{0}.
+
+(t < 1)
+(t = 1)
+(t > 1)
+
+Then we have the dual problem in the main paper (6).
+
+B.2 Calculations for L2-loss L1-regularized SVM (Section 4.2)
+
+For this setup, we can calculate as
+
+ρ∗(β) :=
+
+(cid:40)
+
+0,
++∞,
+
+(βd = 0, ∀j ∈ [d − 1] :
+(otherwise)
+
+
+|βj| ≤ λ)
+
+ℓ∗
+y(t) :=
+
+(cid:40) t2+4t
+4
++∞,
+
+,
+
+(t ≤ 0)
+(otherwise)
+
+∀j ∈ [d − 1] :
+
+[∂ρ∗(β)]j :=
+
+
+
+
+−∞,
+[−∞, 0],
+0,
+[0, +∞],
++∞,
+
+(βj < −λ)
+(βj = −λ)
+(|βj| < λ)
+(βj = λ)
+(βj > λ)
+
+[∂ρ∗(β)]d :=
+
+
+
+
+
+
+−∞,
+[−∞, +∞],
++∞,
+
+(βd < 0)
+(βd = 0)
+(βd > 0)
+
+∂ℓy(t) := −2 max{0, 1 − t}.
+
+Then, setting γi = λ for all i ∈ [n], the dual objective function is described as
+
+Dw(α) =
+
+where
+
+(cid:40)
+
+i=1 wi
+
+− (cid:80)n
++∞,
+
+λ2α2
+
+i −4λαi
+
+4
+
+,
+
+(if (32) are satisfied)
+(otherwise)
+
+λαi ≥ 0 ⇔ αi ≥ 0,
+
+∀j ∈ [d − 1] :
+((λ1n ⊗ w) ⊗ ˇX:d)⊤α = 0 ⇔ (w ⊗ ˇX:d)⊤α = 0.
+
+|((λ1n ⊗ w) ⊗ ˇX:j)⊤α| ≤ λ ⇔ |(w ⊗ ˇX:j)⊤α| ≤ 1,
+
+20
+
+(31)
+
+(32a)
+
+(32b)
+
+(32c)
+
+Optimality conditions (4) and (5) are described as
+
+∀j ∈ [d − 1] :
+
+|(λ1n ⊗ w ⊗ ˇX:j)⊤α∗(w)| < λ ⇔ |(w ⊗ ˇX:j)⊤α∗(w)| < 1 ⇒ β∗(w)
+
+j
+
+= 0,
+
+∀i ∈ [n] :
+
+λα∗(w)
+i
+
+= 2 max{0, 1 − ˇXi:β∗(w)}.
+
+(33)
+
+(34)
+
+C Application of Safe Sample Screening to Kernelized Features
+
+The kernel method in ML means computation methods when the input variable vector of a sample x ∈ Rd
+cannot be specifically obtained (this includes the case when d is infinite), but for the input variable vectors
+for any two samples x, x′ ∈ Rd its inner product x⊤x′ can be obtained. In such a case, we cannot discuss
+SfS since we cannot obtain each feature specifically, however, we can discuss SsS.
+
+We show that the SsS rules for L1-loss L2-regularized SVM (Section 4.1) can be applied even if the features
+
+are kernelized.
+
+First, if features are kernelized, we cannot obtain either X or β∗( ˜w) specifically. However, since we can
+
+obtain α∗( ˜w), with (7) we have
+
+∀x ∈ Rd : x⊤β∗( ˜w) =
+
+x⊤(w×□ ˇX)⊤α∗( ˜w) =
+
+1
+λ
+
+1
+λ
+
+n
+(cid:88)
+
+i=1
+
+wiα∗( ˜w)
+i
+
+(x⊤ ˇXi:).
+
+(35)
+
+This means that we can calculate the inner product of β∗( ˜w) and any vector.
+
+Then, in order to calculate the quantity (9) to conduct SsS, we have only to calculate
+
+• ˇXi:β∗( ˜w) can be calculated by (35),
+
+• ∥ ˇXi:∥2 =
+
+(cid:113)
+
+ˇX ⊤
+i:
+
+ˇXi: is obtained as the kernel value, and
+
+• Pw(β∗( ˜w)) − Dw(α∗( ˜w)) can be calculated by (35) and kernel values since two variables whose values
+
+cannot be specifically obtained ( ˜X and β∗( ˜w)) appears only as inner products.
+
+So, all values needed to derive SsS rules (9) can be computed even if features are kernelized.
+
+D Details of Experiments
+
+D.1 Detailed Experimental Setup
+
+The criteria of selecting datasets (Table 2) and detailed setups are as follows:
+
+• All of the datasets are downloaded from LIBSVM dataset [22]. We used scaled datasets for ones used
+in DRSfS or only scaled datasets are provided (“ionosphere”, “sonar” and “splice”). We used training
+datasets only if test datasets are provided separately (“splice”, “svmguide1” and “madelon”).
+
+• For DRSsS, we selected datasets from LIBSVM dataset containing 100 to 10,000 samples, 100 or fewer
+features, and the area under the curve (AUC) of the receiver operating characteristic (ROC) is 0.9 or
+higher for the regularization strengths (λ) we examined so that they tend to facilitate more effective
+sample screening.
+
+21
+
+• For DRSfS, we selected datasets from LIBSVM dataset containing 50 to 1,000 features, 10,000 or fewer
+samples, and containing no categorical features. Also, due to computational constraints, we excluded
+features that have at least one zero (marked “†” in Table 2). As a result, one feature from “madelon”
+and one from “sonar” have been excluded.
+
+• In the table, the column “d” denotes the number of features including the intercept feature (Remark
+
+2.2).
+
+The choice of regularization hyperparameter λ, based on the characteristics of the data, is as follows:
+
+• For DRSsS, we set λ as n, n × 10−0.5, n × 10−1.0, . . ., n × 10−3.0. (For DRSsS with DL, we set 1000
+
+instead of n.) This is because the effect of λ gets weaker for larger n.
+
+• For DRSfS, we determine λ based on λmax, defined as the smallest λ for which β∗(w)
+
+j
+
+= 0 for any
+
+j ∈ [d − 1] explained below. We then set λ as λmax, λmax × 10−1/3, λmax × 10−2/3, . . ., λmax × 10−2.
+
+Finally, we show the calculation of λmax for L2-loss L1-regularized SVM. By (14), we would like to find λ
+so that |(w ⊗ ˇX:j)⊤α∗(w)| < 1 for all j ∈ [d − 1]. In order to judge this, we need α∗(w), which is calculated
+as follows:
+
+• Solve the primal problem (1) for L2-loss L1-regularized SVM by fixing β∗(w)
+
+= 0 for any j ∈ [d − 1],
+
+j
+
+that is,
+
+β∗(w)
+d
+
+n
+(cid:88)
+
+= argmin
+
+βd
+
+i=1
+
+(cid:88)
+
+= argmin
+
+βd
+
+wiℓyi(ˇxidβd) = argmin
+
+i=1
+wi(max{0, 1 − βd})2 +
+
+βd
+
+i∈[n], yi=+1
+
+i∈[n], yi=−1
+
+n
+(cid:88)
+
+wi(max{0, 1 − yiβd})2
+
+(cid:88)
+
+wi(max{0, 1 + βd})2
+
+=
+
+(cid:80)
+
+i∈[n], yi=+1 wi − (cid:80)
+i=1 wi
+
+(cid:80)n
+
+i∈[n], yi=−1 wi
+
+computed above and β∗(w)
+
+j
+
+= 0 for any j ∈ [d − 1], calculate α$ = λα∗(w) = [2 max{0, 1 −
+
+• If |(w ⊗ ˇX:j)⊤α$)| < λ for all j ∈ [d − 1], then β∗(w)
+
+= 0 for any j ∈ [d − 1]. So, we set λmax =
+
+• With β∗(w)
+ˇXi:β∗(w)}]n
+
+d
+
+i=1 by (15).
+
+maxj∈[d−1] |(w ⊗ ˇX:j)⊤α$)|.
+
+.
+
+j
+
+D.2 All Experimental Results of Section 6.2
+
+For the experiment of Section 6.2, ratios of screened samples by DRSsS setup is presented in Figure 7, while
+ratios of screened features by DRSfS setup in Figure 8.
+
+22
+
+Dataset: australian
+
+Dataset: breast-cancer
+
+Dataset: heart
+
+Dataset: ionosphere
+
+Dataset: sonar
+
+Dataset: splice
+
+Dataset: svmguide1
+
+Figure 7: Ratios of screened samples by DRSsS.
+
+23
+
+0.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=0.690=2.181=6.9=21.81=69.0=218=6900.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=0.683=2.159=6.83=21.59=68.3=215=6830.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=0.27=0.853=2.7=8.538=27.0=85.38=2700.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=0.351=1.109=3.510=11.09=35.1=110=3510.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=0.208=0.657=2.08=6.577=20.8=65.77=2080.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=1.0=3.162=10.0=31.62=100=316=10000.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened samples=3.089=9.768=30.89=97.68=308=976=3089Dataset: madelon
+
+Dataset: sonar
+
+Dataset: splice
+
+Figure 8: Ratios of screened features by DRSfS.
+
+24
+
+0.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened features=7.32e+2=1.58e+3=3.40e+3=7.32e+3=1.58e+4=3.40e+4=7.32e+40.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened features=7.48e1=1.61e+0=3.47e+0=7.48e+0=1.61e+1=3.47e+1=7.48e+10.900.951.001.051.10a (Parameter for change of weight)0.00.20.40.60.81.0Ratio of screened features=7.34e+0=1.58e+1=3.41e+1=7.34e+1=1.58e+2=3.41e+2=7.34e+2

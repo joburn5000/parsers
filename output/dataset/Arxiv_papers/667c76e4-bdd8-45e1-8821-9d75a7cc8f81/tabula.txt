@@ -1,0 +1,39 @@
+       Algorithm     Art  Clipart  Product  Real World    Algorithm.1   Art.1  Clipart.1  Product.1  Real World.1
+0  No Adaptation  0.9902   0.9992   0.5663      0.0113  No Adaptation  0.3133     0.2818     0.1940        0.0024
+1      CD (ours)  2.2642   2.3637   1.5137      0.0892      CD (ours)  0.1107     0.0715     0.0599        0.0072
+2            T3A  0.2527   0.2638   0.1424      0.0837            T3A  0.4330     0.3666     0.2245        0.0427
+3            ETA  0.7716   0.6305   0.4086      0.0118            ETA  0.3341     0.3219     0.2136        0.0023
+4           TENT  0.7820   0.6328   0.4164      0.0077           TENT  0.3281     0.3049     0.2065        0.0025    1. PACS [35] has 4 domains: pictures, art, cartoon, sketch with 7 classes. Tested using LOO.
+0  2.0  HomeOffice [36] has 4 domains: art, clipart, p...                                       
+1  NaN                                               LOO.                                       
+2  3.0  Digits is a combination of 3 “numbers” dataset...                                              Algorithm  Accuracy     ECE  Entropy
+0  No Adaptation    0.5894  0.3014   0.4386
+1      CD (ours)    0.6475  0.1685   1.2195
+2            T3A    0.6247  0.2713   1.8729
+3            ETA    0.6463  0.2698   0.3561
+4           TENT    0.6445  0.2617   0.3980       Algorithm  Accuracy     ECE  Entropy
+0  No Adaptation    0.8410  0.1110   0.1768
+1      CD (ours)    0.8482  0.0754   0.3660
+2            T3A    0.8567  0.1160   0.0960
+3            ETA    0.8541  0.1011   0.1692
+4           TENT    0.8483  0.1079   0.1618Empty DataFrame
+Columns: [[44], Martín Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen, Craig Citro,]
+Index: []Empty DataFrame
+Columns: [3., Digits is a combination of 3 “numbers” datasets: USPS [37], MNIST [38], and SVHN [39].]
+Index: []       Algorithm  Accuracy     ECE  Entropy
+0  No Adaptation    0.6646  0.1979   0.6418
+1        CDβ=98%    0.6686  0.0692   1.5162
+2         CDβ=0%    0.6720  0.0622   1.5576
+3            T3A    0.6863  0.2667   0.1857
+4            ETA    0.6778  0.2180   0.4556
+5           TENT    0.6837  0.2105   0.4597       Algorithm  Accuracy      ECE  Entropy
+0  No Adaptation    0.5669  0.24240   0.8235
+1             CD    0.5748  0.06378   1.8699
+2            T3A    0.6169  0.33510   0.1819
+3            ETA    0.5776  0.23950   0.7928
+4           TENT    0.5791  0.24120   0.7761       Algorithm  Accuracy     ECE  Entropy
+0  No Adaptation    0.8730  0.1054   0.0812
+1      CD (ours)    0.8794  0.0789   0.1565
+2            T3A    0.8973  0.0844   0.0645
+3            ETA    0.8827  0.0975   0.0723
+4           TENT    0.8795  0.1007   0.0719

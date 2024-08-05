@@ -1,0 +1,82 @@
+  prior to model training. The core concept of the DRSS ronmental changes, the use of fewer samples/features
+0  method involves reformulating the DR covariate...                      enables more efficient learning.  
+1  problem as a weighted empirical risk minimization     Our basic idea to tackle this problem is to ef...  
+2  problem, where the weights are subject to unce...     combine distributionally robust (DR) learning ...    Robust Safe Screening (DRSS), for identifying unnec- of supervised learning problems within dynamically
+0  essary samples and features within a DR covariate    changing environments. Identifying unnecessary...
+1  shift setting. This method effectively combine...    ples/features offers several benefits. It help...
+2  learning, a paradigm aimed at enhancing model ro-    creasing the storage space required for keepin...
+3  bustness against variations in data distributi...    training data for updating the machine learnin...
+4  safe screening (SS), a sparse optimization tec...    models in the future. Moreover, in situations ...
+5  designed to identify irrelevant samples and fe...    ing real-time adaptation of ML models to quick...  BC\rUnknownDistributionally\rTest DistributionRobust\rSafe Screening\rAD\rDRSS Method (Proposed)  Unnamed: 0
+0           Distributionally\rRobust\rSafe Screening                                                       NaN
+1                                                NaN                                                       NaN    BC\rUnknownDistributionally\rTest DistributionRobust\rSafe Screening\rAD\rDRSS Method (Proposed)  ... Unnamed: 6
+0                                                 NaN                                                 ...        NaN
+1                                                 NaN                                                 ...        NaN
+2                                                 NaN                                                 ...        NaN
+3                                                 NaN                                                 ...        NaN
+4                                                 NaN                                                 ...        NaN
+5                                                 NaN                                                 ...        NaN
+6                                                 NaN                                                 ...        NaN
+7                                                 NaN                                                 ...        NaN
+8                                                 NaN                                                 ...        NaN
+9                                                 NaN                                                 ...        NaN
+10                                                NaN                                                 ...        NaN
+11                                                NaN                                                 ...        NaN
+
+[12 rows x 8 columns]       Definition 2.1. Given n training samples of d-  ...  (3)
+0   dimensional input variables, scalar output var...  ...  NaN
+1   and scalar sample weights, denoted by X ∈ Rn × d,  ...  (4)
+2   y ∈ Rn and w ∈ Rn≥ , respectively, the trainin...  ...  NaN
+3   putation of weighted RERM for linear predictio...  ...  NaN
+4                              formulated as follows:  ...  NaN
+5                                                 NaN  ...  NaN
+6                                                ∗(w)  ...  NaN
+7                             β := argminPw(β), where  ...  NaN
+8                                                β∈Rd  ...  NaN
+9                                                 NaN  ...  NaN
+10                                                 n∑  ...  NaN
+11                Pw(β) := wily (X̌i:β) + ρ(β). i (1)  ...  NaN
+12                                                i=1  ...  NaN
+13                                                NaN  ...  NaN
+14  Here, ly : R→ R is a convex loss function1, ρ ...  ...  NaN
+15  R is a convex regularization function, and X̌ ...  ...  NaN
+16  is a matrix calculated from X and y and determ...  ...  NaN
+17                                                NaN  ...  NaN
+18  depending on l. In this paper, unless otherwis...  ...  NaN
+19                                                NaN  ...  NaN
+20  with X̌ := y□×X. For regressions (y ∈ Rn) we u...  ...  NaN
+21                                                NaN  ...  NaN
+22                                       set X̌ := X.  ...  NaN
+23                                                NaN  ...  NaN
+24                                                NaN  ...  NaN
+25  Remark 2.2. We add that, we adopt the formulat...  ...  NaN
+
+[26 rows x 9 columns]   First we show how to compute B∗(w). In this paper  ... Unnamed: 0
+0  we adopt the computation methods that is avail...  ...        NaN
+1                                                NaN  ...        NaN
+2  when the regularization function ρ in Pw (and ...  ...        NaN
+3             Pw itself) of (1) are strongly convex.  ...        NaN
+4     Lemma 3.1. Suppose that ρ in P w (and also P w  ...        NaN
+5                                                NaN  ...       ∗(w)
+6  itself) of (1) are κ-strongly convex. Then, fo...  ...         is
+7                                                NaN  ...        NaN
+8  β̂ ∈ Rd and α̂ ∈ Rn, we can assure β∗(w) ∈ B∗(...  ...        NaN
+
+[9 rows x 3 columns]  ducing nontrivial computational techniques, such as   This work was partially supported by MEXT KAK-
+0  constrained maximization of certain convex fun...        ENHI (20H00601), JST CREST (JPMJCR21D3 in-
+1  (Section 4.3). Additionally, to address the co...   cluding AIP challenge program, JPMJCR22N2), JST
+2  of SS, which typically applies to ML by minimi...    Moonshot R&D (JPMJMS2033-05), JST AIP Acceler-
+3  convex functions, we provided an application t...     ation Research (JPMJCR21U2), NEDO (JPNP18002,
+4  by applying SS to the last layer of DL model. ...   JPNP20006) and RIKEN Center for Advanced Intel-                          Unnamed: 0 Unnamed: 1 Unnamed: 2 Unnamed: 3  Unnamed: 4  = 0.208
+0     [25] Ralph Tyrell Rockafellar.     Convex        NaN  analysis.         0.8  = 0.657
+1  Princeton university press, 1970.        NaN        NaN        NaN         NaN   = 2.08
+2                                NaN        NaN        NaN        NaN         0.6  = 6.577
+3                                NaN        NaN        NaN        NaN         NaN   = 20.8
+4  [26] Jean-Baptiste Hiriart-Urruty        NaN        and     Claude         0.4  = 65.77   Unnamed: 0  = 7.32e + 2  Unnamed: 1                  Unnamed: 2    = 7.48e 1
+0         0.8  = 1.58e + 3         0.8                         NaN  = 1.61e + 0
+1         NaN  = 3.40e + 3         NaN                         NaN  = 3.47e + 0
+2         0.6  = 7.32e + 3         0.6  Ratio of screened features  = 7.48e + 0
+3         NaN  = 1.58e + 4         NaN                         NaN  = 1.61e + 1
+4         0.4          NaN         0.4                         NaN          NaN
+5         NaN  = 3.40e + 4         NaN                         NaN  = 3.47e + 1
+6         0.2  = 7.32e + 4         0.2                         NaN  = 7.48e + 1

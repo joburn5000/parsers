@@ -1,0 +1,1306 @@
+4
+2
+0
+2
+
+r
+p
+A
+5
+2
+
+]
+E
+M
+
+.
+t
+a
+t
+s
+[
+
+1
+v
+0
+1
+6
+6
+1
+.
+4
+0
+4
+2
+:
+v
+i
+X
+r
+a
+
+Conformalized Ordinal Classification with Marginal and
+
+Conditional Coverage
+
+Subhrasish Chakraborty1, Chhavi Tyagi1, Haiyan Qiao2, and Wenge Guo∗1
+
+1Department of Mathematical Sciences, New Jersey Institute of Technology
+2School of Computer Science & Engineering, California State University San Bernardino
+
+April 26, 2024
+
+Abstract
+
+Conformal prediction is a general distribution-free approach for constructing prediction sets combined
+
+with any machine learning algorithm that achieve valid marginal or conditional coverage in finite samples.
+
+Ordinal classification is common in real applications where the target variable has natural ordering
+
+among the class labels. In this paper, we discuss constructing distribution-free prediction sets for such
+
+ordinal classification problems by leveraging the ideas of conformal prediction and multiple testing with
+
+FWER control. Newer conformal prediction methods are developed for constructing contiguous and
+
+non-contiguous prediction sets based on marginal and conditional (class-specific) conformal p-values,
+
+respectively. Theoretically, we prove that the proposed methods respectively achieve satisfactory levels of
+
+marginal and class-specific conditional coverages. Through simulation study and real data analysis, these
+
+proposed methods show promising performance compared to the existing conformal method.
+
+KEY WORDS: Conformal prediction, ordinal classification, multiple testing, FWER control, marginal
+
+coverage, class-specific conditional coverage
+
+1
+
+Introduction
+
+Ordinal classification, also known as ordinal regression or ordinal prediction, is a machine learning task that
+
+involves predicting a target variable with ordered categories (McCullagh, 1980; Agresti, 2010). In ordinal
+
+classification, the target variable has a natural ordering or hierarchy among its categories, but the intervals
+
+between the categories may not be evenly spaced or defined. Unlike regular classification, where the classes
+
+are nominal and unordered, ordinal classification takes into account the ordering relationship between the
+
+classes. This makes it suitable for situations where the outcome variable has multiple levels of severity,
+
+satisfaction ratings, or rankings. Here are a few examples of ordinal classification: customer satisfaction
+
+levels, movie ratings, disease severity levels, and education levels (Agresti, 2010).
+
+In ordinal classification, the goal is to learn a model that can accurately predict the ordinal variable’s value
+
+given a set of input features. The model needs to understand the ordering of the classes and make predictions
+
+∗Author e-mail addresses: sc2325@njit.edu, ct364@njit.edu, hqiao@csusb.edu, wenge.guo@njit.edu
+
+1
+
+ 
+ 
+ 
+ 
+ 
+ 
+that respect this order. In the literature, some conventional classification algorithms have been adapted
+
+or modified to address ordinal classification, for example, ordinal logistic regression, SVM, decision trees,
+
+random forest, and neural networks (Harrell, 2015; da Costa et al., 2010; Kramer et al., 2001; Janitza et al.,
+
+2016; Cheng et al., 2008). Some alternative methods are also specifically developed for ordinal classification
+
+problems by fully exploiting the ordinal structure of the response variables (Frank and Hall, 2001; Cardoso and
+
+da Costa, 2007; Gutiérrez et al., 2015). However, these existing methods can only provide point prediction,
+
+which is not adequate in some high stakes areas such as medical diagnosis and automatic driving. Uncertainty
+
+quantification (UQ) techniques aim to go beyond point predictions and provide additional information about
+
+the reliability of these predictions. There are various techniques for UQ in machine learning, including
+
+Bayesian methods, calibration, and conformal prediction (Hüllermeier and Waegeman, 2021).
+
+Conformal prediction is a unique distribution-free UQ technique that provides a prediction set rather
+
+than a point prediction for the true response with guaranteed coverage (Vovk et al., 1999, 2005; Shafer and
+
+Vovk, 2008; Angelopoulos and Bates, 2021; Fontana et al., 2023). It can be used as a wrapper with any
+
+black-box algorithm. In this paper, we use the conformal prediction technique to construct prediction sets for
+
+ordinal classification problems. By combining the ideas of conformal prediction and multiple testing, two new
+
+conformal prediction methods are introduced for constructing contiguous and non-contiguous prediction sets.
+
+Firstly, the problem of ordinal classification is reformulated as a problem of multiple testing; Secondly, for
+each constructed hypothesis, the marginal and conditional conformal p-values are respectively calculated;
+Thirdly, based on these marginal (conditional) conformal p-values, three multiple testing procedures are
+developed for controlling marginal (conditional) familywise error rate (FWER); Finally, based on the testing
+
+outcomes of these procedures, the prediction sets are constructed and proved having guaranteed marginal
+
+(conditional) coverage.
+
+There are almost no works of applying conformal prediction to address ordinal classification in the
+
+literature. To our knowledge, Lu et al. (2022) is the only existing work, in which, a new (split) conformal
+
+prediction method is developed for constructing adaptive contiguous prediction region. This method is proved
+
+to have guaranteed marginal coverage, however, it cannot guarantee to have more desired conditional coverage.
+
+Moreover, it does not work well for high dimensional data. Compared to the method introduced in Lu et al.
+
+(2022), our proposed methods generally show via theoretical and numerical studies performing better in the
+
+settings of higher dimensions and in terms of class-specific conditional coverage; especially for the conditional
+conformal p-values based methods, they are proved to have guaranteed conditional coverage.
+
+The rest of this paper is structured as follows. In Section 2, we briefly introduce split-conformal prediction
+
+and review related works, followed by Section 3 which presents the development of our proposed conformal
+
+methods using the idea of multiple testing. Section 4 provides numerical studies to evaluate the performance
+
+of the proposed methods compared to the existing method. Some discussions are presented in Section 5 and
+
+all proofs
+
+2 Preliminaries
+
+In this section, we briefly describe the conformal prediction framework and review the related literature.
+
+2
+
+2.1 Conformal Prediction
+
+Conformal prediction is a general approach to construct prediction sets combined with a pre-trained classifier.
+
+The main advantage of this approach is that it is distribution-free and can work with any black-box algorithm.
+
+Conformal prediction is broadly of two types – full conformal prediction and split-conformal prediction. The
+
+full conformal prediction uses all the observations to train the black-box algorithms (Vovk et al., 2005). In
+
+contrast, split-conformal prediction (Papadopoulos et al., 2002) involves splitting the training data into proper
+
+training data to train the black-box algorithm and calibration data to calculate the threshold for forming
+
+prediction sets. Our proposed methods are based on the split-conformal method. Consider a multi-class
+classification problem with feature space X and labels Y = {1, 2, · · · , K}. Given the training observations
+and a test input X2n+1, the goal is to find a prediction set C(X2n+1) : X (cid:55)→ 2Y that contains the
+(Xi, Yi)2n
+i=1
+unknown response Y2n+1 with enough statistical coverage.
+
+The split-conformal procedure suggests to split 2n observations to n training observations, i.e., (Xi, Yi)n
+,
+i=1
+which are used to train ˆf , a black-box classifier such that ˆf : X (cid:55)→ Y and the remaining n observations
+for calibration. The central part of this technique involves calculating the conformity scores for
+(Xi, Yi)2n
+each observation, which measures how much the test observation conforms with the calibration observations.
+
+i=n+1
+
+There can be several choices of conformity scores for multi-class classification problem, including posterior
+
+class probability, cumulative probability, and regularized cumulative probability (Sadinle et al., 2019; Romano
+et al., 2020; Angelopoulos et al., 2020). Given the score function s : X × Y (cid:55)→ R, the conformity score for the
+ith calibration observation is defined as si = s(Xi, Yi),
+
+i = n + 1, · · · , 2n.
+
+For a test input X2n+1, we compute the conformity score for each class label. Therefore, for a class label
+y ∈ Y the conformity score corresponding to (X2n+1, y) is s2n+1 = s(X2n+1, y). By using the conformity
+scores obtained for the calibration observations and the test input coupled with a given label y, we can
+calculate the conformal p-value to test whether the unknown true label Y2n+1 corresponding to the test input
+X2n+1 is y or not. The (marginal) conformal p-value is defined as,
+
+p(X2n+1, y) =
+
+2n
+(cid:80)
+i=n+1
+
+I (s2n+1 ≤ si) + 1
+
+n + 1
+
+.
+
+The final step involves constructing the prediction set C(X2n+1) = {y : p(X2n+1, y) ≥ α}, which satisfies
+
+P(Y2n+1 ∈ C(X2n+1)) ≥ 1 − α,
+
+(1)
+
+(2)
+
+are exchangeably distributed, where α ∈ (0, 1) is a
+when the calibration and test observations (Xi, Yi)2n+1
+i=n+1
+pre-specified mis-coverage level. Equation (2) is called marginal validity of the prediction set C(X2n+1). It
+guarantees that the true label Y2n+1 is contained in the prediction set with 100(1 − α)% confidence. Vovk
+(2012) introduced another type of conformal p-value which is called as the conditional conformal p-value. Let
+Dcal = {n + 1, . . . , 2n} denote the indices of the calibration observations (Xi, Yi)2n
+. For a test input X2n+1
+and any class y = 1, . . . , K, the (class-specific) conditional conformal p-value given Y2n+1 = y is defined as
+
+i=n+1
+
+p(X2n+1|y) =
+
+(cid:80)
+
+i∈Iy
+
+I{si ≤ s2n+1} + 1
+
+ny + 1
+
+,
+
+(3)
+
+where Iy = {i ∈ Dcal : Yi = y}, ny = |Iy| is the size of Iy, and si = s(Xi, y) for i = n + 1, . . . , 2n + 1.
+
+3
+
+In general, the concept of conditional coverage such as object conditional validity and class-specific
+conditional validity are more relevant to practical applications (Vovk, 2012; Lei, 2014; Barber et al., 2021).
+If it is satisfied, the more desired results are often guaranteed. Specifically, in classification problems,
+class-specific conditional validity provides conditional coverage for each given class, which is defined as
+
+P(Y2n+1 ∈ C(X2n+1)|Y2n+1 = y) ≥ 1 − α
+
+(4)
+
+for any y = 1, . . . , K. Proposition 1 and 2 below ensure that the marginal and conditional conformal p-values
+are valid, which result in desired marginal and (class-specific) conditional coverage.
+
+To simplify the notation, we let Zi = (Xi, Yi) for i = 1, . . . , 2n + 1 and denote the conformity scores of
+, as si’s, and the conformity score of the test data, Z2n+1 = (X2n+1, Y2n+1),
+the calibration data, {Zi}2n
+as s2n+1, where Y2n+1 is unknown. These notations are used in all propositions and theorems presented in
+this paper.
+
+i=n+1
+
+Proposition 1. Suppose that {Zi}2n+1
+marginal conformal p-values defined below as,
+
+i=1 where Zi = (Xi, Yi) are exchangeable random variables, then the
+
+p(Z2n+1) =
+
+(cid:80)2n
+
+i=n+1
+
+I(si ≤ s2n+1) + 1
+
+n + 1
+
+(5)
+
+is valid in the sense that for any t ∈ [0, 1], we have
+
+P(p(Z2n+1) ≤ t) ≤ t.
+
+Moreover, if the conformity scores {si}2n+1
+
+i=n+1 are distinct surely, we have p(Z2n+1) ∼ U
+
+(cid:110) 1
+
+n+1 , · · · , 1
+
+(cid:111)
+.
+
+Proposition 2. Suppose that {Zi}2n+1
+i=1 where Zi = (Xi, Yi) are exchangeable random variables, then for
+any y ∈ Y, given Iy ⊆ Dcal and Y2n+1 = y, the corresponding conditional conformal p-value as defined in
+equation (3), is conditionally valid in the sense that for any t ∈ [0, 1],
+
+P (cid:0)p(X2n+1|y) ≤ t (cid:12)
+
+(cid:12) Iy, Y2n+1 = y(cid:1) ≤ t.
+
+Moreover, if {si}i∈Iy∪{2n+1} are distinct surely, we have that conditional on Iy and Y2n+1 = y,
+
+p(X2n+1|y) ∼ U
+
+(cid:110) 1
+
+ny + 1
+
+, · · · , 1
+
+(cid:111)
+.
+
+2.2 Related work
+
+The framework of Conformal prediction was introduced by Vladimir Vovk and his collaborators Vovk et al.
+
+(1999, 2005) and has found many applications in classification problems. Shafer and Vovk (2008) and
+
+Angelopoulos and Bates (2021) provided a tutorial introduction and brief literature review on this field.
+
+Several conformal methods have been developed to address binary classification (Lei, 2014) and multi-class
+
+classification problems (Hechtlinger et al., 2018; Sadinle et al., 2019; Romano et al., 2020; Angelopoulos et al.,
+
+2020; Tyagi and Guo, 2023). Coverage guarantees of all these methods are established under the assumption
+
+of exchangeability. Very recently, some new conformal prediction methods have been developed in the settings
+
+of non-exchangeability (Tibshirani et al., 2019; Cauchois et al., 2021; Gibbs and Candes, 2021).
+
+4
+
+Although various conformal prediction methods have been developed for conventional classification
+
+problems, however, to our knowledge, Lu et al. (2022) is the only reference that is specifically devoted to
+
+address ordinal classification problems using conformal prediction methods, in which an adaptive conformal
+
+method is developed for constructing contiguous prediction sets for ordinal response and is applied to AI
+
+disease rating in medical imaging. In addition, Xu et al. (2023) is the closely related reference in which newer
+
+methods are developed for two types of loss functions specially designed for ordinal classification in the more
+
+general framework of conformal risk control.
+
+3 Method
+
+In this section, we introduce several new conformal prediction methods for ordinal classification problems, in
+
+which there is a natural ordering among the classes labels. For simplicity, we assume a descending order of
+priority from class 1 to K in the response space Y = {1, 2, · · · , K}.
+
+3.1 Problem Formulation
+
+We formulate the ordinal classification problem as a multiple testing problem. Specifically, by using the
+
+One-vs-All (OVA) strategy (Rifkin and Klautau, 2004), for each class label, we construct a hypothesis to test
+whether or not a given test input X2n+1 belongs to the particular class. The construction of the hypothesis
+is described as follows,
+
+Hi : Y2n+1 = i
+
+vs H ′
+
+i : Y2n+1 ̸= i,
+
+(6)
+
+for i = 1, · · · , K. It is easy to see that all these hypotheses are random and there is only one true null. To
+test each individual hypothesis Hi, we use the corresponding marginal conformal p-value p(X2n+1, i); to test
+H1, . . . , HK simultaneously, we consider the following three p-value-based testing procedures:
+
+• Procedure 1 : Test H1, H2, · · · , HK sequentially. The test is performed as follows.
+
+– If p(X2n+1, 1) ≤ α, reject H1, move to test H2 else stop testing;
+
+– For i = 2, · · · , K − 1, if p(X2n+1, i) ≤ α, reject Hi, move to test Hi+1 else stop testing;
+
+– If p(X2n+1, K) ≤ α, reject HK else stop testing.
+
+• Procedure 2 : Test HK, HK−1, · · · , H1 sequentially. The test is performed as follows.
+
+– If p(X2n+1, K) ≤ α, reject HK, move to test HK−1 else stop testing;
+
+– For i = K − 1, · · · , 2, if p(X2n+1, i) ≤ α, reject Hi, move to test Hi−1 else stop testing;
+
+– If p(X2n+1, 1) ≤ α, reject H1 else stop testing.
+
+• Procedure 3 : Single-step procedure with common critical value α. This procedure rejects any
+
+hypothesis Hi if and only if p(X2n+1, i) ≤ α.
+
+Procedure 1 and 2 are two pre-ordered testing procedures for which Procedure 1 follows the same testing
+order as that of the K classes whereas Procedure 2 uses the reverse order of these classes (Dmitrienko et al.,
+2009). Procedure 3 is actually a conventional Bonferroni procedure for a single true null. Since there is only
+one true null among the K tested hypotheses, by Proposition 1, we have that all these three (marginal)
+
+5
+
+Figure 1: Graphical representation of Ordinal Prediction Interval (OPI) with K nulls where p(i) represents
+the conformal p-values.
+
+conformal p-value based procedures strongly control family-wise error rate (FWER) at a pre-specified level α
+(Dmitrienko et al., 2009). For each Procedure i, i = 1, 2, 3 defined above, the index set Ai of the accepted
+hypotheses is described as follows,
+
+1. A1 = {ymin, ymin + 1, · · · , K}, where ymin = min{y ∈ Y : p(X2n+1, y) > α};
+
+2. A2 = {1, 2, · · · , ymax}, where ymax = max{y ∈ Y : p(X2n+1, y) > α};
+
+3. A3 = {y : p(X2n+1, y) > α}.
+
+3.2 Ordinal Prediction Interval
+
+Based on the the acceptance sets A1 and A2 of Procedure 1 and 2 given as above, we can obtain a new
+acceptance region A12 = A1 ∩ A2 = {ymin, . . . , ymax}, which is used to define the prediction region C(X2n+1)
+for the unknown response Y2n+1. Specifically, the prediction region C(X2n+1) consists of the class labels for
+which the corresponding hypotheses are both accepted by Procedure 1 and 2, resulting in a contiguous set of
+labels {ymin, . . . , ymax}. This prediction region is referred to as a prediction interval in this context. The
+procedure for constructing the prediction interval C(X2n+1) is summarized in Algorithm 1 and illustrated in
+Figure 1.
+
+Algorithm 1: Ordinal Prediction Interval
+Input: training set Dtrain = (Xi, Yi)n
+
+i=1
+
+, calibration set Dcal = (Xi, Yi)2n
+
+, test input X2n+1,
+
+i=n+1
+
+black-box algorithm A, conformity score function s, mis-coverage level α.
+
+Output: Prediction interval, C(X2n+1).
+Train a classifier A on Dtrain;
+for (Xi, Yi) ∈ Dcal do
+
+Compute conformity score si = s(Xi, Yi);
+
+end
+For each y ∈ Y, compute conformity score s2n+1 = s(X2n+1, y) and corresponding conformal p-value
+p(X2n+1, y) using equation (1);
+ymin = min{y ∈ Y : p(X2n+1, y) > α} ;
+ymax = max{y ∈ Y : p(X2n+1, y) > α} ;
+Prediction interval, C(X2n+1) = {ymin, . . . , ymax}.}
+
+6
+
+3.3 Ordinal Prediction Set
+
+Our second method for constructing ordinal prediction regions is based on Procedure 3. In this method,
+the prediction region C(X2n+1) is defined simply using the acceptance region A3 of Procedure 3, that is,
+C(X2n+1) = {y ∈ Y : p(X2n+1, y) > α}. Specifically, the prediction region consists of any class labels for
+which the corresponding hypotheses are not rejected by Procedure 3, resulting in a non-contiguous set of
+labels. This prediction region is referred to as a prediction set in this context. The procedure for constructing
+the prediction set is detailed in Algorithm 2 below.
+
+Algorithm 2: Ordinal Prediction Set
+
+Input: training set Dtrain = (Xi, Yi)n
+
+i=1
+
+, calibration set Dcal = (Xi, Yi)2n
+
+i=n+1
+
+, test observation X2n+1,
+
+black-box algorithm A, conformity score function s, mis-coverage level α.
+
+Output: Prediction set, C(X2n+1).
+Train a classifier A on Dtrain;
+for (Xi, Yi) ∈ Dcal do
+
+Compute conformity score si = s(Xi, Yi);
+
+end
+For each y ∈ Y, compute conformity score s2n+1 = s(X2n+1, y) and corresponding conformal p-value
+p(X2n+1, y) using equation (1);
+Prediction Set, C(X2n+1) = {y : p(X2n+1, y) > α}.
+
+In the following, we present two results regarding the FWER control of Procedure 1-3 and (marginal) coverage
+
+guarantees of Algorithm 1-2 introduced as above.
+
+Proposition 3. Suppose that (Xi, Yi)2n+1
+i=n+1 are exchangeable random variables, then Procedure 1-3 based on
+marginal conformal p-values, all strongly control the FWER at level α, i.e., F W ER ≤ α. Specifically, if the
+conformity scores {si}2n+1
+
+i=n+1 are distinct surely, then for Procedure 3, we also have, F W ER ≥ α − 1
+
+n+1 .
+
+Theorem 1. Suppose that (Xi, Yi)2n+1
+C(X2n+1) determined by Algorithm 1 and 2 both satisfy
+
+i=n+1 are exchangeable random variables, then the prediction region
+
+P(Y2n+1 ∈ C(X2n+1)) ≥ 1 − α.
+
+Specifically, for C(X2n+1) determined by Algorithm 2, if the conformity scores {si}2n+1
+we have
+
+i=n+1 are distinct surely,
+
+P(Y2n+1 ∈ C(X2n+1)) ≤ 1 − α +
+
+1
+n + 1
+
+.
+
+3.4 Class-specific conditional coverage
+
+To achieve more desired class-specific conditional coverage for our constructed prediction intervals and
+prediction sets, in Procedure 1-3 we use (class-specific) conditional conformal p-values p(X2n+1|y) as described
+in equation (3), instead of the marginal conformal p-values p(X2n+1, y) for simultaneously testing H1, . . . , HK
+formulated in equation (6). It is shown in Proposition 4 below that all these three modified procedures strongly
+control the conditional familywise error rate (FWER) at level α, i.e., FWERy = P(V > 0|Y2n+1 = y) ≤ α,
+for any y ∈ Y, where V is the number of type 1 errors. This result in turn leads to that the prediction
+
+7
+
+regions C(Xn+1|y) constructed by Algorithm 1 and 2 based on p(X2n+1|y) satisfy more desired (class-specific)
+conditional coverage, as stated in Theorem 2.
+
+Proposition 4. Under the same exchangeability assumption as in Proposition 2, Procedure 1-3 based on
+
+conditional conformal p-values p(X2n+1|y) all strongly control the conditional FWER at level α, i.e., for any
+y ∈ Y,
+
+F W ERy = P{reject Hy|Y2n+1 = y} ≤ α.
+
+Specifically, if the conformity scores {si}i∈Iy∪{2n+1} are distinct surely, then for Procedure 3 based on
+p(X2n+1|y), we have that for any y ∈ Y and Iy ⊆ Dcal.
+
+P(reject Hy|Y2n+1 = y, Iy) ≥ α −
+
+1
+ny + 1
+
+.
+
+Theorem 2. Under the same exchangeability assumption as in Theorem 1, the prediction region C(X2n+1|y)
+determined by Algorithm 1 or 2 based on conditional conformal p-values p(X2n+1|y) satisfies
+
+P (cid:0)Y2n+1 ∈ C(X2n+1|y) (cid:12)
+
+(cid:12)Y2n+1 = y(cid:1) ≥ 1 − α
+
+for any y ∈ Y. Specifically, for the prediction set C(Xn+1|y) determined by Algorithm 2 based on p(X2n+1|y),
+if the conformity scores {si}i∈Iy∪{2n+1} are distinct surely, we have
+
+P (cid:0)Y2n+1 ∈ C(X2n+1|y) (cid:12)
+
+(cid:12)Yn+1 = y, Iy
+
+(cid:1) ≤ 1 − α +
+
+1
+ny + 1
+
+for any y ∈ Y and Iy ⊆ Dcal.
+
+4 Numerical Study
+
+In this section, we evaluate the performance of our four proposed methods, Ordinal Prediction Interval
+(OPI) in Algorithm 1 based on marginal conformal p-values (marginal OPI), the OPI based on conditional
+conformal p-values (conditional OPI), Ordinal Prediction Set (OPS) in Algorithm 2 based on marginal
+conformal p-values (marginal OPS), and the OPS based on conditional conformal p-values (conditional OPS),
+in comparison with the existing counterpart developed in Lu et al. (2022), Ordinal Adaptive Prediction
+
+Set (OAPS), on simulated data and one real dataset. The comparison is based on the marginal coverage,
+average set size, and class-specific conditional coverage of the prediction regions for a pre-specified level α.
+The empirical metric we use to measure the class-specific conditional coverage (CCV) of the above methods
+
+is defined as
+
+CCV =
+
+max
+y∈{1,2,··· ,K}
+
+{(1 − α) − Py, 0},
+
+where Py is the estimate of P(Y ∈ C(X2n+1|y) |Y = y) and C(X2n+1|y) is the prediction region obtained
+from Algorithm 1 or 2 using conditional conformal p-values for any y ∈ Y. Intuitively, the metric measures
+the maximum of the deviance of the conditional coverage for each of the classes from the desired level of
+conditional coverage 1 − α.
+
+In the whole numerical investigations including simulation studies and real data analysis, we use the
+
+logistic regression algorithm as the black-box algorithm for our experiments and compute the conformity
+
+scores as estimated posterior probabilities of classes.
+
+8
+
+Figure 2: Performance comparison of four proposed methods OPS and OPI using marginal and conditional
+conformal p-values with the existing Ordinal APS under simulation setting 1 in terms of marginal coverage
+(left), average set size (middle) and class-specific conditional coverage (right) of the prediction sets.
+
+4.1 Simulations
+
+We present the simulation study to evaluate the performance of our proposed methods along with the existing
+
+method. We consider two simulation settings below, a Gaussian mixture model and a sparse model.
+
+1. Gaussian mixture. (X|Y = k) ∼ π1Nd(µk, Σ) + π2Nd(µk+1, Σ) for k = 1, 2, 3 and (X|Y = 4) ∼
+
+π1N (µ4; Σ) + π2N (µ1; Σ) with π1 = 0.2, π2 = 0.8.
+
+In the above setting, we set d = 2, µ1 = (−1, 0), µ2 = (−1, −1), µ3 = (0, −1), µ4 = (1, −1), and Σ as the
+equal correlation matrix with correlation = 0.1.
+
+2. Sparse model. The sparse model is generated with different dimensions of feature vector with
+d = 5, 10, 20, 50, or 100. The features are generated with Xi ∼ N (0, 1) with Cov(Xi, Xj) = 0.5 for i ̸= j.
+The class labels are generated using the sigmoid function f (x) and the the following decision rule,
+
+Yi = k
+
+if
+
+k − 1
+4
+
+≤ f (xi) <
+
+k
+4
+
+, where k = 1, 2, 3, 4,
+
+where f (x) = 1/(1 + e−β
+√
+(β1, . . . , β5) = (1, 1, 1, −
+
+2, 1), and βi = 0 for any 5 < i ≤ d.
+
+′
+
+x) with β = (β1, · · · , βd)′ and x = (x1, . . . , xd)′. The value of β is set as
+
+The sample size for these two simulation settings is 2,000, out of which 500 samples have been used to
+
+train the classifier, 525 observations for calibration, and 975 for validation. The simulations are repeated 500
+
+times, and the results are averaged to obtain the final performance metrics.
+
+Figure 2 displays the performance of our proposed methods along with the existing method under
+
+simulation setting 1. It can be seen from the left panel of Figure 2 that all these five methods empirically
+
+achieve the desired level of marginal coverage. The middle panel of Figure 2 compares the set sizes of the
+
+prediction regions corresponding to these five methods. It can be seen from the figure that the marginal OPS
+
+and the conditional OPS use shorter set sizes to attain the proper marginal coverage than the existing OAPS
+
+whereas the OAPS has shorter set sizes than the marginal OPI and the conditional OPI. Finally, while the
+
+marginal coverage is guaranteed by all the methods, the right panel of Figure 2 shows their differences in
+
+class-specific conditional coverage; the existing OAPS exhibits the largest value of CCV compared to the
+
+proposed methods and among the four proposed methods, the conditional OPI and conditional OPS exhibit
+
+lower values of CCV than the marginal OPI and marginal OPS.
+
+9
+
+Figure 3: Performance comparison of four proposed methods with existing Ordinal APS under simulation
+setting 2 with different dimensions of inputs and fixed mis-coverage level α = 0.1 in terms of marginal coverage
+(left), average set size (middle) and CCV (right) of the prediction sets.
+
+Figure 3 shows the performance of our proposed methods along with the existing method under simulation
+
+setting 2 with different dimensions of inputs. It can be seen from the left panel of this figure that all these
+
+methods empirically achieve desired marginal coverage for lower dimensions, however, the existing OAPS
+
+massively undercovers for higher dimensions and thus loses the control of mis-coverage rate. From the middle
+
+and right panels of Figure 3, we can also see that the conditional OPI and conditional OPS achieve lower
+
+values of CCV than the existing OAPS, although the OAPS has the lower set sizes than our proposed methods
+
+for various dimensions of input.
+
+4.2 Application to real data
+
+We also evaluate the performance of our proposed methods on a real dataset, Traffic accident data, which
+
+is publicly available on the website of Leeds City Council. The real data consists of 1,908 traffic accidents
+
+that occurred in the year 2019. The objective is to predict the severity of the casualties, which are classified
+
+into three categories – mild, serious, and fatal based on the features available. In the numerical experiment,
+500 observations are used to train the logistic regression model, 35% of the remaining observations are used
+for calibration, and 65% for validation. Figure 4 shows that all these methods empirically achieve desired
+marginal coverage for different levels of mis-coverage, however, the proposed marginal OPI and marginal OPS,
+
+and existing OAPS have lower set sizes than the conditional OPI and conditional OPS. It is also evident
+
+from Figure 4 that the proposed conditional OPS and conditional OPI both attain desired class-specific
+
+conditional coverage unlike the existing method, OAPS, which seems to largely deviate from the desired level
+
+of conditional coverage.
+
+5 Concluding Remarks
+
+In this paper, we discussed the ordinal classification problem in the framework of conformal prediction and
+introduced two types of conformal methods, OPI and OPS, for constructing distribution-free contiguous
+prediction regions and non-contiguous prediction sets, respectively. These methods are developed by leveraging
+the idea of multiple testing with the FWER control and are specifically designed based on marginal conformal
+p-values and (class-specific) conditional conformal p-values, respectively. Theoretically, it was proved that
+
+10
+
+Figure 4: Performance comparison of four proposed methods OPS and OPI using marginal and conditional
+conformal p-values with the existing Ordinal APS in terms of marginal coverage (left), average set size
+(middle) and CCV (right) of the prediction regions for Traffic Accident Data.
+
+the proposed methods based on marginal and conditional p-values respectively achieve satisfactory levels of
+marginal and class-specific conditional coverages. Through some numerical investigations including simulations
+
+and real data analysis, our proposed methods show promising results for the settings of higher dimensions
+
+and for class-specific conditional coverage.
+
+This paper discussed constructing valid prediction set for single test input. It would be interesting to
+
+discuss how to construct (simultaneous) prediction sets for multiple test inputs with some overall error control
+
+such as false discovery rate (FDR) control. Another interesting extension might be to relax the conventional
+
+distributional assumption we used for classification problems, for which the training data and the test data
+
+follow from the same distribution. It will be interesting to see whether the proposed methods can be extended
+
+to the settings of distribution shift where the training and test data sets have different distributions.
+
+References
+
+Alan Agresti. Analysis of ordinal categorical data. John Wiley & Sons, 2010.
+
+A.N. Angelopoulos and S. Bates. A gentle introduction to conformal prediction and distribution-free
+
+uncertainty quantification. arXiv preprint arXiv:2107.07511, 2021.
+
+Anastasios Angelopoulos, Stephen Bates, Jitendra Malik, and Michael I. Jordan. Uncertainty sets for image
+
+classifiers using conformal prediction. arXiv preprint arXiv:2009.14193, 2020.
+
+Rina Foygel Barber, Emmanuel J Candes, Aaditya Ramdas, and Ryan J Tibshirani. The limits of distribution-
+free conditional predictive inference. Information and Inference: A Journal of the IMA, 10(2):455–482,
+2021.
+
+Jaime Cardoso and Joaquim Pinto da Costa. Learning to classify ordinal data: The data replication method.
+
+Journal of Machine Learning Research, 8:1393–1429, 2007.
+
+Maxime Cauchois, Suyash Gupta, and John C Duchi. Knowing what you know: valid and validated confidence
+sets in multiclass and multilabel prediction. The Journal of Machine Learning Research, 22(1):3681–3722,
+2021.
+
+11
+
+Jianlin Cheng, Zheng Wang, and Gianluca Pollastri. A neural network approach to ordinal regression. In
+
+2008 IEEE International Joint Conference on Neural Networks, pages 1279–1284. IEEE, 2008.
+
+Joaquim F Pinto da Costa, Ricardo Sousa, and Jaime S Cardoso. An all-at-once unimodal svm approach
+for ordinal classification. In 2010 Ninth International Conference on Machine Learning and Applications,
+pages 59–64. IEEE, 2010.
+
+Alex Dmitrienko, Ajit C Tamhane, and Frank Bretz. Multiple testing problems in pharmaceutical statistics.
+
+CRC press, 2009.
+
+Matteo Fontana, Gianluca Zeni, and Simone Vantini. Conformal prediction: a unified review of theory and
+
+new challenges. Bernoulli, 29(1):1–23, 2023.
+
+Eibe Frank and Mark Hall. A simple approach to ordinal classification. In 12th European Conference on
+
+Machine Learning, Proceedings 12, pages 145–156. Springer, 2001.
+
+Isaac Gibbs and Emmanuel Candes. Adaptive conformal inference under distribution shift. Advances in
+
+Neural Information Processing Systems, 34:1660–1672, 2021.
+
+Pedro Antonio Gutiérrez, Maria Perez-Ortiz, Javier Sanchez-Monedero, Francisco Fernandez-Navarro, and
+Cesar Hervas-Martinez. Ordinal regression methods: survey and experimental study. IEEE Transactions
+on Knowledge and Data Engineering, 28(1):127–146, 2015.
+
+Frank E Harrell. Ordinal logistic regression. In Regression modeling strategies: with applications to linear
+
+models, logistic and ordinal regression, and survival analysis, pages 311–325. Springer, 2015.
+
+Yotam Hechtlinger, Barnabás Póczos, and Larry Wasserman. Cautious deep learning. arXiv preprint
+
+arXiv:1805.09460, 2018.
+
+Eyke Hüllermeier and Willem Waegeman. Aleatoric and epistemic uncertainty in machine learning: an
+
+introduction to concepts and methods. Machine Learning, 110:457–506, 2021.
+
+Silke Janitza, Gerhard Tutz, and Anne-Laure Boulesteix. Random forest for ordinal responses: prediction
+
+and variable selection. Computational Statistics & Data Analysis, 96:57–73, 2016.
+
+Stefan Kramer, Gerhard Widmer, Bernhard Pfahringer, and Michael De Groeve. Prediction of ordinal classes
+
+using regression trees. Fundamenta Informaticae, 47(1-2):1–13, 2001.
+
+J. Lei. Classification with confidence. Biometrika, 101(4):755–769, 2014.
+
+C. Lu, A.N. Angelopoulos, and S. Pomerantz. Improving trustworthiness of ai disease rating in medical
+
+imaging with ordinal conformal prediction sets. arXiv preprint arXiv:2207.02238, 2022.
+
+Peter McCullagh. Regression models for ordinal data. Journal of the Royal Statistical Society B, 42:109–142,
+
+1980.
+
+Harris Papadopoulos, Kostas Proedrou, Volodya Vovk, and Alex Gammerman. Inductive confidence machines
+for regression. In 13th European Conference on Machine Learning, Proceedings 13, pages 345–356. Springer,
+2002.
+
+12
+
+Ryan Rifkin and Aldebaro Klautau. In defense of one-vs-all classification. The Journal of Machine Learning
+
+Research, 5:101–141, 2004.
+
+Y. Romano, M. Sesia, and E. Candès. Classification with valid and adaptive coverage. In Advances in Neural
+
+Information Processing Systems, volume 33, pages 3581–3591, 2020.
+
+M. Sadinle, J. Lei, and L. Wasserman. Least ambiguous set-valued classifiers with bounded error levels.
+
+Journal of American Statistical Association, 114:223–234, 2019.
+
+G. Shafer and V. Vovk. A tutorial on conformal prediction. Journal of Machine Learning Research, 9:371–421,
+
+2008.
+
+Ryan J Tibshirani, Rina Foygel Barber, Emmanuel Candes, and Aaditya Ramdas. Conformal prediction
+
+under covariate shift. Advances in Neural Information Processing Systems, 32, 2019.
+
+Chhavi Tyagi and Wenge Guo. Multi-label classification under uncertainty: a tree-based conformal prediction
+approach. In Conformal and Probabilistic Prediction with Applications, pages 488–512. PMLR, 2023.
+
+V. Vovk, A. Gammerman, and G. Shafer. Algorithmic learning in a random world. Springer, 2005.
+
+Vladimir Vovk. Conditional validity of inductive conformal predictors. In Asian Conference on Machine
+
+Learning, pages 475–490. PMLR, 2012.
+
+Vladimir Vovk, Alex Gammerman, and Craig Saunders. Machine-learning applications of algorithmic
+
+randomness. In Sixteenth International Conference on Machine Learning, pages 444–453, 1999.
+
+Yunpeng Xu, Wenge Guo, and Zhi Wei. Conformal risk control for ordinal classification. In Uncertainty in
+
+Artificial Intelligence, pages 2346–2355. PMLR, 2023.
+
+13
+
+A Proofs
+
+A.1 Proof of Proposition 1
+
+Proof. Suppose, for any given values of conformity scores, v1, · · · , vn+1, they can be rearranged as ˜v1 < · · · < ˜vk
+with repetitions ni of ˜vi such that (cid:80)k
+i=1 ni = n + 1. Let Ev denote the event of {sn+1, · · · , s2n+1} =
+{v1, · · · , vn+1}. Then, under Ev, for i = 1, · · · , k, we have
+
+P(s2n+1 = ˜vi|Ev) =
+
+ni
+n + 1
+
+,
+
+due to the exchangeability of si’s,
+
+We also note that under Ev and s2n+1 = ˜vi we have from equation (5),
+
+Then, for any t ∈ [0, 1] and i = 1, · · · , k, we have
+
+p(Z2n+1) =
+
+(cid:80)i
+
+l=1 nl
+n + 1
+
+.
+
+P(p(Z2n+1) ≤ t|Ev, s2n+1 = ˜vi) =
+
+
+
+
+0 if t <
+
+(cid:80)i
+
+l=1 nl
+n+1
+
+,
+
+
+
+1 o.w.
+
+Thus, for any i = 1, · · · , k and
+
+(cid:80)i−1
+
+l=1 nl
+n+1 ≤ t <
+
+(cid:80)i
+
+l=1 nl
+n+1
+
+, we have
+
+P(p(Z2n+1) ≤ t|Ev)
+k
+(cid:88)
+
+P(p(Z2n+1) ≤ t|Ev, s2n+1 = ˜vl) · P(s2n+1 = ˜vl|Ev)
+
+l=1
+(cid:80)i−1
+
+l=1 nl
+n + 1
+
+≤ t.
+
+=
+
+=
+
+(7)
+
+(8)
+
+By taking the expectation on the above inequality, it follows that the conformal p-value p(Z2n+1) is marginally
+valid.
+
+Specifically, if conformity scores {si}2n+1
+i=n+1
+
+are distinct surely, then k = n+1 and ni = 1 for i = 1, . . . , n+1.
+
+Thus,
+
+that is,
+
+P (p(Z2n+1) ≤ t|Ev) = i−1
+
+n+1 , if i−1
+
+n+1 ≤ t < i
+
+n+1 ,
+
+p(Z2n+1)|Ev ∼ U
+
+(cid:110) 1
+
+n + 1
+
+, · · · , 1
+
+(cid:111)
+.
+
+This completes the proof.
+
+A.2 Proof of Proposition 2
+
+Proof. For any given y ∈ Y, the corresponding (class-specific) conditional conformal p-value is given by
+
+p(X2n+1|y) =
+
+1
+ny + 1
+
+
+
+
+
+(cid:88)
+
+i∈Iy
+
+
+
+I{si ≤ s2n+1} + 1
+
+ ,
+
+(9)
+
+14
+
+where Iy = {i : (Xi, Yi) ∈ Dcal, Yi = y}, ny = |Iy|, si = s(Xi, y) for i ∈ Iy, and s2n+1 = s(X2n+1, y). Given
+Iy and Y2n+1 = y, (Xi)i∈Iy ∪ {X2n+1} are exchangeably distributed, which is due to the assumption that
+are exchangeably distributed. Using the similar arguments as in the proof of Proposition 1, for
+(Xi, Yi)2n+1
+i=1
+any given values of v1, · · · , vny+1, suppose that they can be arranged as ˜v1 < · · · < ˜vl with repetitions mi of
+˜vi such that (cid:80)l
+
+i=1 mi = ny + 1.
+
+Let Ev denote the event {si}i∈Iy ∪ {s2n+1} = {v1, · · · , vny+1}. Then, given Ev, Iy, and Y2n+1 = y, we
+
+have
+
+P(s2n+1 = ˜vi|Ev, Iy, Y2n+1 = y) =
+
+mi
+ny + 1
+
+for i = 1, · · · , l and y = 1, · · · , K, due to exchangeability of si, i ∈ Iy ∪ {2n + 1} given Iy, which in turn is
+. Note that given Ev, Iy, Y2n+1 = y, and s2n+1 = ˜vi, we have from
+due to exchangeability of (Xi, Yi)2n+1
+i=1
+equation (9),
+
+Thus, for any t ∈ [0, 1] and i = 1, · · · , l,
+
+p(X2n+1|y) =
+
+(cid:80)i
+
+j=1 mj
+ny + 1
+
+.
+
+P (cid:0)p(X2n+1|y) ≤ t(cid:12)
+
+(cid:12)Ev, Iy, Y2n+1 = y, s2n+1 = ˜vi
+
+(cid:1) =
+
+
+
+
+0 if t <
+
+(cid:80)i
+j=1 mj
+ny+1 ,
+
+
+
+1 o.w.
+
+(10)
+
+Then, for any given i = 1, · · · , l and
+
+(cid:80)i
+j=1 mj
+ny+1 ≤ t <
+
+(cid:80)i+1
+
+j=1 mj
+ny+1
+
+, we have
+
+P (cid:0)p(X2n+1|y) ≤ t(cid:12)
+
+(cid:12)Ev, Iy, Y2n+1 = y(cid:1)
+
+=
+
+=
+
+l
+(cid:88)
+
+P (cid:0)p(X2n+1|y) ≤ t(cid:12)
+
+(cid:12)Ev, Iy, Y2n+1 = y, s2n+1 = ˜vi
+
+(cid:1) · P (cid:0)s2n+1 = ˜vi
+
+(cid:12)
+(cid:12)Ev, Iy, Y2n+1 = y(cid:1)
+
+j=1
+(cid:80)i
+
+j=1 mj
+ny + 1
+
+≤ t.
+
+By taking expectation, it follows that p(X2n+1|y) is conditionally valid given Y2n+1 = y.
+
+A.3 Proof of Proposition 3
+
+Proof. Consider Procedure 1-3 based on marginal conformal p-values. Note that among the tested hypotheses
+to be true. Thus, the FWER of Procedure 1-3 are all
+H1, . . . , HK, there is exactly one hypothesis HY2n+1
+equal to
+
+where the last inequality follows by Proposition 1.
+
+P(reject HY2n+1) ≤ P (p(X2n+1, Y2n+1) ≤ α) ≤ α,
+
+Specifically, for Procedure 3, if the conformity scores {si}2n+1
+i=n+1
+
+are distinct surely, by Proposition 1, we have
+
+FWER = P(reject HY2n+1) = P
+
+(cid:110)
+
+p(X2n+1, Y2n+1) ≤ α
+
+(cid:111)
+
+≥ α −
+
+1
+n + 1
+
+,
+
+the desired result.
+
+15
+
+A.4 Proof of Theorem 1
+
+Proof. Note that the prediction set derived from Algorithm 1 is given by C(X2n+1) = A1 ∩ A2. Thus, by
+Proposition 1,
+
+P(Y2n+1 ∈ C(X2n+1)) ≥ P(p(X2n+1), Y2n+1) > α) ≥ 1 − α.
+
+Similarly, for Algorithm 2, its prediction set is given by C(X2n+1) = {y ∈ Y : p(X2n+1, y) > α}. By
+
+Proposition 1, it is easy to check that
+
+P(Y2n+1 ∈ C(X2n+1)) = P(p(X2n+1, Y2n+1) > α) ≥ 1 − α.
+
+Specifically, if the conformity scores {si}2n+1
+i=1
+
+are distinct surely, for Algorithm 2, we have
+
+P(Y2n+1 ∈ C(X2n+1)) = 1 − P(p(X2n+1, Y2n+1) ≤ α) ≤ 1 − α +
+
+1
+n + 1
+
+.
+
+This completes the proof.
+
+A.5 Proof of Proposition 4
+
+Proof. Consider Procedure 1-3 based on conditional conformal p-values. For any y = 1, · · · , K, given
+Y2n+1 = y, the conditional FWER of Procedure 1-3 are all equal to
+
+P(reject Hy|Y2n+1 = y) ≤ P(p(X2n+1|y) ≤ α|Y2n+1 = y) ≤ α,
+
+where the inequalities follow the definitions of Procedure 1-3 and Proposition 2.
+
+Specifically, for Procedure 3, if the conformity scores {si}i∈Iy∪{2n+1} are distinct surely, then by Proposition
+2, the FWER conditional on Iy and Y2n+1 = y is equal to
+
+(cid:110)
+
+reject Hy
+
+P
+
+(cid:12)
+(cid:12)Iy, Y2n+1 = y
+
+(cid:111)
+
+= P(p(X2n+1|y) ≤ α|Iy, Y2n+1 = y) ≥ α −
+
+1
+ny + 1
+
+.
+
+This completes the proof.
+
+A.6 Proof of Theorem 2
+
+Proof. By using Proposition 4 and the similar arguments as in the proof of Theorem 1, the prediction sets
+C(X2n+1|y) derived from Algorithm 1 and 2 based on the conditional conformal p-values p(X2n+1|y) all
+satisfy,
+
+(cid:110)
+Y2n+1 ∈ C(X2n+1|y) (cid:12)
+
+P
+
+(cid:12)Iy, Y2n+1 = y
+
+(cid:111)
+
+≥ 1 − α
+
+for any y = 1, . . . , K. Specifically, if the conformity scores {si}i∈Iy∪{2n+1} are distinct surely, for Algorithm
+2, we have
+
+(cid:110)
+Y2n+1 ∈ C(X2n+1|y) (cid:12)
+
+P
+
+(cid:12)Iy, Y2n+1 = y
+
+(cid:111)
+
+the desired result.
+
+16
+
+= P
+
+(cid:110)
+p(X2n+1|y) > α (cid:12)
+1
+ny + 1
+
+,
+
+≤ 1 − α +
+
+(cid:12)Iy, Y2n+1 = y
+
+(cid:111)
+
+

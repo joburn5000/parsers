@@ -1639,9 +1639,9 @@ The PDF of the Poisson distribution can be expressed by:
 
 (cid:17)
 
-(cid:17)
-
 (cid:16)
+
+(cid:17)
 
 f (y; µ) =
 
@@ -3682,13 +3682,13 @@ optimization solvers
 programming,
 doi:10.1007/s00180-021-01084-5.
 
+for
+
 A comparison of
 regression including conic
 Computational Statistics 36 (2021) 1721–1754.
 
 log-binomial
-
-for
 
 [18] E. Carrizosa, A. V. Olivares-Nadal, P. Ram´ırez-Cobo,
 

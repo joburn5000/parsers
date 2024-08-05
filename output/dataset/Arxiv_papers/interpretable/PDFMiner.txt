@@ -1,0 +1,2005 @@
+4
+2
+0
+2
+
+r
+p
+A
+5
+2
+
+]
+L
+M
+
+.
+t
+a
+t
+s
+[
+
+2
+v
+7
+6
+9
+5
+1
+.
+4
+0
+4
+2
+:
+v
+i
+X
+r
+a
+
+INTERPRETABLE CLUSTERING WITH THE DISTINGUISHABILITY
+CRITERION
+
+A PREPRINT
+
+Ali Turfah
+Department of Biostatistics
+University of Michigan
+Ann Arbor, MI, 48105
+aturfah@umich.edu
+
+Xiaoquan Wen∗
+Department of Biostatistics
+University of Michigan
+Ann Arbor, MI, 48105
+xwen@umich.edu
+
+April 24, 2024
+
+ABSTRACT
+
+Cluster analysis is a popular unsupervised learning tool used in many disciplines to identify heteroge-
+neous sub-populations within a sample. However, validating cluster analysis results and determining
+the number of clusters in a data set remains an outstanding problem. In this work, we present a global
+criterion called the Distinguishability criterion to quantify the separability of identified clusters and
+validate inferred cluster configurations. Our computational implementation of the Distinguishability
+criterion corresponds to the Bayes risk of a randomized classifier under the 0-1 loss. We propose a
+combined loss function-based computational framework that integrates the Distinguishability criterion
+with many commonly used clustering procedures, such as hierarchical clustering, k-means, and finite
+mixture models. We present these new algorithms as well as the results from comprehensive data
+analysis based on simulation studies and real data applications.
+
+Keywords Unsupervised learning · Cluster analysis · k-means · Hierarchical clustering · Mixture models
+
+1
+
+Introduction
+
+Cluster analysis is a ubiquitous unsupervised learning approach to uncover latent structures and patterns in observed
+data. Clustering algorithms have been used in a wide variety of scientific applications, such as animal behavior studies
+[1], weather anomaly detection [2], disease diagnosis [3, 4, 5], and novel cell type identification [6, 7, 8, 9]. Often, the
+identified clusters are interpreted to represent distinct populations from which the corresponding samples originate.
+
+Many challenges with cluster analysis, such as determining the number of clusters, arise from an inability to rigorously
+quantify desired cluster characteristics. While the precise definition of a “meaningful” cluster is usually context-
+dependent, it is generally accepted that the clusters should display “internal cohesion” (i.e., objects within a cluster are
+similar to one another) and “external isolation” (i.e., the clusters are well-separated) [10, 11, 12]. Despite this almost
+universally agreed-upon principle, quantifying the separability of the clusters, i.e., the level of external isolation with
+respect to internal cohesion, remains an open problem in cluster analysis.
+
+In this paper, we introduce the Distinguishability criterion to measure the separability of a set of assumed clusters. The
+criterion is motivated by this simple intuition: if all clusters are well separated from each other, then the originating
+clusters for all data points (whether observed or not) should be easily traceable. To implement the Distinguishability
+criterion, we formulate labeling the generating cluster for an arbitrary data point as a probabilistic classification problem.
+Naturally, the difficulty (or lack thereof) of this classification problem can be described by an overall misclassification
+probability averaged over all possible data points.
+
+We employ a statistical viewpoint to define the Distinguishability criterion for cluster analysis. The partitioned observed
+data are taken to be realizations from cluster-specific data generative distributions, which are essential for computing the
+
+∗Corresponding Author
+
+ 
+ 
+ 
+ 
+ 
+ 
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+proposed misclassification probability. Although not all clustering algorithms make explicit distributional assumptions
+for the presumed clusters, many commonly applied heuristics-based algorithms achieve optimal performance under
+specific probabilistic generative models [13, 14]. Furthermore, the identified cluster structures from cluster analysis are
+typically expected to be replicated in future datasets—an implicit assumption for consistent data generative distributions.
+As a result, statistical inference procedures based on explicit distributional assumptions have become more popular for
+their ability to not only enhance clustering performance but also to examine and interpret cluster structures identified by
+both model and heuristics-based clustering methods [15, 16, 17, 18].
+
+The remainder of this paper is organized as follows. We first provide the mathematical definition and properties of the
+Distinguishability criterion. We then discuss its usage with existing clustering algorithms. Finally, we illustrate the
+applications of the Distinguishability criterion using both synthetic and real data from various scientific applications.
+Our implementation of the Distinguishability criterion and the analyses presented in this paper can be found at
+https://github.com/aturfah/distinguishability-criterion.
+
+2 Results
+
+2.1 The Distinguishability Criterion
+
+The proposed Distinguishability criterion measures the overall separability of a given cluster configuration and is
+derived by quantifying the misclassification probability from a multi-class classification problem.
+
+Given a cluster configuration where each of the K clusters corresponds to a distinct class, we denote the class label for
+an observation x by θ ∈ {1, 2, ..., K}. We assume a pre-defined classifier, δ(x) : Rp → {1, ..., K}, and evaluate the
+classification performance using the 0-1 loss function, i.e.,
+
+The overall misclassification probability under the assumed cluster configuration, denoted by Pmc, is defined as the
+Bayes risk of the classifier δ(x), i.e.,
+
+L(δ(x), θ) = 1{δ(x) ̸= θ}.
+
+Pmc = Ex
+
+(cid:104)
+
+Eθ
+
+(cid:0) L(δ(x), θ) | x (cid:1) (cid:105)
+
+(1)
+
+Using the 0-1 loss ensures that the resulting Bayes risk is a valid probability measurement, ranging from 0 to 1. It is
+naturally interpreted as the probability of misclassifying a data point under the given cluster configuration, marginalizing
+all potential x values and their respective true generating clusters. For instance, a Pmc value close to 0 signifies a high
+degree of cluster separation, indicated by a minimal probability of erroneously assigning an arbitrary data point to an
+incorrect generating cluster (Supplementary Figure 2).
+
+As we are primarily interested in assessing different cluster configurations, the selection of the required classifier
+is flexible. However, the choice of classifier can impact the computational efficiency of the Pmc evaluation. Our
+implementation focuses on the set of classifiers working directly with the probabilities
+
+This set includes the optimal classifier under the 0-1 loss, δo, i.e.,
+
+πk(x) := Pr(θ = k | x),
+
+for k = 1, ..., K.
+
+δo(x) = arg max
+
+k
+
+πk(x)
+
+Our default classifier for computing Pmc is a randomized decision function, δr, which assigns a label to an observation
+x by sampling from a categorical distribution based on the probability distribution π(x) = (π1(x), ..., πK(x)), i.e.,
+
+δr(x) ∼ Categorical (π(x)).
+
+In addition to yielding highly comparable Pmc values to the optimal classifier within the decision-critical ranges of
+cluster separation (Supplementary Figure 1), the randomized classifier’s computational properties enable highly efficient
+cluster analysis procedures.
+
+The πk’s are the key quantities bridging the observed clustering data and Pmc. They are calculated using Bayes rule,
+
+2
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+πk(x) ∝ αk(X c) p(x | θ(X c) = k).
+
+The notation emphasizes that both the prior, αk(X c), and the likelihood function, p(x | θ(X c)), are directly informed by
+and estimated from the clustering data. More specifically, the prior quantifies the relative frequency of the observations
+arising from each assumed cluster, while the likelihood function encodes the characteristics of the corresponding cluster
+population, such as its centroid and spread information. Computing πk values is straightforward for model-based
+clustering algorithms such as Gaussian mixture models (GMMs) [14]. For non-model-based clustering algorithms,
+explicit distributional assumptions specifying the parametric family of likelihood functions are required. We illustrate
+these procedures for k-means and hierarchical clustering algorithms in subsequent sections.
+
+In summary, Pmc is a probability measurement of global separability across inferred clusters. It can accommodate a
+wide range of distributional assumptions, making it compatible with a diverse set of clustering procedures and data
+modalities. Moreover, as a function of clustering data, X c, the estimate of Pmc itself is a valid loss function suitable for
+selecting optimal cluster configurations in cluster analysis.
+
+2.2 Combined Loss Function for Cluster Analysis
+
+In cluster analysis, the desired cluster characteristics are often defined by multiple criteria [19]. A single criterion on
+its own, including the proposed Distinguishability criterion, is insufficient to define a practically optimal clustering
+solution. Alternatively, combining multiple loss functions targeting different desired cluster properties can result in
+more balanced and holistic clustering solutions. This observation leads to a principled way to incorporate Pmc with
+other established clustering criteria and algorithms.
+
+Specifically, let L1 denote a loss function associated with existing clustering algorithms. Formally, we consider a
+compound loss, L, as a weighted linear combination of L1 and Pmc, i.e.,
+
+Because of the scale of Pmc, it is often convenient to solve the following equivalent constrained optimization problem,
+
+L = L1 + λPmc, λ > 0.
+
+(2)
+
+Minimize L1, subject to Pmc ≤ τ,
+
+(3)
+
+where τ is a pre-specified probability threshold. It is worth noting that the stringency of the τ value may depend on the
+dimensionality of the clustering data.
+
+The choice of clustering algorithm determines the functional form of L1. For example, the distortion function or Ward’s
+linkage are natural choices for L1 when using k-means and hierarchical clustering methods, respectively. Alternatively,
+the negative of the gap statistic [20] can also be an excellent choice in these application scenarios. For model-based
+clustering algorithms, the L1 function can be derived from various model selection criteria, e.g., the negative of Bayesian
+information criterion (BIC).
+
+2.3 Connections to Related Approaches
+
+The misclassification probability defined by Pmc falls into the category of internal clustering validity indices [21, 22, 23],
+which assess the quality of a clustering solution without additional external information beyond the observed data. This
+category includes many commonly applied statistical measures, such as the Silhouette index [24], Calinski-Harabaze
+index [25], Dunn index [26], among others. A common behavior of internal clustering validity indices is that they
+evaluate both the cohesion (or compactness) within a cluster as well as the separation between clusters. For Pmc, the
+within-cluster cohesion is quantified through the estimated parameters in the likelihood function, p(x | θ(xc) = k).
+The separation, relative to the cohesion, is quantified by the overall misclassification probability.
+
+Henning [19] and Melnykov [27] also compute misclassification probabilities to assess the separation between clusters
+in the context of mixture models for clustering. They introduce the metrics—named “directly estimated misclassification
+probability" (DEMP) and DEMP+—specifically designed to compute misclassification probabilities between pairs
+of clusters to inform decisions about the local merging of mixture components. In comparison, Pmc is a global
+measure of the misclassification probability across all clusters. It, too, can be used to combine mixture components
+to form interpretable clusters, as illustrated in Section 2.4. Additionally, the entropy criterion proposed by Celeux
+and Soromenho [28, 29, 30] provides another alternative approach to quantify the separability of clusters using a
+classification problem set-up.
+
+3
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+The Distinguishability criterion also agrees with the principle of stability measures commonly employed in clustering
+analysis. Specifically, if the underlying cluster distributions are all well-separated, as indicated by low Pmc values,
+data sampled repeatedly from these distributions are expected to produce consistent clustering outcomes [31, 32, 33].
+Empirical evidence has shown that Pmc and various measures of clustering instability are highly correlated, which is
+demonstrated in the subsequent sections.
+
+2.4 Finite Mixture Models Incorporating Pmc
+
+Finite mixture models (MM) are probabilistic models that can seamlessly incorporate the Distinguishability criterion.
+MM-based clustering algorithms primarily infer the distributional characteristics underlying each latent cluster. As a
+result, no additional assumptions are needed to compute Pmc in the MM setting — the required quantities, {αk, p(x |
+θ = k), πk}, are all direct outputs or by-products from standard MM inference procedures [14], e.g., the EM algorithm.
+
+We make an important distinction between a mixture component and an interpretable cluster, a point previously
+discussed by [27, 29, 30, 34]. We view mixture models as flexible density estimation devices, where the number of
+mixture components is chosen to adequately fit the observed data. On the other hand, the distribution of an underlying
+cluster—characterized by the Distinguishability criterion—may itself be a mixture distribution comprising multiple
+components. This distinction naturally leads to combining the loss functions represented by −BIC, which evaluates the
+goodness-of-fit of a mixture density, and Pmc, which characterizes the separation between potential clusters.
+
+To optimize the combined loss function, we first find P (x), the optimal mixture distribution with κ components, by
+maximizing the BIC. Subsequently, we merge the mixture components into clusters until Pmc falls below a pre-specified
+threshold τ . Since merging mixture components into clusters does not alter the mixture component distributions in
+any way, the BIC is unchanged by the merging process. It can be shown that merging existing clusters in this manner
+always decreases Pmc (Appendix B). Specifically, under the default randomized classifier δr, the reduction of Pmc by
+combining clusters i and j is given by
+
+(cid:90)
+
+∆P (i,j)
+
+mc = 2
+
+πi(x)πj(x) P (dx).
+
+(4)
+
+For clusters with little to no overlap, i.e., πi(x)πj(x) → 0 for all x values, merging (i, j) results in minimal changes in
+Pmc. On the other hand, for clusters with significant overlap, ∆P (i,j)
+mc
+By further utilizing the cluster merging property of Pmc (Proposition 1, Methods Section), i.e.,
+
+can be substantial.
+
+Pmc =
+
+∆P (i,j)
+mc ,
+
+(cid:88)
+
+i<j
+
+(5)
+
+we propose an efficient Pmc Hierarchical Merging (PHM) algorithm to sequentially amalgamate mixture components
+into clusters (Algorithm 1). Briefly, starting by assigning each of the κ mixture components to individual clusters, the
+PHM algorithm pre-computes ∆P (i,j)
+for all (i, j) cluster pairs. It then sequentially combines the pairs of clusters
+mc
+with the largest ∆P (i,j)
+into a single cluster and updates the ∆Pmc values for the remaining clusters. The process is
+mc
+repeated until the updated Pmc falls at or below a pre-defined τ value. Intuitively, this procedure prioritizes merging the
+most similar or closely related clusters at each step, quantified by their ∆P (i,j)
+By setting τ = 0, the algorithm runs until all mixture components have been merged into a single cluster. The
+complete merging process can be visualized using a dendrogram (Appendix C), characterizing the hierarchical merging
+orders between individual mixture components and merged clusters. In many scientific applications, e.g., genetics and
+single-cell data analysis, such a dendrogram can provide a snapshot of the underlying continuous differentiation process
+that forms the identified clusters. We provide two examples in our real data applications (Section 2.7).
+
+mc value.
+
+To illustrate the PHM algorithm with Gaussian mixture models (GMMs), we use the synthetic data from Section 4.1 in
+Baudry et al. [30]. Specifically, 600 observations are drawn from six Gaussian distributions arranged along the corners
+of a square in the following manner. Two overlapping Gaussian distributions are placed in the top left corner of the
+square, each with 1/5 of the samples. The bottom left and top right corners each have a single Gaussian distribution,
+each contributing 1/5 of the samples. Finally, two overlapping Gaussian distributions are placed in the bottom right
+corner, each with 1/10 of the samples.
+
+A GMM with six components is selected by BIC using the R package mclust [35]. The observed clustering data is
+shown in the left panel of Figure 1, with colors corresponding to an observation’s assignment to one of the κ GMM
+components. The initial cluster configuration labeling each mixture component as a single cluster has Pmc = 0.139.
+
+4
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Figure 1: (Left) 600 simulated observations drawn from a mixture of six two-dimensional Gaussian distributions. Colors
+indicate the cluster assignment labels to each of the six estimated mixture components. (Right) Heatmap visualizing
+∆Pmc values for the estimated mixture components. The intensity of the color indicates the relative proportion of Pmc
+contributed by the overlap between these components (i.e., ∆P (i,j)
+mc ).
+
+The heatmap in the right panel of Figure 1 visualizes the ∆P (i,j)
+contributions from each pair of mixture components,
+mc
+showing that the main sources of Pmc come from the overlapping components in the top left and bottom right corners.
+
+With a threshold of τ = 0.01, the PHM algorithm sequentially combines the mixture components in the top left and
+bottom right corners, reducing the values of Pmc to 0.049 and 0.004, respectively. In the end, the algorithm returns four
+clusters: one corresponding to the components in each of the four corners.
+
+2.5 Applications in k-means Clustering
+
+Applying the Distinguishability criterion to heuristics-based clustering algorithms requires additional distributional
+assumptions to compute Pmc. Although popular algorithms of this kind—such as k-means and hierarchical clustering—
+rely on intuitive heuristics, their implicit connections to probability models have been well studied. These results
+provide insights into the data types for which certain non-model-based clustering algorithms are expected to be optimal.
+The k-means algorithm, in particular, has been shown as equivalent to approximately optimizing a multivariate Gaussian
+classification likelihood function [13, 14]. Hence, when applying the Distinguishability criterion with the usual k-means
+distortion function, it seems natural to assume that data within each inferred partition are normally distributed. It then
+
+Algorithm 1: Pmc Hierarchical Merging (PHM) algorithm
+Input: Input data X, Pmc threshold τ
+Result: Groupings of mixture components into clusters
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9
+
+10
+
+11
+
+12
+
+13
+
+1 Procedure PHM
+2
+
+Fit a mixture model to X, determining the number of components by maximizing BIC
+Initialize clusters to individual mixture components
+Compute ∆P (i,j)
+mc
+while Pmc > τ do
+
+for all pairs of clusters i, j
+
+Group clusters i, j with maximal ∆P (i,j)
+mc
+Update the distribution quantities for this new cluster:
+
+into a single cluster k′
+
+αk′ ← αj + αi
+p(x | θ = k′) ← α−1
+k′
+πk′(x) ← πi(x) + πj(x)
+Update Pmc ← Pmc − ∆P (i,j)
+mc
+Compute ∆P (k′,k)
+
+mc
+
+· [ αi · p(x | θ = i) + αj · p(x | θ = j) ]
+
+for all uninvolved clusters k: ∆P (k′,k)
+
+mc = ∆P (i,k)
+
+mc + ∆P (j,k)
+
+mc
+
+return
+
+5
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Figure 2: (Left) 450 simulated observations drawn from a mixture of three Gaussian distributions. Color indicates true
+generating distribution while shape indicates the assigned k-means cluster. (Center and Right) Value of the gap statistic,
+Pmc, and the Silhouette index for different numbers of clusters based on the k means clustering partition with Gaussian
+cluster distributions.
+
+becomes straightforward to estimate the necessary parameters and compute Pmc given the partitioned data from the
+k-means output.
+
+We illustrate a procedure to determine the number of clusters (K) in k-means clustering by optimizing the combined
+loss of Pmc and the gap statistic [20]. For a given data partitioning from the k-means algorithm, the gap statistic
+compares the observed within-cluster dispersion to the expected dispersion under a null reference distribution. It
+subsequently estimates the optimal number of clusters corresponding to the largest gap statistic value from a range of
+potential K values. We consider observations drawn from three Gaussian clusters in R2 centered at (0, 0), (1.75, 1.75),
+and (-4, 4) with identity covariance matrices (nk = 150). The observed data are shown in Figure 2, with substantial
+overlap between the data generated from two of the three distributions. The k-means algorithm is performed for K = 1
+to 7 using the R package ClusterR [36] with kmeans++ initialization [37]. In addition to the Pmc values, we also
+present the averaged Silhouette index [24] for each value of K = 2, . . . , 7.
+
+The values of the gap statistic, Pmc, and the Silhouette index for different K are shown in Figure 2. When used alone,
+the gap statistic selects K = 3, coinciding with the number of generating distributions. There is a noticeable difference
+in the inferred clusters’ separability between K = 2 (Pmc = 0.002) and K = 3 (Pmc = 0.062). For a Pmc threshold
+τ = 0.01, optimizing the combined loss function (3) leads to selecting K = 2, which seems most reasonable judging
+by the data visualization. This decision is also consistent with the Silhouette index, which takes a maximal value of
+0.632 at K = 2 compared to 0.522 at K = 3. Additionally we find that Pmc is highly negatively correlated with cluster
+stability measures. We present the values of the stability measure proposed by Lange et al. [32] using the adjusted Rand
+index to compute cluster similarities as well as the prediction strength [33] in Supplementary Table 1.
+
+As noticed in the original paper [20], the gap statistic can struggle to determine K when the underlying generative
+distributions have substantial overlapping support. The above numerical example illustrates that the Distinguishability
+criterion can alleviate this challenge in k-means clustering.
+
+2.6 Hypothesis Testing in Hierarchical Clustering
+
+It has become increasingly common to perform formal statistical testing in post-clustering analysis to reduce cluster
+over-identification. Recent works by Gao et al. [16], Chen et al. [17], and Grabski et al. [18] highlight the necessity
+and importance of such analysis in scientific applications, where false positive findings of clusters are considered more
+costly than false negative findings. In many application contexts, it is often of interest to assess whether the partitions
+of the observed data output by heuristics-based clustering algorithms (e.g., hierarchical clustering) could arise from
+a single homogeneous distribution (most commonly, a single Gaussian distribution) by chance. Pmc emerges as a
+
+6
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+natural test statistic in this parametric hypothesis testing framework because its values are expected to be quantitatively
+different under the null and alternative scenarios.
+
+Formally, we consider testing the null hypothesis,
+
+H0 : the data are generated from a single Gaussian distribution
+
+in the hierarchical clustering setting [15, 16, 18]. Following hierarchical clustering of observed data, we compute Pmc
+for the pair of inferred clusters resulting from the first split of the dendrogram (i.e., K = 2). The null distribution of
+Pmc can be estimated by a simple Monte Carlo procedure that repeatedly samples data from H0, performs hierarchical
+clustering, and computes Pmc for the partitions defined by the first split. Alternatively, the p-value of the Pmc statistic
+can be derived from the standard parametric bootstrap procedure [38].
+
+We present the results of simulation studies examining the performance of Pmc in this hypothesis testing setting.
+
+First, we illustrate Pmc’s ability to control for spurious cluster detection. For 5,000 simulation replicates, we draw 150
+observations from a N (0, 1) distribution and perform hierarchical clustering based on the squared Euclidean distance
+with the Ward linkage. We compute Pmc and derive the corresponding p-values based on the estimated null distribution
+from 5,000 additional Monte Carlo simulations, each with a sample size of 150. We also compute the Pmc p-values
+using a bootstrap procedure, using 500 bootstrap replicates to estimate the p-value for each simulation replicate. For
+comparison, we also compute the p-values from the selective inference procedure proposed by Gao et al. [16] as well as
+the standard two-sample t-test. The results are shown in the top panel of Figure 3. As expected, the p-values from the
+two-sample t-test are all in the range of 10−20 to 10−40, providing no control for false positive findings. This is because
+the naive t-test fails to take into account that the hierarchical clustering procedure always partitions data according to
+their observed values even under H0, as noted by [16]. In contrast, p-values derived from Pmc and Gao et al.’s methods
+are both roughly uniformly distributed under H0, suggesting well-controlled type I error rates. Specifically, we find that
+Pmc = 0.094 corresponds to the cutoff at the 5% α level, and the realized type I error rate is 4.8%. The type I error rate
+from the bootstrap procedure using Pmc at the same control level is 1%, which is more conservative.
+
+Second, we examine the power of the Pmc-based hypothesis test to identify truly separated clusters. Specifically,
+we draw samples from two distinct Gaussian distributions, N (µ1, σ2) and N (µ2, σ2), where a range of |µ1 − µ2|/σ
+
+Figure 3: (Top) The distribution of p-values based on Pmc, Gao et al.’s selective inference procedure, and the two-sample
+t-test for 5,000 simulation replicates. (Bottom) Power comparison between Pmc and Gao et al.’s method to detect the
+presence of two Gaussian clusters controlling the type I error rate at level α = 0.05 as the cluster separability increases.
+The power at each value |µ1 − µ2|/σ is calculated based on 500 simulation replicates.
+
+7
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Figure 4: (Left) Bill and flipper lengths for the subset of female penguins with complete data from the un-scaled
+palmerpenguins data. Color indicates species, while shape indicates the assigned k-means cluster at K = 3. (Right)
+Value of the gap statistic and Pmc for different numbers of clusters based on the k-means clustering partition with
+Gaussian cluster distributions.
+
+values are selected from the set {1, 1.5, . . . , 7}. In each alternative scenario represented by a unique |µ1 − µ2|/σ
+value, we draw 75 observations from each cluster distribution and compute the p-values using Pmc as well as Gao et
+al.’s procedure. We calculate the power based on 500 replicates for each alternative scenario. As can be seen in the
+bottom panel of Figure 3, Pmc exhibits higher power than Gao et al.’s procedure for moderate-to-large degrees of cluster
+separation (defined by |µ1 − µ2|/σ ∈ [2, 6]).
+
+2.7 Real Data Applications
+
+2.7.1 Cluster Analysis of Palmer Penguin Data
+
+We analyze the penguins data from the palmerpenguins package [39], which consists of bill, flipper, and mass
+measurements from three species of penguins in the Palmer Archipelago between 2007 and 2009. Following the analysis
+by [16], we consider the subset of female penguins with complete data for bill and flipper length (both measured in
+millimeters), leaving us with 165 observations. Prior to performing the clustering, we center and scale the observations
+so that the measurements have zero mean and unit variance. Following the procedure laid out in Section 2.5, we perform
+k-means clustering of the scaled observations into K = 1, . . . , 8 clusters and compute the gap statistic as well as Pmc
+for each grouping of the observations. Figure 4 shows the data used for clustering and the values of the gap statistic and
+Pmc for different values of K.
+
+For the Pmc threshold of 0.05, the combined loss defined by the gap statistic and Pmc is optimized at K = 3. Both the
+visualization of the clustering data and the external species information suggest that the result is reasonable. We observe
+that the values of Pmc in this example are strongly negatively correlated with other cluster validity indices [24, 32, 33] to
+evaluate the k-means clustering partitions (Supplementary Table 2). We repeat this analysis using hierarchical clustering
+based on the squared Euclidean distance with the Ward linkage and come to the same conclusions (Supplementary
+Figure 3 and Supplementary Table 3).
+
+2.7.2 Inferring Population Structure from HGDP data
+
+In this illustration, we apply the PHM algorithm to perform cluster analysis on the genetic data from the Human Genome
+Diversity Project (HGDP) [40, 41], aiming to identify population structures. The dataset comprises 927 unrelated
+individuals sampled worldwide and genotyped at 2,543 autosomal SNPs. The geographic sampling locations are broadly
+divided into 7 continental groups: Europe, Central/South Asia (C/S Asia), Africa, Middle East, the Americas, East Asia,
+and Oceania.
+
+Following the standard procedures for genetic data analysis, we pre-process the genotype matrix using principal
+component analysis (PCA) and select the first 5 PCs for our analysis based on the elbow point of the scree plot
+(Supplementary Figure 4). To apply the PHM algorithm, we fit a GMM to the dimension-reduced PC score matrix and
+select the model with 9 components based on the BIC. Each individual’s posterior component assignment probability
+
+8
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Figure 5: (Top) Dendrogram visualizing the order of component merges in the PHM procedure. Numeric values indicate
+the reduction of Pmc by the merge. Colors correspond to the mixture components from the distruct plot. (Bottom)
+Distruct plot for posterior component assignment probability, with color indicating mixture components. Observations
+are grouped by the geographic region of their sampling location.
+
+πk is shown in the distruct plot [42] in Figure 5. Except for the Europe, Central/South Asia, and Middle East groups,
+the remaining continental groups tend to correspond to unique mixture components.
+
+Starting with assigning each mixture component to its own cluster and an initial Pmc = 0.1437, we proceed with
+the steps of the PHM algorithm with τ = 0, i.e., merging until all observations belong to a single cluster and Pmc
+is decreased to 0. Figure 5 visualizes the merging process as a dendrogram. The numbers in each node indicate the
+reduction of Pmc, i.e., ∆Pmc, by combining the corresponding branches into a single cluster. A smaller value of
+∆Pmc indicates that the clusters being combined are more distinct. Because the algorithm always prioritizes merging
+the most overlapping clusters, the merging sequence reflects the relative genetic dissimilarities between different
+clusters. This relationship can be straightforwardly interpreted from the dendrogram. For example, the first two merges
+— reducing Pmc to 0.063 and 0.021, respectively — form a cluster representing samples from Europe, the Middle
+East, and Central/South Asia, reflecting a close genetic relationship and noticeable genetic admixture among these
+population groups. The general structure of the dendrogram can be roughly explained by the likely path of historical
+human migrations: from Africa into the Middle East, from the Middle East to Europe and Central/South Asia, from
+Central/South Asia to East Asia, and from East Asia to Oceania and the Americas. The overall pattern of human genetic
+diversity among the continental groups identified from our analysis is also corroborated by more sophisticated genetic
+analysis using additional information (e.g., haplotype analysis) [41] and high-coverage genome sequencing data [43].
+
+2.7.3 Cluster Analysis of Single-cell RNA Sequence Data
+
+In this illustration, we apply the PHM algorithm to single-cell RNA sequencing (scRNA-seq) data from a sample of
+peripheral blood mononuclear cells to identify the different cell types. The data (sequenced on the Illumina NextSeq
+500 and freely available from 10x Genomics) consist of gene expression counts for 2,700 single cells at 13,714 genes.
+
+The raw sequence data are quality-controlled and pre-processed using standard procedures implemented in the Seurat
+package [44], leaving us with 2,638 cells. Principal component analysis is subsequently performed on the normalized
+and scaled expression counts for dimension reduction. The first 10 components are selected based on the elbow point
+
+9
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Figure 6: (Top) Dendrogram visualizing the order of component merges in the PHM procedure. Numeric values indicate
+the reduction of Pmc by the merge. Colors correspond to the mixture components from the distruct plot. (Bottom)
+Distruct plot for posterior component assignment probability, with color indicating mixture components. Observations
+are grouped by annotated cell type.
+
+of the scree plot (Supplementary Figure 5). The resulting 2,638 × 10 data matrix is used for our cluster analysis.
+Additionally, each cell is annotated as one of the following cell types: Naïve CD4+ T cells, Memory CD4+ T cells,
+CD8+ T cells, Natural Killer (NK) cells, B cells, CD14+ monocytes, FCGR3A+ monocytes, Dendritic cells (DC), and
+Platelets, using known biomarkers. The annotated cell type information is not used in our cluster analysis procedure.
+
+We fit a GMM on the dimension-reduced PC matrix and select the model with 9 components based on the optimal BIC.
+The posterior component assignment probability πk for each cell is visualized in Figure 6. With the exception of the
+Naïve and Memory CD4+ T cells, each cell type corresponds to a unique mixture component.
+
+Starting with each mixture component as its own cluster and an initial Pmc = 0.0703, we perform the merging
+procedure until all components have been combined into a single cluster. The merging process is represented by the
+dendrogram in Figure 6. We note that the pattern shown in the dendrogram has a striking similarity to the known
+immune cell differentiation trajectories. For example, the first merge combines the two types of CD4+ T cells, reducing
+Pmc from 0.070 to 0.042. Furthermore, CD8+ T cells, CD4+ T cells, NK cells, and B cells—all derived from Lymphoid
+progenitor cells—are grouped together in the dendrogram and separated from the branch consisting of FCGR4A+,
+CD14+ monocytes, and Dendritic cells—all of which are derived from Myeloid progenitor cells.
+
+3 Conclusion and Discussion
+
+In this work, we introduce the Distinguishability criterion, Pmc, to quantify the separability of clusters inferred from
+cluster analysis procedures. We discuss the intuition behind the criterion, as well as the derivation and properties of Pmc.
+We propose a combined loss function-based computational framework that integrates the Distinguishability criterion
+with available model and heuristics-based clustering algorithms and demonstrate its use with synthetic and real data
+applications.
+
+The proposed Pmc is an internal clustering validity index to assess the separability of the clustering results, with unique
+advantages over alternative validity indices. Since Pmc is measured on the probability scale, the threshold for our
+
+10
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+proposed constrained optimization problem is interpretable. Additionally, Pmc measurements are directly comparable
+across different datasets and various types of clustering applications, enabling future work on assessing the replicability
+of clustering analysis.
+
+While our numerical illustrations primarily use Gaussian or mixtures of Gaussian distributions to evaluate Pmc, it is
+important to highlight the proposed computational framework’s flexibility and compatibility with any valid parametric
+likelihood function. As a result, the applications of Pmc can be extended to a more diverse class of latent variable
+models, e.g., latent Dirichlet allocation (LDA) and generalized factor analysis models, in order to help address the
+similar model selection problems that arise with their use. We will explore these extensions in our future work.
+
+The properties of Pmc are best utilized in our proposed PHM algorithm, which is motivated by Baudry et al.’s entropy
+criterion-based merging procedure [30]. By combining mixture components into clusters, both algorithms enjoy
+excellent model fit and interpretability for the inferred clusters. However, the constrained optimization formulation
+described above leads to a more interpretable stopping rule for the PHM algorithm compared to Baudry et al.’s procedure.
+Furthermore, the PHM algorithm shows improved computational efficiency—due to the cluster merging property of
+Pmc, the complexity of the PHM algorithm is invariant to the sample size of the observed clustering data, making it
+more suitable for analyzing large-scale data. Finally, we note that the dendrogram visualizing the complete merging
+procedure can be used to represent a coalescent process that has many applications across scientific disciplines, such as
+developmental biology, human genetics, and evolutionary biology. One possible future research direction is shifting
+the focus from cluster analysis to uncovering the underlying coalescent trees by incorporating more context-specific
+information, with the PHM algorithm as a natural starting point.
+
+It is also possible to extend the PHM algorithm to work with a general class of hard clustering algorithms that output
+optimal partitions of observed data. One strategy is to treat each output partition as a distinct population sample and
+estimate its distribution using a finite mixture model. We can then re-normalize the mixture proportions globally and
+initilize the clusters at the level of the output partitions, at which point applying the PHM algorithm is straightforward.
+This simple strategy extends the applications of the Distinguishability criterion to a more diverse class of clustering
+algorithms, including density-based and graph clustering algorithms.
+
+4 Methods
+
+4.1 Overview of Clustering Methods
+
+We briefly review existing clustering methods, focusing on the algorithms used in this paper. The available clustering
+methods can be roughly classified into two categories: heuristics-based clustering methods, represented by the k-means
+and hierarchical clustering algorithms, and model-based clustering methods, represented by finite-mixture models.
+The heuristics-based clustering methods typically do not make explicit distributional assumptions and instead perform
+hard clustering by outputting optimal partitions of the observed data based on their corresponding objective functions.
+The model-based clustering methods perform formal statistical inference of the latent cluster structures underlying the
+observed data.
+
+4.1.1 k-means clustering
+
+k-means clustering is a widely used heuristics-based clustering algorithm for partitioning a sample into clusters. As the
+name suggests, this procedure identifies clusters by their centroids (defined as the mean of all points in the cluster) and
+assigns observations to the cluster with the nearest centroid. More formally, for a specified number of clusters K, the
+algorithm groups the observations into disjoint sets C1, . . . , CK to minimize the distortion function, i.e.,
+
+min
+C1,...,CK
+
+K
+(cid:88)
+
+(cid:88)
+
+k=1
+
+i∈Ck
+
+(cid:12)
+(cid:12)
+(cid:12)
+(cid:12)
+
+(cid:12)
+(cid:12)
+(cid:12)
+(cid:12)
+
+xi −
+
+(cid:88)
+
+j∈Ck
+
+xj/|Ck|
+
+(cid:12)
+(cid:12)
+(cid:12)
+(cid:12)
+
+(cid:12)
+(cid:12)
+(cid:12)
+(cid:12)
+
+2
+
+2
+
+,
+
+which corresponds to minimizing the within-cluster variances. The clustering is usually performed using Lloyd’s
+algorithm [45], which alternates between assigning observations to the cluster with the nearest centroid and updating
+the cluster centroid to eventually arrive at a locally optimal solution.
+
+It has been shown that the k-means algorithm is equivalent to an approximate maximum likelihood procedure, where the
+underlying probability model assumes a multivariate Gaussian distribution for each latent cluster [13, 14]. Hence, the
+observation frequency of each cluster and the corresponding parameters for the Gaussian distribution can be estimated
+straightforwardly using the partitioned output from the k-means algorithm.
+
+11
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+4.1.2 Hierarchical clustering
+
+Hierarchical clustering produces a sequence of partitions for observations. In the commonly used agglomerative
+hierarchical clustering procedure, each observation comprises its own cluster in the initial partition. Subsequent
+clusterings in the sequence are formed by repeatedly combining the most similar pair of groups of observations into
+a single group until all observations have been combined into a single cluster. The similarity between groups of
+observations in hierarchical clustering is typically defined by a distance measure between pairs of observations, such
+as the squared Euclidean distance, in addition to a function that generalizes this similarity to groups of observations
+(referred to as a linkage function). Commonly used linkage functions between groups of observations are single linkage,
+complete linkage, average linkage, and the Ward linkage.
+
+The hierarchical clustering algorithm is also often connected to probability models assuming a Gaussian data distribution
+underlying each cluster [46, 14], and explicit Gaussian assumptions are commonly used for model-selection or post-
+selection inference in hierarchical clustering [15, 16, 18].
+
+4.1.3 Model-based Clustering
+
+Finite mixture models are the most representative approach for model-based clustering, where a mixture distribution with
+finite components models the observed clustering data. Traditionally, each mixture component is taken to correspond
+to a homogeneous subpopulation or cluster. The goal of inference in the mixture model setting is to estimate the
+characteristics of each mixture component, i.e., p(x | θ = k), and the corresponding mixture proportion, i.e., αk. The
+expectation-maximization (EM) algorithm is commonly used to find maximum likelihood estimates of the parameters
+of interest. The Gaussian mixture model (GMM), which models each mixture component using a unique Gaussian
+distribution, is probably the most commonly used mixture model in practice. This is because, among other reasons, the
+GMM is considered to be a universal approximator [47] and is flexible enough to fit diverse data types.
+
+Unlike most heuristics-based clustering approaches, model-based clustering algorithms perform soft (or fuzzy) cluster-
+ing, as they do not directly partition the observed data. Instead, every data point has an associated (posterior) probability
+distribution over all possible cluster assignments. A post-hoc classification procedure, with a pre-specified decision rule
+using the cluster assignment probabilities, can be applied to partition the observed data.
+
+For a more thorough review of model-based clustering, we refer the reader to [14, 48, 49]
+
+4.2 Derivation and Estimation of Pmc
+
+The Bayes risk for a general classifier δ(x) : Rp (cid:55)→ {1, . . . , K} assigning a point x to one of the K clusters can be
+derived as follows,
+
+Pmc = Ex
+
+(cid:104)
+
+Eθ
+
+(cid:2)L(δ(x), θ) | x(cid:3)(cid:105)
+
+(cid:90)
+
+(cid:90)
+
+=
+
+=
+
+
+
+
+
+K
+(cid:88)
+
+(cid:88)
+
+πi(x) Pr(δ(x) = j | x)
+
+ P (dx)
+
+
+
+j=1
+
+i̸=j
+
+(6)
+
+
+
+
+
+K
+(cid:88)
+
+(1 − πj(x)) Pr(δ(x) = j | x)
+
+ P (dx)
+
+
+
+For a more detailed derivation, see Appendix A. The marginal data distribution P (x), with loose notation, is given by
+
+j=1
+
+P (x) =
+
+K
+(cid:88)
+
+k=1
+
+Pr(θ = k) p(x | θ = k) =
+
+K
+(cid:88)
+
+k=1
+
+αk p(x | θ = k).
+
+For the default randomized decision rule, δr(x) ∼ Categorical (π(x)),
+
+Pr(δ(x) = j | x) = πj(x).
+
+(7)
+
+Thus,
+
+12
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+(cid:90)
+
+Pmc, δr =
+
+= 2
+
+
+
+
+
+K
+(cid:88)
+
+j=1
+(cid:90)
+
+(cid:88)
+
+πi(x)πj(x)P (dx)
+
+
+
+πj(x)(1 − πj(x))
+
+ P (dx)
+
+(8)
+
+To compute Pmc using the optimal decision rule, δo(x) = arg maxk πk(x), we define a partition of the sample space,
+∪K
+
+k=1Rk, such that Rk := {x : δo(x) = k}. It follows that,
+
+i<j
+
+Pr(δ(x) = j | x) = 1{x ∈ Rj},
+
+(cid:90)
+
+Pmc, δo =
+
+
+
+
+
+K
+(cid:88)
+
+(cid:88)
+
+πi(x) 1{x ∈ Rj}
+
+ P (dx)
+
+
+
+j=1
+
+i̸=j
+
+(cid:90) (cid:18)
+
+1 − max
+
+k
+
+=
+
+(cid:19)
+
+πk(x)
+
+P (dx)
+
+(9)
+
+(10)
+
+K
+(cid:88)
+
+j=1
+
+πj(x)(1 − πj(x)) ≥
+
+k
+(cid:88)
+
+j=1
+
+πj(x)(1 − max
+
+k
+
+πk(x)) = 1 − max
+
+k
+
+πk(x), ∀x
+
+(11)
+
+and
+
+Note that,
+
+Hence,
+
+Pmc, δr ≥ Pmc, δo
+
+Unless otherwise specificied, we use the notation Pmc to refer to Pmc, δr by default. In this paper, we estimate Pmc by
+plugging in the point estimates of the αk’s as well as the key distributional parameters in the corresponding likelihood
+functions obtained from the observed data.
+
+4.3 Lower and Upper Bounds of Pmc
+
+When all clusters are well-separated, Pmc approaches its lower bound at 0. More specifically, assuming well-separated
+clusters, both of the following conditions should hold:
+
+and
+
+πi(x) πj(x) → 0, ∀ x and (i, j) pairs,
+
+max
+k
+
+πk(x) → 1, ∀ x.
+
+Hence, both decision rules (δr and δo) approach perfect classification accuracy.
+
+Pmc is maximized when all clusters are completely overlapping, i.e.,
+
+Thus, πk(x) = αk, ∀x. It follows that
+
+p(x | θ = i) = p(x | θ = j) ∀ x and (i, j) pairs.
+
+(12)
+
+max Pmc, δr =
+
+αk (1 − αk),
+
+K
+(cid:88)
+
+k=1
+
+13
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+and
+
+In the special case that αk = 1/K for all k values,
+
+max Pmc, δo = 1 − max
+
+k
+
+αk.
+
+max Pmc, δr = max Pmc, δo =
+
+K − 1
+K
+
+.
+
+(13)
+
+4.4 The Cluster Merging Property of Pmc
+
+The merging property is specific to the default Pmc, evaluated using the randomized decision rule δr. For a given
+cluster configuration with K ≥ 2, consider merging two arbitrary clusters to form a new combined cluster. Let Pmc and
+P †
+mc denote the misclassification probabilities before and after the merging, respectively. The following proposition
+summarizes the merging property.
+Proposition 1. Merging two existing clusters indexed by i and j leads to
+
+∆P (i,j)
+mc
+
+:= Pmc − P †
+
+mc = 2
+
+(cid:90)
+
+πi(x)πj(x) P (dx) ≥ 0.
+
+Furthermore,
+
+Proof. Appendix B.
+
+Pmc =
+
+∆P (i,j)
+mc
+
+(cid:88)
+
+i<j
+
+The cluster merging property forms the basis of the PHM algorithm. As ∆P (i,j)
+can be pre-computed for all pairs of
+mc
+clusters from the initial configuration, the subsequent updates for Pmc—merging one pair of clusters at a time—become
+straightforward to compute.
+
+4.5 Numerical Evaluation of Pmc
+
+Evaluating Pmc numerically can be challenging, especially when clustering data are high-dimensional. For low-
+dimensional data, it is possible to evaluate Eqn (6) by numerical integration using various quadrature methods. However,
+they generally do not scale well when the clustering data dimensionality becomes larger than 5. When the marginal data
+distribution, P (x), can be directly sampled from (as in the case in all examples presented in this paper), Monte Carlo
+(MC) integration becomes an efficient solution. Specifically, we sample M data points from P (x) and approximate
+Pmc by
+
+ˆPmc =
+
+1
+M
+
+M
+(cid:88)
+
+
+
+
+
+K
+(cid:88)
+
+(cid:18)
+
+(cid:19)
+
+
+
+1 − πj(xi)
+
+Pr(δ(xi) = j | x)
+
+
+
+(14)
+
+i=1
+
+j=1
+
+The unique advantage of the Monte Carlo integration method is that its error bound is always O(1/
+M ) regardless of
+the dimensionality of x. We provide comparisons between the Monte Carlo method and the numerical integration for
+evaluating Pmc in some low-dimensional settings (Supplementary Method 1 and Supplementary Table 4), indicating
+that the MC integration method is accurate and efficient.
+
+√
+
+14
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+References
+
+[1] Elke Braun, Bart Geurten, and Martin Egelhaaf. Identifying prototypical components in behaviour using clustering
+
+algorithms. PloS one, 5(2):e9361, 2010.
+
+[2] S Wibisono, MT Anwar, Aji Supriyanto, and IHA Amin. Multivariate weather anomaly detection using dbscan
+clustering algorithm. In Journal of Physics: Conference Series, volume 1869, page 012077. IOP Publishing, 2021.
+
+[3] Parvez Ahmad, Saqib Qamar, and Syed Qasim Afser Rizvi. Techniques of data mining in healthcare: a review.
+
+International Journal of Computer Applications, 120(15), 2015.
+
+[4] Jui-Hung Kao, Ta-Chien Chan, Feipei Lai, Bo-Cheng Lin, Wei-Zen Sun, Kuan-Wu Chang, Fang-Yie Leu, and
+Jeng-Wei Lin. Spatial analysis and data mining techniques for identifying risk factors of out-of-hospital cardiac
+arrest. International Journal of Information Management, 37(1):1528–1538, 2017.
+
+[5] Sarah Shafqat, Saira Kishwer, Raihan Ur Rasool, Junaid Qadir, Tehmina Amjad, and Hafiz Farooq Ahmad. Big
+data analytics enhanced healthcare systems: a review. The Journal of Supercomputing, 76:1754–1799, 2020.
+
+[6] Juan Xie, Anjun Ma, Yu Zhang, Bingqiang Liu, Changlin Wan, Sha Cao, Chi Zhang, and Qin Ma. Qubic2: a
+novel biclustering algorithm for large-scale bulk rna-sequencing and single-cell rna-sequencing data analysis.
+bioRxiv, page 409961, 2018.
+
+[7] Vladimir Yu Kiselev, Tallulah S Andrews, and Martin Hemberg. Challenges in unsupervised clustering of
+
+single-cell rna-seq data. Nature Reviews Genetics, 20(5):273–282, 2019.
+
+[8] Itamar Kanter, Piero Dalerba, and Tomer Kalisky. A cluster robustness score for identifying cell subpopulations in
+single cell gene expression datasets from heterogeneous tissues and tumors. Bioinformatics, 35(6):962–971, 2019.
+
+[9] Ren Qi, Anjun Ma, Qin Ma, and Quan Zou. Clustering and classification methods for single-cell rna-sequencing
+
+data. Briefings in bioinformatics, 21(4):1196–1208, 2020.
+
+[10] John Harmon Wolfe. Object cluster analysis of social areas. PhD thesis, University of California, 1963.
+
+[11] Richard M Cormack. A review of classification. Journal of the Royal Statistical Society: Series A (General),
+
+134(3):321–353, 1971.
+
+[12] Gbeminiyi John Oyewole and George Alex Thopil. Data clustering: application and trends. Artificial Intelligence
+
+Review, 56(7):6439–6475, 2023.
+
+[13] Hans H Bock. Probabilistic models in cluster analysis. Computational Statistics & Data Analysis, 23(1):5–28,
+
+1996.
+
+[14] Chris Fraley and Adrian E Raftery. Model-based clustering, discriminant analysis, and density estimation. Journal
+
+of the American Statistical Association, 97(458):611–631, June 2002.
+
+[15] Patrick K. Kimes, Yufeng Liu, David Neil Hayes, and James Stephen Marron. Statistical significance for
+
+hierarchical clustering. Biometrics, 73(3):811–821, January 2017.
+
+[16] Lucy L Gao, Jacob Bien, and Daniela Witten. Selective inference for hierarchical clustering. Journal of the
+
+American Statistical Association, pages 1–11, 2022.
+
+[17] Yiqun T Chen and Daniela M Witten. Selective inference for k-means clustering. arXiv preprint arXiv:2203.15267,
+
+2022.
+
+[18] Isabella N. Grabski, Kelly Street, and Rafael A. Irizarry. Significance analysis for clustering with single-cell
+
+rna-sequencing data. Nature Methods, 20(8):1196–1202, July 2023.
+
+[19] Christian Hennig. What are the true clusters? Pattern Recognition Letters, 64:53–62, October 2015.
+
+[20] Robert Tibshirani, Guenther Walther, and Trevor Hastie. Estimating the number of clusters in a data set via the
+gap statistic. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 63(2):411–423, 2001.
+
+[21] Maria Halkidi, Yannis Batistakis, and Michalis Vazirgiannis. On clustering validation techniques. Journal of
+
+intelligent information systems, 17:107–145, 2001.
+
+[22] Minho Kim and RS Ramakrishna. New indices for cluster validity assessment. Pattern Recognition Letters,
+
+26(15):2353–2363, 2005.
+
+[23] Yanchi Liu, Zhongmou Li, Hui Xiong, Xuedong Gao, and Junjie Wu. Understanding of internal clustering
+validation measures. In 2010 IEEE international conference on data mining, pages 911–916. IEEE, 2010.
+
+[24] Peter J Rousseeuw. Silhouettes: a graphical aid to the interpretation and validation of cluster analysis. Journal of
+
+computational and applied mathematics, 20:53–65, 1987.
+
+15
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+[25] Tadeusz Cali´nski and Jerzy Harabasz. A dendrite method for cluster analysis. Communications in Statistics-theory
+
+and Methods, 3(1):1–27, 1974.
+
+[26] Joseph C Dunn. Well-separated clusters and optimal fuzzy partitions. Journal of cybernetics, 4(1):95–104, 1974.
+[27] Volodymyr Melnykov. Merging mixture components for clustering through pairwise overlap. Journal of
+
+Computational and Graphical Statistics, 25(1):66–90, January 2016.
+
+[28] Gilles Celeux and Gilda Soromenho. An entropy criterion for assessing the number of clusters in a mixture model.
+
+Journal of Classification, 13(2):195–212, September 1996.
+
+[29] C. Biernacki, G. Celeux, and G. Govaert. Assessing a mixture model for clustering with the integrated completed
+likelihood. IEEE Transactions on Pattern Analysis and Machine Intelligence, 22(7):719–725, July 2000.
+[30] Jean-Patrick Baudry, Adrian E. Raftery, Gilles Celeux, Kenneth Lo, and Raphaël Gottardo. Combining mixture
+
+components for clustering. Journal of Computational and Graphical Statistics, 19(2):332–353, January 2010.
+
+[31] Ulrike Von Luxburg et al. Clustering stability: an overview. Foundations and Trends® in Machine Learning,
+
+2(3):235–274, 2010.
+
+[32] Tilman Lange, Volker Roth, Mikio L Braun, and Joachim M Buhmann. Stability-based validation of clustering
+
+solutions. Neural computation, 16(6):1299–1323, 2004.
+
+[33] Robert Tibshirani and Guenther Walther. Cluster validation by prediction strength. Journal of Computational and
+
+Graphical Statistics, 14(3):511–528, 2005.
+
+[34] Christian Hennig. Methods for merging gaussian mixture components. Advances in Data Analysis and Classifica-
+
+tion, 4(1):3–34, January 2010.
+
+[35] Luca Scrucca, Michael Fop, T. Brendan Murphy, and Adrian E. Raftery. mclust 5: clustering, classification and
+
+density estimation using Gaussian finite mixture models. The R Journal, 8(1):289–317, 2016.
+
+[36] Lampros Mouselimis. ClusterR: Gaussian Mixture Models, K-Means, Mini-Batch-Kmeans, K-Medoids and
+
+Affinity Propagation Clustering, 2023. R package version 1.3.1.
+
+[37] David Arthur, Sergei Vassilvitskii, et al. k-means++: The advantages of careful seeding. In Soda, volume 7, pages
+
+1027–1035, 2007.
+
+[38] David V Hinkley. Bootstrap methods. Journal of the Royal Statistical Society Series B: Statistical Methodology,
+
+50(3):321–337, 1988.
+
+[39] Allison Marie Horst, Alison Presmanes Hill, and Kristen B Gorman. palmerpenguins: Palmer Archipelago
+
+(Antarctica) penguin data, 2020. R package version 0.1.0.
+
+[40] L Luca Cavalli-Sforza. The human genome diversity project: past, present and future. Nature Reviews Genetics,
+
+6(4):333–340, 2005.
+
+[41] Donald F Conrad, Mattias Jakobsson, Graham Coop, Xiaoquan Wen, Jeffrey D Wall, Noah A Rosenberg, and
+Jonathan K Pritchard. A worldwide survey of haplotype variation and linkage disequilibrium in the human genome.
+Nature genetics, 38(11):1251–1260, 2006.
+
+[42] Noah A Rosenberg. Distruct: a program for the graphical display of population structure. Molecular ecology
+
+notes, 4(1):137–138, 2004.
+
+[43] Anders Bergström, Shane A McCarthy, Ruoyun Hui, Mohamed A Almarri, Qasim Ayub, Petr Danecek, Yuan
+Chen, Sabine Felkel, Pille Hallast, Jack Kamm, et al. Insights into human genetic variation and population history
+from 929 diverse genomes. Science, 367(6484):eaay5012, 2020.
+
+[44] Yuhan Hao, Tim Stuart, Madeline H Kowalski, Saket Choudhary, Paul Hoffman, Austin Hartman, Avi Srivastava,
+Gesmira Molla, Shaista Madad, Carlos Fernandez-Granda, and Rahul Satija. Dictionary learning for integrative,
+multimodal and scalable single-cell analysis. Nature Biotechnology, 2023.
+
+[45] Stuart Lloyd. Least squares quantization in pcm. IEEE transactions on information theory, 28(2):129–137, 1982.
+[46] Geoffrey J McLachlan, Sharon X Lee, and Suren I Rathnayake. Finite mixture models. Annual review of statistics
+
+and its application, 6:355–378, 2019.
+
+[47] Ian Goodfellow, Yoshua Bengio, and Aaron Courville. Deep learning. MIT press, 2016.
+[48] Paul D McNicholas. Model-based clustering. Journal of Classification, 33:331–373, 2016.
+[49] Isobel Claire Gormley, Thomas Brendan Murphy, and Adrian E Raftery. Model-based clustering. Annual Review
+
+of Statistics and Its Application, 10:573–595, 2023.
+
+16
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Appendix A Derivation of Pmc
+
+To compute the Bayes risk for a general classifier δ(x) under the 0-1 loss, we first evaluate its posterior expected loss
+Eθ
+
+(cid:2)L(δ(x), θ) | x(cid:3) as follows:
+
+Eθ
+
+(cid:2)L(δ(x), θ) | x(cid:3) = Pr(θ ̸= δ(x) | x)
+
+=
+
+=
+
+=
+
+=
+
+=
+
+K
+(cid:88)
+
+j=1
+
+K
+(cid:88)
+
+j=1
+
+K
+(cid:88)
+
+Pr(δ(x) = j, θ ̸= j | x)
+
+Pr(θ ̸= j | x) Pr(δ(x) = j | x)
+
+(cid:88)
+
+Pr(θ = i | x) Pr(δ(x) = j | x)
+
+j=1
+
+i̸=j
+
+k
+(cid:88)
+
+(cid:88)
+
+j=1
+
+i̸=j
+
+πi(x) Pr(δ(x) = j | x)
+
+k
+(cid:88)
+
+j=1
+
+(1 − πj(x)) Pr(δ(x) = j | x)
+
+Note that Pr(θ ̸= j | x, δ(x)) = Pr(θ ̸= j | x). Subsequently,
+
+Pmc = Ex
+
+(cid:104)
+
+Eθ
+
+(cid:2)L(δ(x), θ) | x(cid:3)(cid:105)
+
+(cid:90)
+
+(cid:90)
+
+=
+
+=
+
+
+
+
+
+K
+(cid:88)
+
+(cid:88)
+
+πi(x) Pr(δ(x) = j | x)
+
+ P (dx)
+
+
+
+j=1
+
+i̸=j
+
+
+
+
+
+K
+(cid:88)
+
+(1 − πj(x)) Pr(δ(x) = j | x)
+
+ P (dx)
+
+
+
+j=1
+
+Appendix B Proof of Proposition 1
+
+Proof. Consider merging two existing clusters i, j to a new combined cluster k′. It follows that
+
+αk′ = αi + αj
+
+and
+
+p(x | θ = k) =
+
+αi p(x | θ = i) + αj p(x | θ = j)
+αk′
+
+Consequently, by applying Bayes rule,
+
+πk′(x) = πi(x) + πj(x)
+
+(15)
+
+Let S denote the set of indices of the existing clusters not impacted by the merge, where |S| = K − 2. By Eqn (8), Pmc
+can be written as
+
+17
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Pmc = 2
+
+(cid:88)
+
+(cid:90)
+
+m,n∈S, m<n
+
+πm(x)πn(x)P (dx)
+
+(cid:90)
+
+(cid:88)
+
++ 2
+
+πl(x)πi(x)P (dx) + 2
+
+l∈S
+(cid:90)
+
+πi(x)πj(x)P (dx)
+
++ 2
+
+(cid:90)
+
+(cid:88)
+
+l∈S
+
+πl(x)πj(x)P (dx)
+
+By Eqn (15),
+
+and note that,
+
+(cid:90)
+
+(cid:88)
+
+2
+
+l∈S
+
+πl(x)πi(x)P (dx) + 2
+
+(cid:90)
+
+(cid:88)
+
+l∈S
+
+πl(x)πj(x)P (dx) = 2
+
+(cid:90)
+
+(cid:88)
+
+l∈S
+
+πl(x)πk′(x)P (dx)
+
+P †
+
+mc = 2
+
+(cid:88)
+
+(cid:90)
+
+m,n∈S, m<n
+
+πm(x)πn(x)P (dx) + 2
+
+(cid:90)
+
+(cid:88)
+
+l∈S
+
+πl(x)πk′(x)P (dx)
+
+It becomes evident that
+
+∆P (i,j)
+
+mc = Pmc − P †
+
+mc = 2
+
+(cid:90)
+
+πi(x)πj(x)P (dx) ≥ 0
+
+Plugging in the expression of ∆P (i,j)
+mc
+
+into Eqn (8) yields
+
+Pmc =
+
+∆P (i,j)
+mc
+
+(cid:88)
+
+i<j
+
+(16)
+
+(17)
+
+Remark The merging property is specific to the randomized decision rule δr under the 0-1 loss. For the optimal
+decision rule, δo, it can be shown that P †
+mc ≤ Pmc after merging a pair of existing clusters. However, the quantitive
+expression for ∆P (i,j)
+mc
+
+is analytically intractable.
+
+Appendix C Pmc Dendrogram Construction
+
+We use a dendrogram to visualize the PHM procedure described in Algorithm 1. The leaf nodes in the tree correspond
+to the individual components of the mixture model (MM) used to fit the data. The edges between parent and child
+nodes correspond to a cluster merge step; we present the ∆Pmc reduction from the merge on the parent node for the
+merged clusters. In this way, it is possible to determine the value of Pmc after each successive merge by subtracting the
+cumulative ∆Pmc values from the leaf nodes of the tree up to the height of a specific merge from the Pmc of the initial
+cluster configuration.
+The height of a merge in the tree is determined as follows. Let P 0
+mc denote the Pmc value at the initial cluster
+configuration and, for a given merge, let P ‡
+mc be the value of the criterion prior to that merge taking place. We place the
+merge in the dendrogram at a height corresponding to the log10 scaled ratio of these values, i.e., log10 P 0
+mc. The
+log10 transformation prevents the merges from early on in the procedure from being “squashed" to the bottom of the
+tree. We opt to use the Pmc value before the merge occurs rather than after to avoid dividing by zero when calculating
+the height of the final merge (which would result in Pmc = 0).
+
+mc/P ‡
+
+18
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Figures
+
+1
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Figure 1: Values of Pmc based on the randomized and optimal decision rules δr and δo. The value
+Pmc is shown in the y-axis and is calculated for two univariate Gaussian distributions N (µ1, σ) and N (µ2, σ) where
+π1 = π2 = 0.5. The x-axis indicates the degree of cluster separation in terms of the distribution parameters.
+
+2
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Figure 2: Distribution plots for two univariate Gaussian distributions N (0, 1) (solid line) and N (µ, 1)
+(dashed line) at decreasing values of Pmc, where π1 = π2 = 0.5. The distance between the two centroids, |µ|,
+determines the specific Pmc value.
+
+3
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Figure 3: (Left) Bill and flipper lengths for the subset of palmerpenguins data. Color indicates species
+while shape indicates the assigned hierarchical clustering partition. (Right) Value of the gap statistic and Pmc based on
+hierarchical clustering for different numbers of clusters with Gaussian cluster distributions.
+
+4
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Figure 4: Scree plot visualizing standard deviation captured by each of of the principal component
+vectors from the HGDP data.
+
+5
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Figure 5: Scree plot visualizing standard deviation captured by each of of the principal component
+vectors from the scRNA-seq data.
+
+6
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Tables
+
+7
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+K
+
+Gap
+
+1
+2
+3
+4
+5
+6
+7
+
+0.403
+0.824
+1.058
+0.901
+0.808
+0.722
+0.740
+
+Pmc
+
+0.000
+0.002
+0.062
+0.101
+0.126
+0.137
+0.158
+
+Silhouette
+
+Stability (ARI)
+
+Prediction Strength
+
+—
+0.632
+0.522
+0.417
+0.353
+0.353
+0.348
+
+—
+0.995
+0.961
+0.758
+0.723
+0.630
+0.619
+
+—
+1.000
+0.842
+0.618
+0.519
+0.679
+0.399
+
+Supplementary Table 1: Values of Pmc and other cluster validity indices for the simulated k-means example data.
+
+8
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+K
+
+Gap
+
+1
+2
+3
+4
+5
+6
+7
+8
+
+0.562
+1.115
+1.208
+0.964
+0.890
+0.886
+0.884
+0.804
+
+Pmc
+
+0.000
+0.014
+0.025
+0.076
+0.124
+0.147
+0.138
+0.148
+
+Silhouette
+
+Stability (ARI)
+
+Prediction Strength
+
+—
+0.583
+0.595
+0.468
+0.372
+0.385
+0.390
+0.369
+
+—
+0.957
+0.947
+0.757
+0.679
+0.646
+0.641
+0.627
+
+—
+0.902
+0.897
+0.458
+0.470
+0.362
+0.333
+0.383
+
+Supplementary Table 2: Values of Pmc and other cluster validity indices for the Palmer penguins data based on the
+k-means clusterings of the observations.
+
+9
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+K
+
+Gap
+
+1
+2
+3
+4
+5
+6
+7
+8
+
+0.545
+1.133
+1.325
+1.124
+1.051
+1.024
+1.013
+0.994
+
+Pmc
+
+0.000
+0.012
+0.024
+0.063
+0.099
+0.141
+0.132
+0.128
+
+Silhouette
+
+Stability (ARI)
+
+Prediction Strength
+
+—
+0.581
+0.595
+0.483
+0.470
+0.382
+0.387
+0.381
+
+—
+0.909
+0.943
+0.757
+0.702
+0.652
+0.656
+0.645
+
+—
+0.942
+0.899
+0.544
+0.464
+0.413
+0.366
+0.345
+
+Supplementary Table 3: Values of Pmc and other cluster validity indices for the Palmer penguins data based on the
+hierarchical clusterings of the observations.
+
+10
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+p
+
+1
+2
+3
+4
+5
+
+Pmc
+
+Elapsed (s)
+
+0.13144
+0.13144
+0.13144
+0.13144
+0.13145
+
+0.011
+0.164
+3.163
+23.061
+23.689
+
+ˆPmc
+0.13143
+0.13141
+0.13133
+0.13132
+0.13140
+
+σ( ˆPmc) Elapsed (s)
+1.010
+0.00056
+0.885
+0.00041
+0.994
+0.00042
+0.854
+0.00058
+0.954
+0.00051
+
+Supplementary Table 4: Pmc values computed using cubature methods and Monte Carlo integration based on 50
+replicates. The Pmc and ˆPmc values are averages across all replicates. Elapsed time (in seconds) is the average time for
+a single replicate.
+
+11
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+Supplementary Methods
+
+12
+
+Interpretable Clustering with the Distinguishability Criterion
+
+A PREPRINT
+
+1 Monte Carlo Pmc Comparison
+
+Here we compare Pmc computed using standard cubature methods to ˆPmc estimated using a Monte Carlo (MC) integral
+(as described in Section 4.5). We use 50 replicates to obtain the timing measurements and quantify the uncertainty in the
+MC integral. All values presented are means over these replicates unless otherwise specified. For the MC integration
+procedure we use M = 105 sample points, and parallelize the computation over 8 cores.
+The distribution in question consists of three Gaussian clusters with πk = 1/3 in Rp with Ip variance. The cluster are
+centered at 0p and ±dp, where dp is the p-dimensional vector whose elements are all d. d is set so that the Euclidean
+distance between dp and the origin is fixed to be 3; i.e. d = (cid:112)32/p. This is so that the value of Pmc remains fixed
+across dimensions and we do not need to worry about the dimensionality affecting the true value of Pmc. The results for
+dimension p = 1, . . . , 5 are presented in Supplementary Table 4.
+
+Both approaches produce highly similar values of Pmc across dimensions. The standard deviation of the MC estimates
+is quite low, indicating stability in the estimation procedure. However, while the cubature method evaluation time
+rapidly increases in p, the time for the MC procedure is roughly constant. These together highlight the MC estimation
+procedure as a viable and accurate approach to estimate Pmc, especially in moderate dimensional data (i.e., p ≥ 3)
+where cubature methods may struggle to reach a solution in a reasonable time.
+
+13
+
+
