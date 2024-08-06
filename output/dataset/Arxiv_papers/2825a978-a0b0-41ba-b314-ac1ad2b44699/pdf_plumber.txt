@@ -1,0 +1,1039 @@
+Pearls from Pebbles: Improved Confidence Functions for
+Auto-labeling
+HaritVishwakarma Reid(Yi)Chen SuiJietTay
+hvishwakarma@cs.wisc.edu reid.chen@wisc.edu sstay2@wisc.edu
+SatyaSaiSrinathNamburi FredericSala RamyaKorlakaiVinayak
+sgnamburi@cs.wisc.edu fredsala@cs.wisc.edu ramya@ece.wisc.edu
+UniversityofWisconsin-Madison,WI,USA
+ABSTRACT
+Auto-labelingisanimportantfamilyoftechniquesthatproducelabeledtrainingsetswithminimum
+manual labeling. A prominent variant, threshold-based auto-labeling (TBAL), works by finding
+a threshold on a model’s confidence scores above which it can accurately label unlabeled data
+points. However,manymodelsareknowntoproduceoverconfidentscores,leadingtopoorTBAL
+performance. While a natural idea is to apply off-the-shelf calibration methods to alleviate the
+overconfidenceissue,suchmethodsstillfallshort. Ratherthanexperimentingwithad-hocchoicesof
+confidencefunctions,weproposeaframeworkforstudyingtheoptimalTBALconfidencefunction.
+We develop a tractable version of the framework to obtain Colander (Confidence functions for
+Efficient and Reliable Auto-labeling), a new post-hoc method specifically designed to maximize
+performance in TBAL systems. We perform an extensive empirical evaluation of our method
+Colanderandcompareitagainstmethodsdesignedforcalibration. Colanderachievesupto60%
+improvementsoncoverageoverthebaselineswhilemaintainingauto-labelingerrorbelow5%and
+usingthesameamountoflabeleddataasthebaselines.
+1 Introduction
+Thedemandforlabeleddatainmachinelearning(ML)isperpetual (Fisher,1936;Dengetal.,2009;Touvronetal.,
+2023),yetobtainingsuchdataisexpensiveandtime-consuming,creatingabottleneckinMLworkflows. Threshold-
+basedauto-labeling(TBAL)emergesasapromisingsolutiontoobtainhigh-qualitylabeleddataatlowcost(SGT,
+2022;Qiuetal.,2023;Vishwakarmaetal.,2023). ATBALsystem(Figure1)takesunlabeleddataasinputandoutputs
+alabeleddataset. Itworksiteratively: ineachiteration,itacquireshumanlabelsforasmallchunkofdatatotraina
+model,thenauto-labelspointsusingthemodel’spredictionswhereitsconfidencescoresareaboveacertainthreshold.
+Thethresholdisdeterminedusingvalidationdatasothattheauto-labeledpointsmeetadesiredaccuracycriteria. The
+goalistomaximizecoverage—thefractionofauto-labeledpointswhilemaintainingtheaccuracycriteria.
+The confidence function is critical to the TBAL workflow (Figure 1). Existing TBAL systems rely on commonly
+usedfunctionslikesoftmaxoutputsfromneuralnetworkmodels (Qiuetal.,2023;Vishwakarmaetal.,2023). These
+functions are not well aligned with the objective of the auto-labeling system. Using them results in substantially
+suboptimalcoverage(Figure2(a)). Hence,aqueryarises:
+WhataretherightchoicesofconfidencefunctionsforTBALandhowcanweobtainsuchfunctions?
+An ideal confidence function for auto-labeling will achieve the maximum coverage at a given auto-labeling error
+toleranceandthuswillbringdownthelabelingcostsignificantly. Findingsuchanidealfunction,however,isdifficult
+becauseoftheinherenttensionbetweenaccuracyandcoverage. Themodelsusedinauto-labelingareoftenhighly
+inaccuratesoachievingacertainerrorguaranteeiseasierwhenbeingconservativeintermsofconfidence—butthis
+reducescoverage. Conversely,highcoveragemayappeartorequireloweringtherequirementsinconfidence,butthis
+mayeasilyleadtoovershootingtheerrorbar. ThisiscompoundedbythefactthatTBALisiterativesothatevensmall
+deviationsintolerableerrorlevelscancascadeinfutureiterations.
+4202
+rpA
+42
+]GL.sc[
+1v88161.4042:viXraPearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Worseyet,overconfidencemayruinanyhopeofbalanc-
+Threshold-based Auto-labeling System
+ingaccuracyandcoverage. Furthermore,inTBALthe
+Superlevel sets on
+models are trained on a small amount of labeled data. the confidence scores
+Hence,themodelsarenothighlyaccurate,makingthe Unlabeled Data
+problem of designing functions for such models even
+Get Human-labeled Data Train Model (ERM) Find Auto-labeling
+morechallenging. Threshold
+Commonlyusedtrainingproceduresproduceoverconfi-
+dentscores—highscoresforbothcorrectandincorrect
+predictions (Szegedyetal.,2014;Nguyenetal.,2015;
+Labeled Data Auto-label points with confidence
+HendrycksandGimpel,2017;Heinetal.,2018;Baietal.,
+2021).Figure2(a)showsthatthesoftmaxscoresareover-
+Figure1: High-leveldiagramofanauto-labelingsystem. It
+confident, resulting in poor auto-labeling performance.
+takesunlabeleddataasinputand,withthehelpofexpert
+Severalmethodshavebeenintroducedtoovercomeover-
+labelersandMLmodels,outputsalabeleddataset.
+confidence, including calibration methods (Guo et al.,
+2017). Usingthemstillmissesoutonsignificantperfor-
+mance(Figure2(b))sincethecalibrationgoaldiffersfromauto-labeling. Fromtheauto-labelingstandpoint,wewant
+minimumoverlapbetweenthecorrectandincorrectmodelpredictionscores. Othersolutions (Corbièreetal.,2019;
+Moon et al., 2020) either bake the objective of separating scores into model training or use different optimization
+procedures (Zhuetal.,2022)thatcanencouragesuchseparation. WeobservethatthesedonothelpTBALaswell
+since,aftersomepoint,themodeliscorrectonalmostallthetrainingpoints,makingithardtotrainittodiscriminate
+betweenitsowncorrectandincorrectpredictions.
+WeaddressthesechallengesbyproposingaframeworktolearntherightconfidencefunctionsforTBAL.Inparticular,
+we express the auto-labeling objective as an optimization problem over the space of confidence functions and the
+thresholds. Ourframeworksubsumesexistingmethods—theybecomepointsinthespaceofsolutions. Weintroduce
+Colander (Confidence functions for Efficient and Reliable Auto-labeling) based on a practical surrogate to the
+frameworkthatcanbeusedtolearnoptimalconfidencefunctionsforauto-labeling. Usingtheselearnedfunctionsinthe
+TBALcanachieveupto60%improvementsincoverageversusbaselineslikesoftmax,temperaturescaling (Guoetal.,
+2017),CRL (Moonetal.,2020)andFMFP (Zhuetal.,2022).
+Wesummarizeourcontributionsasfollows,
+1. Weproposeaprincipledframeworktostudythechoicesofconfidencefunctionssuitableforauto-labelingand
+provideapracticalmethod(Colander)tolearnconfidencefunctionsforefficientandreliableauto-labeling.
+2. Wesystematicallystudycommonlyusedchoicesofscoringfunctionsandcalibrationmethodsanddemonstrate
+thattheyleadtopoorauto-labelingperformance.
+3. Throughextensiveempiricalevaluationonrealdata,weshowthatusingtheconfidencescoresobtainedusing
+ourprocedureboostsauto-labelingperformancesignificantlyincomparisontocommonchoicesofconfidence
+functionsandcalibrationmethods.
+2 BackgroundandMotivation
+Webeginwithsettingupsomeusefulnotation.
+Notation. Let [m] := {1,2,...,m} for any natural number m. Let X be a set of unlabeled points drawn from
+u
+someinstancespaceX. LetY = {1,...,k}bethelabelspaceandlettherebeanunknowngroundtruthlabeling
+functionf∗ :X →Y. LetObeanoiselessoraclethatprovidesthetruelabelforanypointx∈X. Denotethemodel
+(hypothesis)classofclassifiersbyH, whereeachh ∈ Hisafunctionh : X → Y. Eachclassifierhalsohasan
+associatedconfidencefunctiong:X →∆k thatquantifiestheconfidenceofthepredictionbymodelh ∈Honany
+datapointx∈X. Here,∆k isa(k−1)-dimensionalprobabilitysimplex. Letv[i]denotetheithcomponentforany
+vectorv∈Rd. Foranypointx∈Xthepredictionisyˆ:=h(x)andtheassociatedconfidenceisg(x)[yˆ]. Thevectort
+denotesscoresoverk-classes,andt[y]denotesitsythentry,i.e.,scoreforclassy. PleaseseeTable3forasummaryof
+thenotation.
+2.1 Threshold-basedAuto-labeling
+Threshold-basedauto-labeling(TBAL)(Figure1)seekstoobtainlabeleddatasetswhilereducingthelabelingburden
+onhumans. TheinputisapoolofunlabeleddataX . Itoutputs,foreachx∈X ,labely˜∈Y. Theoutputlabelcould
+u u
+2PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+(a) Softmax (b) Temp.Scaling (c) Colander (Ours) (d) Coverage (e) Auto-labelingerror
+Figure2: Scoresdistributions(KernelDensityEstimates)ofaCNNmodeltrainedonCIFAR-10data. (a)softmax
+scoresofvanillatrainingprocedure(SGD)(b)scoresafterpost-hoccalibrationusingtemperaturescalingand(c)scores
+fromourColander procedureappliedonthesamemodel. FortrainingtheCNNmodelweuse4000pointsdrawn
+randomly,andthenumberofvalidationpointsis1000(ofwhich500areusedforTemp. ScalingandColander). The
+testaccuracyofthemodelis55%. Figures(d)and(e)showthecoverageandauto-labelingerrorofthesemethods. The
+dotted-redlinecorrespondstoa5%errorthreshold.
+beeithery,fromtheoracle(representingahuman-obtainedlabel),oryˆ,fromthemodel. LetN bethenumberof
+u
+unlabeledpoints,A⊆[N ]thesetofindicesofauto-labeledpoints,andX (A)bethesepoints. LetN denotethe
+u u a
+sizeoftheauto-labeledsetA. Theauto-labelingerrordenotedbyE(cid:98)(X u(A))andthecoveragedenotedbyP(cid:98)(X u(A))
+oftheTBALaredefinedasfollows:
+1 (cid:88)
+E(cid:98)(X u(A)):= N
+a
+i∈A1(y˜ i ̸=f∗(x i)), (1) P(cid:98)(X u(A)):= N|A u| = NN ua, (2)
+The goal of an auto-labeling algorithm is to label the dataset so that E(cid:98)(X u(A)) ≤ ϵ
+a
+while maximizing coverage
+P(cid:98)(X u(A))foranygivenϵ
+a
+∈[0,1]. AsdepictedinFigure1theTBALalgorithmproceedsiteratively. Ineachiteration,
+itquerieslabelsforasubsetofunlabeledpointsfromtheoracle. IttrainsaclassifierfromthemodelclassHonthe
+oracle-labeleddataacquiredtillthatiteration. Itthenusesthemodel’sconfidencescoresonthevalidationdatato
+identifytheregionintheinstancespace,wherethecurrentclassifierisconfidentlyaccurateandautomaticallylabelsthe
+pointsinthisregion.
+2.2 ProblemswithconfidencefunctionsinTBAL
+ThesuccessofTBALhingessignificantlyontheabilityoftheconfidencescoresoftheclassifiertodistinguishbetween
+correctandincorrectlabels. PriorworksonTBAL (Vishwakarmaetal.,2023;Qiuetal.,2023)trainthemodelwith
+StochasticGradientDescent(SGD)andusethesoftmaxoutputofthemodelasconfidencescoreswhichareknown
+tobeoverconfident(Nguyenetal.,2015). Anaturalchoicetomitigatethisproblemistousepost-hoccalibration
+techniques,e.g.,temperaturescaling (Guoetal.,2017). WeevaluatethesechoicesbyrunningTBALforasingleround
+ontheCIFAR-10 (Krizhevskyetal.,2009)datasetwithaSimpleCNNmodelwith5.8Mparameters (Hussain,2021)
+witherrorthreshold5%. SeeAppendixC.1formoredetails.
+InFigures2(d)and2(e)weobservethatusingsoftmaxscoresfromtheclassifieronlyproduces2.9%coveragewhile
+theerrorthresholdisviolatedwith10%error. Usingtemperaturescalingonlyincreasesthecoveragemarginallyto
+4.9%andstillviolatesthethresholdwitherror14%. Lookingcloseratthescoresforcorrectversusincorrectexamples
+onvalidationdata,weobservealargeoverlapforsoftmax(Figure2(a))andamarginalshiftwithconsiderableoverlap
+fortemperaturescaling(Figure2(b)). Toovercomethischallenge,weproposeanovelframework(Section3)tolearn
+suchconfidencefunctionsinaprincipledway. Ourmethodinthisexamplecanachieve50%coveragewithanerrorof
+3.4%withinthedesiredthreshold(Figure2(c)).
+3 ProposedMethod(Colander)
+TheobservationsinFigure2(a)and2(b)suggestthatarbitrarychoicesofconfidencefunctionscanleavesignificant
+coverageonthetable. Tofindabetterchoiceofconfidencefunctioninaprincipledmanner,wedevelopaframework
+basedonauto-labelingobjectives—maximizingcoveragewhilehavingboundedauto-labelingerror. Weinstantiateitby
+usingempiricalestimatesandeasy-to-optimizesurrogates. WeusetheoverallTBALworkflowfromVishwakarmaetal.
+(2023)andintroduceourmethodtoreplacetheconfidence(scoring)functionaftertrainingtheclassifier.
+3PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Threshold-based Auto-labeling System + Colander
+Colander
+Unlabeled Data
+Get Human-
+labeled Data Train Model Learn confidence function for auto-labeling
+Estimate errors on superlevel sets of the confidence scores
+Labeled Data
+Auto-label points with confidence Estimate Thresholds
+Figure3: Threshold-basedAuto-labelingwithColander. SimilartotheexistingTBAL(Figure1)ittakesunlabeled
+dataasinput,selectsasmallsubsetofdatapoints,andobtainshumanlabelsforthemtocreateD(i) andD(i) for
+train val
+theithiteration. Thenittrainsmodelhˆ onD(i) . IncontrasttothestandardTBALprocedure,herewerandomly
+i train
+splitD(i) intotwopartsD(i) andD(i). ThenColanderkicksin,ittakeshˆ andD(i) asinputandlearnscoverage
+val cal th i cal
+maximizingconfidencefunctiongˆ forhˆ . ThenusingD(i)andgˆ auto-labelingthresholdsˆt aredeterminedtoensure
+i i th i i
+theauto-labeleddataaserroratmostϵ . Afterobtainingthethresholdstherestofthestepsarethesameasthestandard
+a
+TBAL.Thewholeworkflowrunsinaloopuntilallthedataislabeledorsomeotherstoppingcriteriaareachieved.
+3.1 Auto-labelingoptimizationframework
+InanyiterationofTBAL,wehaveamodelhtrainedonasubsetofdatalabeledbytheoracle. Thismodelmaynotbe
+highlyaccurate. However,itcouldbeaccurateinsomeregionsoftheinstancespace,andwiththehelpofaconfidence
+functiong,wewanttoidentifythepointswherethemodeliscorrectandauto-labelthem. Aswesawearlier,arbitrary
+choicesofgperformpoorlyonthistask. Insteadofrelyingonthesechoices,weproposeaframeworktofindtheright
+functionfromasufficientlyrichfamilyofconfidencefunctionsthatalsosubsumesthecurrentchoices.
+Optimalconfidencefunction. Tofindtheconfidencefunctionalignedwithourobjective,weconsiderarichenough
+spaceoftheconfidencefunctionsGandthresholdsandexpresstheauto-labelingobjectiveasanoptimizationproblem
+(P1)overthesespaces.
+argmax P(g,t|h) s.t. E(g,t|h)≤ϵ . (P1)
+a
+g∈G,t∈Tk
+Here T is the set of confidence thresholds and G : X → Tk is the set of confidence functions and P(g,t|h) and
+E(g,t|h)arethepopulationlevelcoverageandauto-labelingerrorwhicharedefinedasfollows,
+P(g,t|h):=P (cid:0) g(x)[yˆ]≥t[yˆ](cid:1) , (3) E(g,t|h):=P (cid:0) y ̸=yˆ|g(x)[yˆ]≥t[yˆ](cid:1) . (4)
+x x
+Theoptimalg⋆andt⋆thatachievethemaximumcoveragewhilesatisfyingtheauto-labelingerrorconstraintbelongto
+thesolution(s)ofthefollowingoptimizationproblem.
+3.2 Practicalmethodtolearnconfidencefunctions
+Theaboveframeworkprovidesatheoreticalcharacterizationoftheoptimalconfidencefunctionsandthresholdsfor
+TBAL.However,itisnotpracticalsince,inpractice,thedatadistributionsandf⋆arenotknown. Next,weprovidea
+practicalmethodbasedontheaboveframeworktolearnconfidencefunctionsforTBAL.
+Empiricaloptimizationproblem. Sincewedonotknowthedistributionsofxandf⋆,weuseestimatesofcoverage
+andauto-labelingerrorsonafractionofvalidationdatatosolvetheoptimizationproblem. LetDbesomefinitenumber
+oflabeledsamples,andthentheempiricalcoverageandauto-labelingerroraredefinedasfollows,
+4PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+P(cid:98)(g,t|h,D):=
+1 (cid:88) 1(cid:0) g(x)[yˆ]≥t[yˆ](cid:1)
+, (5)
+|D|
+(x,y)∈D
+(cid:80) 1(cid:0)
+y
+̸=yˆ∧g(x)[yˆ]≥t[yˆ](cid:1)
+(x,y)∈D
+E(cid:98)(g,t|h,D):=
+(cid:80) 1(cid:0) g(x)[yˆ]≥t[yˆ](cid:1)
+. (6)
+(x,y)∈D
+We randomly split the validation data into two parts D
+cal
+and D
+th
+and use D
+cal
+to compute P(cid:98)(g,t | h,D cal) and
+E(cid:98)(g,t|h,D cal)forthefollowingempiricalversionoftheoptimizationproblem. Wenowhopetosolvethefollowing
+optimizationproblemusingtheseestimatestogetgˆ,ˆt.
+argmax P(cid:98)(g,t|h,D cal) s.t. E(cid:98)(g,t|h,D cal)≤ϵ a. (P2)
+g∈G,t∈Tk
+However,thereisacaveat: theobjectiveandconstraintarebasedon0-1variables,soitishardtooptimizeforgandt.
+Surrogateoptimizationproblem. Tomaketheaboveoptimization(P2)tractableusinggradient-basedmethods,we
+introducedifferentiablesurrogatesforthe0-1variables.Letσ(α,z):=1/(1+exp(−αz))denotethesigmoidfunction
+onRwithscaleparameterα∈R. Itiseasytoseethat,foranyg,yandt,g(x)[y]≥t[y] ⇐⇒ σ(α,g(x)[y]−t[y])≥
+1/2. Usingthisfact,wedefinethefollowingsurrogatesoftheauto-labelingerrorandcoverageasfollows,
+1 (cid:88) (cid:0) (cid:1)
+P(cid:101)(g,t|h,D cal):=
+|D |
+σ α,g(x)[yˆ]−t[yˆ] , (7)
+cal
+(x,y)∈Dcal
+(cid:80) 1(cid:0)
+y
+̸=yˆ(cid:1) σ(cid:0) α,g(x)[yˆ]−t[yˆ](cid:1)
+E(cid:101)(g,t|h,D cal):=
+(x, (cid:80)y)∈Dcal
+(cid:0) (cid:1)
+. (8)
+σ α,g(x)[yˆ]−t[yˆ]
+(x,y)∈Dcal
+andthesurrogateoptimizationproblemasfollows,
+argmin −P(cid:101)(g,t|h,D cal)+λE(cid:101)(g,t|h,D cal) (P3)
+g∈G,t∈Tk
+Here, λ ∈ R+ isthepenaltytermcontrollingtherelativeimportanceoftheauto-labelingerrorandcoverage. Itis
+ahyper-parameter,andwefinditusingourhyper-parametersearchingprocedurediscussedinsection4.3. Thegap
+betweenthesurrogateandactualcoverage,errordiminishesasα→∞. WediscussthisinAppendixB.
+ChoiceofG. Ourframeworkisflexiblewiththefunctionclass
+Gchoice. Inthiswork,weusedeepneuralnetworks(DNNs)
+withatleasttwolayersonmodelclassH. SinceDNNsalso
+learnpowerfulrepresentationsduringtraining,weusethelast
+two layers of representations as input for the functions in G
+(Figure4). Letz(1)(x;h) ∈ Rk andz(2)(x;h) ∈ Rd2 bethe
+outputs(logits)ofthelastandthesecond-lastlayerofthenet
+hforinputxandletz(x;h):=[z(1)(x;h),z(2)(x;h)]denote
+theconcatenationofthetworepresentations. Weproposeto
+usetwo-layerneuralnetworksG
+nn2
+:Rk+d2 (cid:55)→∆k forG. A
+netg∈G takesthelasttwolayer’srepresentationsfromh
+nn2
+andoutputsconfidencescoresoverkclasses. Givenh,thegis
+definedasfollows,
+(cid:0) (cid:1) Figure4: Ourchoiceofgfunction.
+g(x):=softmax W tanh(W z(x;h)) . (9)
+2 1
+Here W
+1
+∈ R(k+d2)×2(k+d2) and R2(k+d2)×k are the learnable weight matrices and for any v ∈ Rd, the
+(cid:80)
+softmax(v)[i]:=exp(v[i])/( exp(v[j]))andtanh(v)[i]:=(exp(2v[i])−1)/(exp(2v[i])+1).
+j
+5PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Algorithm1Threshold-basedAuto-Labeling(TBAL)
+Input: UnlabeleddataX ,labeledvalidationdataD ,autolabelingerrortoleranceϵ ,N trainingdataquerybudget,
+u val a t
+seeddatasizen ,batchsizeforactivequeryn ,calibrationdatafractionν,setofconfidencethresholdsT,coverage
+s b
+lowerboundρ ,labelspaceY.
+0
+Output: Auto-labeleddatasetD
+out
+1: procedureTBAL(X u,D val,ϵ a,N t,n s,n b,ν,ρ 0,T,Y)
+2: ▷/***Initialization. ***/
+3: D q(1 u) ery ← RANDOMQUERY(X u,n s) ▷Randomlyselectn spointsandgetmanuallabelsforthem.
+4: X u(1) ←X u\{x:(x,y)∈D q(1 u) ery} ▷Removethemanuallylabeledpointsfromtheunlabeledpool.
+5: D v(1 a)
+l
+←D val;D t( r0 a)
+in
+←∅ ▷ValidationdataforthefirstroundisfullD val.
+6: D out ←D q(1 u) ery;n( t1) ←n s;i←1 ▷IncludethemanuallylabeleddatainStep2. intheoutputdataD out.
+7: ▷/***Runtheauto-labelingloop***/
+8: ▷/*Untilnomoreunlabeledpointsareleftorthebudgetformanuallylabeledtrainingdataisexhausted. */
+9: whileX u(i) ̸=∅andn( ti) ≤N tdo
+10: D t( ri) ain ←D t( ri− ai1 n)∪D q(i u) ery ▷Includethemanuallylabeledpointsinthetrainingdata.
+11: hˆ i ← TRAINMODEL(H,D t( ri) ain) ▷Trainaclassificationmodel.
+12: D(i),D(i) ← RANDOMSPLIT(D(i),ν) ▷Randomlysplitthecurrentvalidationdataintotwoparts.
+cal th val
+13: ▷/***Colander block,tolearnthenewconfidencefunctiongˆ i***/
+14: gˆ i,ˆt′
+i
+←argmin g∈G,t∈Tk−P(cid:101)(g,t|hˆ i,D c(i a) l)+λE(cid:101)(g,t|hˆ i,D c(i a) l) ▷Colander procedure.
+15: ▷/***Estimateauto-labelingthresholdsusinggˆ iandD t( hi). SeeAlgorithm2. ***/
+16: ˆt i ← ESTTHRESHOLD(gˆ i,hˆ i,D t( hi),ϵ a,ρ 0,T,Y)
+17: ▷/***Auto-labelthepointshavingscoresabovethethresholds. ***/
+18: D(cid:101)u(i) ←{(x,hˆ i(x)):x∈X u(i)}
+19: D a(i u)
+to
+←{(x,yˆ)∈D˜ u(i) :gˆ i(x)[yˆ] ≥ˆt i[yˆ]}
+20: X u(i) ←X u(i)\{x:(x,yˆ)∈D a(i u) to} ▷Removeauto-labeledpointsfromtheunlabeledpool.
+21: D(cid:101) v(i a)
+l
+←{(x,hˆ i(x)):(x,y)∈D v(i a) l}
+22: D v(i a+ l1) ←{(x,yˆ)∈D˜ v(i a)
+l
+:gˆ i(x)[yˆ]<ˆt i[yˆ]} ▷Removevalidationpointsintheauto-labelingregion.
+23: ▷/***Getthenextbatchofmanuallylabeleddatausinganactivequeryingstrategy. ***/
+24: D q(i u+ er1 y) ← ACTIVEQUERY(hˆ i,X u(i),n b)
+25: X u(i+1) ←X u(i)\{x:(x,y)∈D q(i u+ er1 y)} ▷Removemanuallylabeleddatafromtheunlabeledpool.
+26: D out ←D out∪D a(i u) to∪D q(i u+ er1 y) ▷Addtheauto-labeledandmanuallylabeledpointsintheoutputdata.
+27: n( ti+1) ←n( ti) +n b
+28: i ←i+1
+29: endwhile
+30: return D out
+31: endprocedure
+Solvingthesurrogateoptimization. Theoptimizationproblem(P3)isnon-convexevenforasimpleclassofg(such
+aslinear). Nevertheless,itisdifferentiableandweapplygradient-basedmethods,whichhavebeenhighlyeffective
+inminimizingnon-convexlossesindeeplearning. WesolveforgandtsimultaneouslyusingtheAdamoptimizer
+(KingmaandBa,2014). ThedetailsofthetraininghyperparametersaredeferredtotheAppendixC.4.
+3.3 TBALprocedurewithColander
+WepluginourmethodColandertolearnconfidencefunctionsintheworkflowofTBAL(Algorithm1). Theworkflow
+isalsoillustratedinFigure3. ThestepsintheupdatedworkflowarethesameasthestandardTBAL(Figure1),except
+for the introduction of Colander after the model training step to learn a new confidence function gˆ using part of
+i
+6PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Algorithm2EstimateAuto-LabelingThreshold
+Input: Confidencefunctiongˆ,classifierhˆ ,PartofvalidationdataD(i)forthresholdestimation,autolabelingerror
+i i th
+toleranceϵ ,setofconfidencethresholdsT,coveragelowerboundρ ,labelspaceY.
+a 0
+Output: Auto-labelingthresholdsˆt ,whereˆt [y]isthethresholdforclassy.
+i i
+1: procedureESTTHRESHOLD(gˆ i,hˆ i,D t( hi),ϵ a,ρ 0,T,Y)
+2: ▷/***Estimatethresholdsforeachclass. ***/
+3: for y ∈Ydo
+4: D(i,y) ←{(x′,y′)∈D(i) :y′ =y} ▷Grouppointsclass-wise.
+th th
+5: ▷/***Onlyevaluatethresholdswithest. coverageatleastρ 0. ***/
+6: T y′ ←{t∈T :P(cid:98)(cid:0) gˆ i,t|hˆ i,D t( hi,y)(cid:1) ≥ρ 0}∪{∞}
+7: ▷/***Estimateauto-labelingerrorateachthreshold. Pickthesmallestthresholdwiththesumofestimated
+errorandC timesthestandarddeviationisbelowϵ . C issetto0.25here. ***/
+1 a 1
+8: ˆt i[y] ←min{t∈T y′ :E(cid:98)a(gˆ i,t|hˆ i,D t( hi,y) )+C 1σˆ(hˆ i,t,D t( hi,y) )≤ϵ a}
+9: endfor
+10: return ˆt i
+11: endprocedure
+thevalidationdata(D(i))andthenthethresholdestimationprocedure(Algorithm2)findsauto-labelingthresholds
+cal
+ˆt onthescorescomputedusinggˆ ontheotherpartofthevalidationdatacalledD(i). Whilewegetthresholdsas
+i i th
+outputfromColander,itisimportanttoestimatethemagainfromtheheld-outdataD(i)toensuretheauto-labeling
+th
+errorconstraintisnotviolated. InAlgorithm1theprocedureRANDOMQUERY(X u,n s)selectsn
+s
+pointsrandomly
+fromX uandobtainshumanlabelsforthemtocreateD t( r1 a) in. TheprocedureRANDOMSPLIT(D v(i a) l,ν)randomlysplits
+D(i),thevalidationdatainithiterationtoD(i) andD(i)withD(i) havingν fractionofpointsfromD(i). D(i) isused
+val cal th cal val cal
+forlearningthepost-hocconfidencefunctionandD(i) isusedforestimatingauto-labelingthresholdsinAlgorithm
+th
+2. Theprocedure, TRAINMODEL(H,D(i) )trainsamodelfrommodelclassH onthetrainingdataD(i) . Any
+train train
+trainingprocedurecanbeusedhere,inthisworkweusemethodslistedinSection4.1.1formodeltraining. Lastly,
+ACTIVEQUERY(hˆ i,X u(i),n b), selects n
+b
+points from the remaining unlabeled pool using the same active learning
+strategyusedinapriorwork (Vishwakarmaetal.,2023). WedeferthedetailstotheAppendixB.
+4 EmpiricalEvaluation
+AsweobservedinSection2.2,ad-hocchoicesofconfidencefunctionscanleadtopoorauto-labelingperformance.
+Motivatedbytheseshortcomings,wedesignedamethodtolearnconfidencefunctionsthatarewell-alignedwiththe
+auto-labelingobjective. Inthissection,weverifythefollowingclaimsthroughextensiveempiricalevaluation,
+C1.Colander learnsbetterconfidencefunctionsforauto-labelingcomparedtostandardtrainingandcommonpost-hoc
+methodsthatmitigatetheoverconfidenceproblem. UsingitinTBALcanboostthecoveragesignificantlywhilekeeping
+theauto-labelingerrorlow.
+C2. Colander isnotdependentonanyparticulartrain-timemethodandthusshouldimprovetheperformanceover
+usinganytrain-timemethodalone.
+4.1 Baselines
+Wecompareseveraltrain-timeandpost-hocmethodsthatimproveconfidencefunctionsfromcalibrationandordinal
+rankingperspectives. DetaileddescriptionsofthesemethodsaredeferredtoAppendixC.5.
+4.1.1 Train-timemethods
+Weusethefollowingmethodsfortrainingthemodelhˆ.
+1. Vanillaneuralnetworktrainedundercross-entropylossusingstochasticgradientdescent(SGD) (Amari,1993;
+Bottou,2012;Guoetal.,2017).
+7PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Dataset Modelh N N K N N N Modality Preprocess Dimension
+u t v hyp
+MNIST LeNet-5 70k 60k 10 500 500 500 Image None 1×28×28
+CIFAR-10 CNN 50k 40k 10 10k 8k 2k Image None 3×32×32
+Tiny-Imagenet MLP 110k 90k 200 10k 8k 2k Image CLIP 512
+20Newsgroup MLP 11.3k 9k 20 2k 1.6k 600 Text FlagEmb. 1,024
+Table1: Detailsofthedatasetandmodelweusedtoevaluatetheperformanceofourmethodandothercalibration
+methods. FortheTiny-Imagenetand20Newsgroupdatasets,weuseCLIPandFlagEmbedding,respectively,toobtain
+the embeddings of these datasets and conduct auto-labeling on the embedding space. For Tiny-Imagenet, we use
+a 3-layer perceptron with 1,000, 500, 300 neurons on each layer as model h; for 20 Newsgroup, we use a 3-layer
+perceptronwith1,000,500,30neuronsoneachlayerasmodelh.
+2. Squentropy (Huietal.,2023)addstheaveragesquarelossovertheincorrectclassestocross-entropylossto
+improvethecalibrationandaccuracyofthemodel.
+3. CorrectnessRankingLoss(CRL) (Moonetal.,2020)alignstheconfidencescoresofthemodelwiththeordinal
+rankingscriterionviaregularization.
+4. FMFP (Zhuetal.,2022)alignsconfidencescoreswiththeordinalrankingscriterionbyusingSharpnessAware
+Minimization(SAM)(Foretetal.,2021)inlieuofSGD.
+4.1.2 Post-hocmethods
+Weusethefollowingmethodsforlearning(orupdating)theconfidencefunctiongˆafterlearninghˆ.
+1. Temperature scaling (Guo et al., 2017) is a variant of Platt scaling (Platt, 1999). It rescales the logits by a
+learnablescalarparameter.
+2. Top-LabelHistogram-Binning (GuptaandRamdas,2022)buildsonthehistogram-binningmethod(Zadrozny
+andElkan,2002)andfocusesoncalibratingthescoresofthepredictedlabelassignedtounlabeledpoints.
+3. Scaling-Binning (Kumaretal.,2019)appliestemperaturescalingandthenbinstheconfidencefunctionvalues.
+4. DirichletCalibration (Kulletal.,2019)modelsthedistributionofpredictedprobabilityvectorsseparatelyon
+instancesofeachclassandassumesDirichletclassconditionaldistributions.
+Remark: Eachtrain-timemethodispipedwithapost-hocmethod,yieldingtotal4×5=20methods.
+4.2 Datasetsandmodels
+Weevaluatetheperformanceofauto-labelingonfourdatasets. Eachispairedwithamodelforauto-labeling:
+1. MNIST LeCun(1998)isahand-writtendigitsdataset. WeusetheLeNetLeCunetal.(1998)forauto-labeling.
+2. CIFAR-10Krizhevskyetal.(2009)isanimagedatasetwith10classes. WeuseaCNNwithapproximately5.8M
+parametersHussain(2021)forauto-labeling.
+3. Tiny-ImageNetLeandYang(2015)isanimagedatasetcomprising100Kimagesacross200classes. WeuseCLIP
+Radfordetal.(2021)toderiveembeddingsfortheimagesinthedatasetanduseanMLPmodel.
+4. 20NewsgroupsMitchell(1999)isanaturallanguagedatasetcomprisingaround18Knewspostsacross20topics.
+WeusetheFlagEmbeddingXiaoetal.(2023)toobtaintextembeddingsanduseanMLPmodel.
+4.3 HyperparameterSearchandEvaluation
+ThecomplexityofTBALworkflowandlackoflabeleddatamakehyperparametersearchandevaluationchallenging.
+Similarchallengeshavebeenobservedinactivelearning (Lowelletal.,2019). Wediscussourpracticalapproachand
+deferthedetailstoAppendixC.8.
+HyperparameterSearch. WerunonlythefirstroundofTBALwitheachmethodusingahyperparametercombination
+5 times and measure the mean auto-labeling error and mean coverage on D , which represents a small part of
+hyp
+theheld-outhuman-labeleddata. Wepickthecombinationthatyieldsthelowestaverageauto-labelingerrorwhile
+maximizingthecoverage. Wefirstfindthebesthyperparametersforeachtrain-timemethod,fixthose,andthensearch
+thehyperparametersforthepost-hocmethods. Notethatthebesthyperparameterforapost-hocmethoddependsonthe
+8PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+MNIST CIFAR-10 20Newsgroups Tiny-ImageNet
+Train-time Post-hoc
+Err(↓) Cov(↑) Err(↓) Cov(↑) Err(↓) Cov(↑) Err(↓) Cov(↑)
+Softmax 4.1±0.7 85.0±2.5 4.8±0.2 14.0±2.1 6.0±0.6 48.2±1.6 11.1±0.3 32.6±0.5
+TS 7.8±0.6 94.2±0.5 7.3±0.3 23.2±0.7 9.7±0.6 60.7±2.3 16.3±0.5 37.4±1.5
+Vanilla Dirichlet 7.9±0.7 93.2±2.2 7.7±0.5 22.4±1.2 9.4±0.9 59.4±1.8 17.1±0.4 33.3±2.0
+SB 6.7±0.5 92.6±1.5 6.1±0.4 18.6±1.1 8.1±0.6 58.1±1.8 15.7±0.6 35.4±1.2
+Top-HB 7.4±1.4 93.1±3.6 6.0±0.7 15.6±1.9 9.2±1.0 59.0±2.0 16.6±0.5 37.6±2.2
+Ours 4.2±1.5 95.6±1.4 3.0±0.2 78.5±0.2 2.5±1.1 80.6±0.7 1.4±2.1 59.2±0.8
+Softmax 4.7±0.4 86.0±4.5 5.2±0.3 15.9±0.8 5.8±0.5 48.3±0.3 10.4±0.4 32.5±0.6
+TS 8.0±0.8 94.8±0.8 6.8±0.8 20.3±1.1 9.5±1.0 61.7±1.6 15.8±0.6 37.4±1.7
+CRL Dirichlet 8.6±0.6 93.1±1.6 7.7±0.2 20.9±1.1 8.7±0.9 58.0±1.4 16.3±0.4 33.1±1.9
+SB 7.4±0.8 93.1±2.7 5.9±0.9 17.9±1.5 8.9±1.1 57.9±3.9 15.0±0.4 35.5±1.2
+Top-HB 7.7±0.8 94.1±1.5 4.4±0.5 12.3±0.4 8.8±1.0 58.8±2.7 16.5±0.5 38.9±1.6
+Ours 4.5±1.4 95.6±1.3 2.2±0.6 77.9±0.2 1.8±1.2 81.3±0.5 2.8±2.1 61.2±1.4
+Softmax 4.8±0.8 84.2±4.1 4.9±0.4 15.6±1.7 5.4±0.7 45.4±1.9 10.5±0.3 32.4±1.4
+TS 8.0±0.6 95.3±1.6 6.5±0.3 21.0±1.5 9.5±0.5 57.7±2.2 16.2±1.1 37.7±1.8
+FMFP Dirichlet 8.2±1.3 94.0±2.2 6.9±0.4 21.7±1.2 8.9±1.0 56.6±2.4 17.4±0.8 33.0±1.8
+SB 7.2±1.1 93.1±2.3 6.1±0.5 19.5±1.0 8.6±0.4 55.8±1.3 15.5±0.6 36.1±0.5
+Top-HB 7.1±0.6 93.3±4.9 5.2±0.5 14.2±2.4 9.0±0.7 57.9±2.4 16.2±0.4 37.4±1.1
+Ours 4.6±0.8 95.7±0.2 3.0±0.4 77.4±0.2 2.5±0.9 80.8±0.6 1.8±2.0 60.8±1.4
+Softmax 3.7±1.0 88.2±3.9 5.2±0.5 21.2±1.8 4.6±0.4 52.0±1.2 7.8±0.3 36.2±0.8
+TS 6.2±1.1 95.6±0.9 6.9±0.6 28.2±2.5 8.3±0.6 66.6±1.4 13.3±0.1 44.9±1.0
+Squentropy Dirichlet 6.5±1.2 95.9±0.8 7.3±0.3 29.4±1.1 7.8±0.6 64.0±1.3 14.1±0.3 42.5±0.7
+SB 6.0±0.8 95.3±1.2 6.2±0.4 23.8±1.9 7.8±0.7 63.0±2.9 13.0±0.5 45.2±2.0
+Top-HB 5.3±0.4 96.4±0.9 4.3±0.5 15.8±1.4 8.2±0.8 66.5±2.2 13.7±0.1 45.9±1.4
+Ours 4.1±0.8 97.2±0.5 2.3±0.5 79.0±0.3 3.3±0.8 82.9±0.4 0.6±0.2 66.5±0.7
+Table2: Ineveryroundtheerrorwasenforcedtobebelow5%;‘TS’standsforTemperatureScaling,‘SB’standsfor
+ScalingBinning,‘Top-HB’standsforTop-LabelHistogramBinning. ThecolumnErrstandsforauto-labelingerror
+andCovstandsforthecoverage. Eachcellvalueismean±std. deviationobservedon5repeatedrunswithdifferent
+randomseeds.
+training-timemethodthatitpipesto. ThehyperparametersearchspacesareintheAppendixC;andtheselectedvalues
+usedforeachsettingareinthesupplementarymaterial.
+PerformanceEvaluation. Afterfixingthehyper-parameters,werunTBALwitheachcombinationoftrain-timeand
+post-hocmethodonfullX ofsizeN,withafixedbudgetofN labeledtrainingsamplesandN validationsamples.
+u t v
+ThedetailsofthesevaluesforeachdatasetareinTable1inAppendixC.Here,weknowthegroundtruthlabelsforthe
+pointsinX ,sowemeasuretheauto-labelingerrorandcoverageasdefinedinequations(1)and(2)respectivelyand
+u
+reporttheminTable2. Wediscusstheseresultsandtheirimplicationsinthenextsection.
+4.4 ResultsandDiscussion
+Ourfindingsare,showninTable2,are:
+C1: Colander improvesTBALperformance. Ourapproachaimstooptimizetheconfidencefunctiontomaximize
+coveragewhileminimizingerrors. WhenappliedtoTBAL,weexpectittoyieldsubstantialcoverageenhancement
+and error reduction compared to vanilla training and softmax scores. Indeed, the results in Table 2 corresponding
+9PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+to the vanilla training match our expectations. We see across all data settings, our method achieves significantly
+highercoveragewhilekeepingauto-labelingerrorbelowthetolerancelevelof5%. Theimprovementsareevenmore
+pronouncedwhenthedatasetsaremorecomplexthanMNIST.Alsoconsistentwithourexpectationandobservationsin
+Figure2(b),thepost-hoccalibrationmethodsimprovethecoverageoverusingsoftmaxscoresbutatthecostofslightly
+highererror. WhiletheyarereasonablechoicestoapplyintheTBALpipeline,theyfallshortofmaximallyimproving
+TBALperformanceduetothemisalignmentofgoals.
+C2: Colander is compatible with and improves over other train-time methods. Our method is compatible with
+variouschoicesoftrain-timemethods,andifatrain-timemethod(Squentropyhere)providesabettermodelrelativeto
+anothertrain-timemethod(e.g.,Vanilla),thenourmethodexploitsthisgainandpushestheperformanceevenfurther.
+Acrossdifferenttrain-timemethods,wedonotseesignificantdifferencesintheperformance,exceptforSquentropy.
+UsingSquentropywithsoftmaximprovesthecoveragebyashighas6-7%whiledroppingtheauto-labelingerrorin
+contrasttousingsoftmaxscoresobtainedwithothertrain-timemethodsfortheTiny-ImageNetsetting. Thisisan
+unexpectedandinterestingfinding. Squentropyaddsaveragesquarelossovertheincorrectclassesasaregularizer,and
+ithasbeenshowntoachievebetteraccuracyandcalibrationcomparedtotrainingjustwithcross-entropyloss(Vanilla).
+Train-timemethodsdesignedforordinalrankingobjectiveperformpoorlyinauto-labeling. CRLandFMFPare
+state-of-the-artmethodsdesignedtoproducescoresalignedwiththeordinalrankingcriteria. Ideally, ifthescores
+satisfythiscriterion,TBAL’sperformancewouldimprove. However,wedonotseeanysignificantdifferencefromthe
+Vanillamethod. Similartotheotherbaselines,theirevaluationisfocusedonmodelstrainedonlargeamountsofdata.
+But,inTBAL,wehavelessdatafortraining. Thetrainingerrorgoestozeroaftersomerounds,andnoinformation
+isleftfortheCRLlosstodistinguishbetweencorrectandincorrectpredictions(i.e.,countSGDmistakes). Onthe
+otherhand,FMFPisbasedonahypothesisthattrainingmodelsusingSharpnessAwareMinimizer(SAM)couldlead
+toscoressatisfyingtheordinalrankingcriteria. However,thisphenomenonisstillnotwellunderstood,especiallyin
+settingslikeourswithlimitedtrainingdata.
+5 RelatedWorks
+Data-labeling. Webrieflydiscussprominentmethodsfordatalabeling. CrowdsourcingRaykaretal.(2010);Sorokin
+andForsyth(2008)usesacrowdofnon-expertstocompleteasetoflabelingtasks. Worksinthisdomainfocuson
+mitigatingnoiseintheobtainedinformation,modelinglabelerrors,anddesigningeffectivelabelingtasksGomesetal.
+(2011);Kargeretal.(2011);MazumdarandSaha(2017);Vinayaketal.(2014);VinayakandHassibi(2016);Vinayak
+etal.(2017);Chenetal.(2023). Weaksupervision,incontrast,emphasizeslabelingthroughmultipleinexpensivebut
+noisysources,notnecessarilyhuman(Ratneretal.,2016;Fuetal.,2020;Shinetal.,2022;VishwakarmaandSala,
+2022). WorkssuchasRatneretal.(2016);Fuetal.(2020)concentrateonbinaryormulti-classlabeling,whileShin
+etal.(2022);VishwakarmaandSala(2022)extendweaksupervisiontostructuredpredictiontasks.
+Auto-labeling occupies an intermediate position between weak supervision and crowdsourcing in terms of human
+dependency. Itaimstominimizecostsassociatedwithobtaininglabelsfromhumanswhilegeneratinghigh-quality
+labeleddatausingaspecificmachinelearningmodel. Qiuetal.(2023)useaTBAL-likealgorithmandexplorethe
+costoftrainingforauto-labelingwithlarge-scalemodelclasses. RecentworkVishwakarmaetal.(2023)theoretically
+analyzesthesamplecomplexityofvalidationdatarequiredtoguaranteethequalityofauto-labeleddata.
+Overconfidence and calibration. The issue of overconfidence (Szegedy et al., 2014; Nguyen et al., 2015; Hein
+etal.,2018;Baietal.,2021)isdetrimentalinseveralapplications,includingours. Manysolutionshaveemergedto
+mitigatetheoverconfidenceandmiscalibrationproblem. Gawlikowskietal.(2021)provideacomprehensivesurvey
+onuncertaintyquantificationandcalibrationtechniquesforneuralnetworks. Guoetal.(2017)evaluatedavarietyof
+solutionsrangingfromthechoiceofnetworkarchitecture,modelcapacity,weightdecayregularization (Kroghand
+Hertz,1991),histogram-binningandisotonicregression (ZadroznyandElkan,2001,2002)andtemperaturescaling
+(Platt,1999;Niculescu-MizilandCaruana,2005)whichtheyfoundtobethemostpromisingsolution. Thesolutions
+fallintotwobroadcategories: train-timeandpost-hoc. Train-timesolutionsmodifythelossfunction,includeadditional
+regularizationterms,orusedifferenttrainingprocedures (Kumaretal.,2018;Mülleretal.,2019;Mukhotietal.,2020;
+Huietal.,2023). Ontheotherhand,post-hocmethodssuchastop-labelhistogram-binning(GuptaandRamdas,2021),
+scalingbinning (Kumaretal.,2019),Dirichletcalibration (Kulletal.,2019)calibratethescoresdirectlyorlearna
+modelthatcorrectsmiscalibratedconfidencescores.
+Beyondcalibration. Whilecalibrationaimstomatchtheconfidencescoreswithaprobabilityofcorrectness,itisnot
+theprecisesolutiontotheoverconfidenceprobleminmanyapplications,includingoursetting. Thedesirablecriteriafor
+scoresforTBALarecloselyrelatedtotheordinalrankingcriterion (HendrycksandGimpel,2017). Togetsuchscores,
+Corbièreetal.(2019)addanadditionalmoduleinthenetforfailureprediction,Zhuetal.(2022)switchtosharpness
+awareminimizationForetetal.(2021)tolearnthemodel;CRL(Moonetal.,2020)regularizesthelossfunction.
+10PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+6 Conclusions
+Westudiedissueswithconfidencescoringfunctionsusedinthreshold-basedauto-labeling(TBAL).Weshowedthatthe
+commonlyusedconfidencefunctionsandcalibrationmethodscanoftenbeabottleneck,leadingtopoorperformance.
+WeproposedColander tolearnconfidencefunctionsthatarealignedwiththeTBALobjective. Weevaluatedour
+methodextensivelyagainstcommonbaselinesonseveralreal-worlddatasetsandfoundthatitimprovestheperformance
+ofTBALsignificantlyincomparisontotheseveralcommonchoicesofconfidencefunction. Ourmethodiscompatible
+withseveralchoicesofmethodsusedfortrainingtheclassifierinTBALandusingitinconjunctionwiththemimproves
+TBAL performance further. A limitation of Colander is that, similar to other post-hoc methods it also requires
+validationdatatolearntheconfidencefunction. Reducing(oreliminating)thisdependenceonvalidationdatacouldbe
+aninterestingfuturework.
+7 Acknowledgments
+ThisworkwaspartlysupportedbyfundingfromtheAmericanFamilyDataScienceInstitute. WethankHeguangLin,
+ChanghoShin,DyahAdila,Tzu-HengHuang,JohnCooper,AniketRege,DaiweiChenandAlbertGefortheirvaluable
+inputs. Wethanktheanonymousreviewersfortheirvaluablecommentsandconstructivefeedbackonourwork.
+References
+S.-i.Amari. Backpropagationandstochasticgradientdescentmethod. Neurocomputing,5(4-5):185–196,1993.
+Y.Bai,S.Mei,H.Wang,andC.Xiong. Don’tjustblameover-parametrizationforover-confidence: Theoreticalanalysis
+ofcalibrationinbinaryclassification. InM.MeilaandT.Zhang, editors, Proceedingsofthe38thInternational
+Conference on Machine Learning, volume 139 of Proceedings of Machine Learning Research, pages 566–576.
+PMLR,18–24Jul2021.
+L.Bottou. StochasticGradientDescentTricks,pages421–436. SpringerBerlinHeidelberg,2012. ISBN978-3-642-
+35289-8.
+Y. Chen, R. K. Vinayak, and B. Hassibi. Crowdsourced clustering via active querying: Practical algorithm with
+theoretical guarantees. In Proceedings of the AAAI Conference on Human Computation and Crowdsourcing,
+volume11,pages27–37,2023.
+C. Corbière, N. THOME, A. Bar-Hen, M. Cord, and P. Pérez. Addressing failure prediction by learning model
+confidence. InAdvancesinNeuralInformationProcessingSystems32,pages2902–2913.2019.
+J.Deng,W.Dong,R.Socher,L.-J.Li,K.Li,andL.Fei-Fei. Imagenet: Alarge-scalehierarchicalimagedatabase. In
+2009IEEEConferenceonComputerVisionandPatternRecognition(CVPR),pages248–255,2009.
+R.A.Fisher. Theuseofmultiplemeasurementsintaxonomicproblems. AnnalsEugenics,7:179–188,1936.
+P.Foret,A.Kleiner,H.Mobahi,andB.Neyshabur. Sharpness-awareminimizationforefficientlyimprovinggeneraliza-
+tion. InInternationalConferenceonLearningRepresentations,2021.
+D. Y. Fu, M. F. Chen, F. Sala, S. M. Hooper, K. Fatahalian, and C. Ré. Fast and three-rious: Speeding up weak
+supervisionwithtripletmethods. InProceedingsofthe37thInternationalConferenceonMachineLearning(ICML
+2020),2020.
+J.Gawlikowski,C.R.N.Tassi,M.Ali,J.Lee,M.Humt,J.Feng,A.Kruspe,R.Triebel,P.Jung,R.Roscher,etal. A
+surveyofuncertaintyindeepneuralnetworks. arXivpreprintarXiv:2107.03342,2021.
+R.G.Gomes,P.Welinder,A.Krause,andP.Perona. Crowdclustering. InAdvancesinNeuralInformationProcessing
+Systems24,pages558–566.2011.
+C.Guo,G.Pleiss,Y.Sun,andK.Q.Weinberger. Oncalibrationofmodernneuralnetworks. InInternationalconference
+onmachinelearning,pages1321–1330.PMLR,2017.
+C.GuptaandA.Ramdas. Distribution-freecalibrationguaranteesforhistogrambinningwithoutsamplesplitting. In
+InternationalConferenceonMachineLearning,pages3942–3952.PMLR,2021.
+C.GuptaandA.Ramdas. Top-labelcalibrationandmulticlass-to-binaryreductions. InInternationalConferenceon
+LearningRepresentations,2022.
+S.HansonandL.Pratt. Comparingbiasesforminimalnetworkconstructionwithback-propagation. InD.Touretzky,
+editor,AdvancesinNeuralInformationProcessingSystems,volume1.Morgan-Kaufmann,1988.
+11PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+M.Hein,M.Andriushchenko,andJ.Bitterwolf. Whyrelunetworksyieldhigh-confidencepredictionsfarawayfrom
+thetrainingdataandhowtomitigatetheproblem. 2018.
+D.HendrycksandK.Gimpel.Abaselinefordetectingmisclassifiedandout-of-distributionexamplesinneuralnetworks.
+InInternationalConferenceonLearningRepresentations,2017.
+L.Hui,M.Belkin,andS.Wright. Cutyourlosseswithsquentropy. InProceedingsofthe40thInternationalConference
+onMachineLearning,pages14114–14131,2023.
+S. Hussain. Cifar 10- cnn using pytorch, Jul 2021. URL https://www.kaggle.com/code/shadabhussain/
+cifar-10-cnn-using-pytorch.
+D.R.Karger,S.Oh,andD.Shah. Budget-optimalcrowdsourcingusinglow-rankmatrixapproximations. In201149th
+AnnualAllertonConferenceonCommunication,Control,andComputing(Allerton),pages284–291.IEEE,2011.
+D.P.KingmaandJ.Ba. Adam: Amethodforstochasticoptimization. arXivpreprintarXiv:1412.6980,2014.
+A.Krizhevsky,G.Hinton,etal. Learningmultiplelayersoffeaturesfromtinyimages. 2009.
+A.KroghandJ.A.Hertz. Asimpleweightdecaycanimprovegeneralization. InProceedingsofthe4thInternational
+ConferenceonNeuralInformationProcessingSystems,NIPS’91,page950–957,SanFrancisco,CA,USA,1991.
+MorganKaufmannPublishersInc. ISBN1558602224.
+M.Kull,M.PerelloNieto,M.Kängsepp,T.SilvaFilho,H.Song,andP.Flach. Beyondtemperaturescaling: Obtaining
+well-calibratedmulti-classprobabilitieswithdirichletcalibration. InAdvancesinNeuralInformationProcessing
+Systems,volume32,2019.
+A.Kumar,S.Sarawagi,andU.Jain. Trainablecalibrationmeasuresforneuralnetworksfromkernelmeanembeddings.
+InProceedingsofthe35thInternationalConferenceonMachineLearning,volume80ofProceedingsofMachine
+LearningResearch,pages2805–2814.PMLR,10–15Jul2018.
+A.Kumar,P.S.Liang,andT.Ma. Verifieduncertaintycalibration. AdvancesinNeuralInformationProcessingSystems,
+32,2019.
+Y.LeandX.Yang. Tinyimagenetvisualrecognitionchallenge. CS231N,7(7):3,2015.
+Y.LeCun. Themnistdatabaseofhandwrittendigits. http://yann.lecun.com/exdb/mnist/,1998.
+Y.LeCun,L.Bottou,Y.Bengio,andP.Haffner. Gradient-basedlearningappliedtodocumentrecognition. Proceedings
+oftheIEEE,86(11):2278–2324,1998.
+D.Lowell,Z.C.Lipton,andB.C.Wallace. Practicalobstaclestodeployingactivelearning. InK.Inui,J.Jiang,V.Ng,
+andX.Wan,editors,Proceedingsofthe2019ConferenceonEmpiricalMethodsinNaturalLanguageProcessing
+andthe9thInternationalJointConferenceonNaturalLanguageProcessing(EMNLP-IJCNLP),pages21–30,Hong
+Kong,China,Nov.2019.AssociationforComputationalLinguistics. doi: 10.18653/v1/D19-1003.
+A.MazumdarandB.Saha. Clusteringwithnoisyqueries. InAdvancesinNeuralInformationProcessingSystems,
+volume30,2017.
+T.Mitchell. TwentyNewsgroups. UCIMachineLearningRepository,1999.
+J.Moon,J.Kim,Y.Shin,andS.Hwang. Confidence-awarelearningfordeepneuralnetworks. InProceedingsofthe
+37thInternationalConferenceonMachineLearning,volume119,pages7034–7044,2020.
+J.Mukhoti,V.Kulharia,A.Sanyal,S.Golodetz,P.Torr,andP.Dokania. Calibratingdeepneuralnetworksusingfocal
+loss. AdvancesinNeuralInformationProcessingSystems,33:15288–15299,2020.
+R.Müller,S.Kornblith,andG.E.Hinton.Whendoeslabelsmoothinghelp? Advancesinneuralinformationprocessing
+systems,32,2019.
+A. Nguyen, J. Yosinski, and J. Clune. Deep neural networks are easily fooled: High confidence predictions for
+unrecognizableimages. InProceedingsoftheIEEEconferenceoncomputervisionandpatternrecognition,pages
+427–436,2015.
+A.Niculescu-MizilandR.Caruana. Predictinggoodprobabilitieswithsupervisedlearning. InProceedingsofthe22nd
+InternationalConferenceonMachineLearning,ICML’05,page625–632,2005. ISBN1595931805.
+F.Pedregosa,G.Varoquaux,A.Gramfort,V.Michel,B.Thirion,O.Grisel,M.Blondel,P.Prettenhofer,R.Weiss,
+V. Dubourg, J. Vanderplas, A. Passos, D. Cournapeau, M. Brucher, M. Perrot, and E. Duchesnay. Scikit-learn:
+MachinelearninginPython. JournalofMachineLearningResearch,12:2825–2830,2011.
+J.Platt. Probabilisticoutputsforsupportvectormachinesandcomparisonstoregularizedlikelihoodmethods. Advances
+inlargemarginclassifiers,10(3):61–74,1999.
+12PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+H.Qiu,K.Chintalapudi,andR.Govindan. MCAL:Minimumcosthuman-machineactivelabeling. InTheEleventh
+InternationalConferenceonLearningRepresentations,2023.
+A.Radford,J.W.Kim,C.Hallacy,A.Ramesh,G.Goh,S.Agarwal,G.Sastry,A.Askell,P.Mishkin,J.Clark,etal.
+Learningtransferablevisualmodelsfromnaturallanguagesupervision. InInternationalconferenceonmachine
+learning,pages8748–8763.PMLR,2021.
+A.J.Ratner,C.M.D.Sa,S.Wu,D.Selsam,andC.Ré. Dataprogramming: Creatinglargetrainingsets,quickly. In
+Proceedingsofthe29thConferenceonNeuralInformationProcessingSystems(NIPS2016),Barcelona,Spain,2016.
+V.C.Raykar,S.Yu,L.H.Zhao,G.H.Valadez,C.Florin,L.Bogoni,andL.Moy. Learningfromcrowds. Journalof
+MachineLearningResearch,11(43):1297–1322,2010.
+SGT. Awssagemakergroundtruth. https://aws.amazon.com/sagemaker/data-labeling/,2022. Accessed:
+2022-11-18.
+C. Shin, W. Li, H. Vishwakarma, N. C. Roberts, and F. Sala. Universalizing weak supervision. In International
+ConferenceonLearningRepresentations,2022.
+A.SorokinandD.Forsyth. Utilitydataannotationwithamazonmechanicalturk. In2008IEEEComputerSociety
+ConferenceonComputerVisionandPatternRecognitionWorkshops,pages1–8,2008. doi: 10.1109/CVPRW.2008.
+4562953.
+C.Szegedy,W.Zaremba,I.Sutskever,J.Bruna,D.Erhan,I.Goodfellow,andR.Fergus. Intriguingpropertiesofneural
+networks. InInternationalConferenceonLearningRepresentations,2014.
+H.Touvron,L.Martin,K.R.Stone,P.Albert,A.Almahairi,Y.Babaei,N.Bashlykov,S.Batra,P.Bhargava,S.Bhosale,
+D.M.Bikel,L.Blecher,C.C.Ferrer,M.Chen,G.Cucurull,D.Esiobu,J.Fernandes,J.Fu,W.Fu,B.Fuller,C.Gao,
+V.Goswami, N.Goyal, A.S.Hartshorn, S.Hosseini, R.Hou, H.Inan, M.Kardas, V.Kerkez, M.Khabsa, I.M.
+Kloumann,A.V.Korenev,P.S.Koura,M.-A.Lachaux,T.Lavril,J.Lee,D.Liskovich,Y.Lu,Y.Mao,X.Martinet,
+T.Mihaylov,P.Mishra,I.Molybog,Y.Nie,A.Poulton,J.Reizenstein,R.Rungta,K.Saladi,A.Schelten,R.Silva,
+E.M.Smith,R.Subramanian,X.Tan,B.Tang,R.Taylor,A.Williams,J.X.Kuan,P.Xu,Z.Yan,I.Zarov,Y.Zhang,
+A.Fan,M.Kambadur,S.Narang,A.Rodriguez,R.Stojnic,S.Edunov,andT.Scialom. Llama2: Openfoundation
+andfine-tunedchatmodels. ArXiv,abs/2307.09288,2023.
+R.K.VinayakandB.Hassibi. Crowdsourcedclustering: Queryingedgesvstriangles. InProceedingsofthe30th
+InternationalConferenceonNeuralInformationProcessingSystems,NIPS’16,2016.
+R. K. Vinayak, S. Oymak, and B. Hassibi. Graph clustering with missing data: Convex algorithms and analysis.
+AdvancesinNeuralInformationProcessingSystems,27,2014.
+R.K.Vinayak,T.Zrnic,andB.Hassibi. Tensor-basedcrowdsourcedclusteringviatrianglequeries. In2017IEEE
+InternationalConferenceonAcoustics,SpeechandSignalProcessing(ICASSP),pages2322–2326.IEEE,2017.
+H.VishwakarmaandF.Sala. Liftingweaksupervisiontostructuredprediction. InAdvancesinNeuralInformation
+ProcessingSystems,2022.
+H. Vishwakarma, H. Lin, F. Sala, and R. K. Vinayak. Promises and pitfalls of threshold-based auto-labeling. In
+Thirty-seventhConferenceonNeuralInformationProcessingSystems,2023.
+S.Xiao,Z.Liu,P.Zhang,andN.Muennighoff. C-pack: Packagedresourcestoadvancegeneralchineseembedding,
+2023.
+B. Zadrozny and C. Elkan. Learning and making decisions when costs and probabilities are both unknown. In
+ProceedingsoftheseventhACMSIGKDDinternationalconferenceonKnowledgediscoveryanddatamining,pages
+204–213,2001.
+B.ZadroznyandC.Elkan. Transformingclassifierscoresintoaccuratemulticlassprobabilityestimates. InProceedings
+oftheeighthACMSIGKDDinternationalconferenceonKnowledgediscoveryanddatamining,pages694–699,
+2002.
+F.Zhu,Z.Cheng,X.-Y.Zhang,andC.-L.Liu. Rethinkingconfidencecalibrationforfailureprediction. InEuropean
+ConferenceonComputerVision,pages518–536.Springer,2022.
+13PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+A SupplementaryMaterialOrganization
+Thesupplementarymaterialisorganizedasfollows. WeprovidedeferreddetailsofthemethodinsectionB.Then,in
+sectionC,weprovideadditionalexperimentalresultsanddetailsoftheexperimentprotocolandhyperparametersused
+fortheexperiments. Ourcodewithinstructionstorun,isuploadedalongwiththepaper.
+A.1 Glossary
+ThenotationissummarizedinTable3below.
+Symbol Definition
+1(E) indicatorfunctionofeventE. Itis1ifE happensand0otherwise.
+X featurespace.
+Y labelspacei.e. 1,2,...k.
+H hypothesisspace(modelclassfortheclassifiers).
+G classofconfidencefunctions.
+k numberofclasses.
+x,y xisanelementinXandyisitstruelabel.
+h ahypothesis(model)inH.
+g confidencefunctiong:X →∆k.
+X givenpoolofunlabeleddatapoints.
+u
+X(i) unlabeleddataleftatthebeginningofithround.
+u
+hˆ(i) ERMsolutionandauto-labelingthresholdsrespectivelyinithround.
+D(i) labeleddataqueriedfromoracle(human)intheithround.
+query
+D(i) trainingdatatolearnhˆ(i)intheithround.
+train
+D(i) validationdataintheithround.
+val
+D(i) calibrationdataintheithroundtolearnapost-hocg.
+cal
+D(i) partofvalidationdataintheithroundtoestimatethresholdt.
+th
+D(i) partofX(i)thatgotauto-labeledintheithround.
+auto u
+D Outputlabeleddata,includingauto-labeledandhumanlabeleddata.
+out
+t kdimensionalvectorofthresholds.
+t[y] ythentryofti.e. thethresholdforclassy.
+g(x)[y] theconfidencescoreforclassyoutputbyconfidencefunctiongondatapointx.
+yˆ predictedclassfordatapointx.
+f∗ unknowngroundtruthlabelingfunction.
+N numberofunlabeledpoints,i.e. sizeofX .
+u u
+N numberofmanuallylabeledpointsthatcanbeusedfortrainingh.
+t
+N Totalauto-labeledpointsinD .
+a out
+ν fractionofD thatcanbeusedfortrainingpost-hoccalibrator.
+val
+A indicesofpointsthatareauto-labeled.
+X (A) subsetofpointsinX withindicesinA,i.e. thesetofauto-labeledpoints.
+u u
+y˜ labelassignedtotheithpointbythealgorithm. Itcouldbeeithery oryˆ.
+i i i
+y groundtruthlabelfortheithpoint.
+i
+yˆ predictedlabelfortheithpointbyclassifier.
+i
+ϵ auto-labelingerrortolerance.
+a
+E(g,t|h) populationlevelauto-labelingerror,seeeq. (4).
+P(g,t|h) populationlevelauto-labelingcoverage,seeeq. (3).
+E(cid:98)(g,t|h,D) estimatedauto-labelingerror,seeeq. (6).
+P(cid:98)(g,t|h,D) estimatedauto-labelingcoverage,seeeq. (5).
+E(cid:101)(g,t|h,D) surrogateestimatedauto-labelingerror,seeeq. (8).
+P(cid:101)(g,t|h,D) surrogateestimatedauto-labelingcoverage,seeeq. (7).
+Table3: Glossaryofvariablesandsymbolsusedinthispaper.
+14PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+B AppendixtoSection3
+Tightnessofsurrogates. Thesurrogateauto-labelingerrorandcoverageintroducedtorelaxtheoptimizationproblem
+(P2)isindeedagoodapproximationoftheactualauto-labelingerrorandcoverage. Toseethis, weuseatoydata
+settingofx ∼ Uniform(0,1)with1−dimensionalthresholdclassifierh (x) = 1(x ≥ θ). Foranyx,lettruelabels
+θ
+y =h (x)andconsidertheconfidencefunctiong (x)=|w−x|. Letyˆ=h (x)andconsiderthepointsonthe
+0.5 w 0.25
+sidewhereyˆ=1. WeplotactualandsurrogateerrorsinFigure5(a)andthesurrogateandactualcoverageinFigure
+5(a).
+0.4
+0.2
+0.0
+0.0 0.5 1.0
+w(parameterofg))
+rorrEgnilebaLotuA
+t=0.125,α=1.0 t=0.125,α=10.0 t=0.125,α=50.0
+0.4 0.4
+0.2 0.2
+SurrogateErr. SurrogateErr. SurrogateErr.
+ActualErr. 0.0 ActualErr. 0.0 ActualErr.
+0.0 0.5 1.0 0.0 0.5 1.0
+w(parameterofg)) w(parameterofg))
+(a) Auto-labelingerrorandsurrogateerroratvariousα.
+0.8
+0.6
+0.4
+0.0 0.5 1.0
+w(parameterofg)
+egarevoCgnilebaLotuA
+forthreechoicesofα. Asexpected,thegap
+between the surrogates and the actual func-
+tionsdiminishesasweincreasetheα.
+ActiveQueryingStrategy. Weemploythe
+margin-randomqueryapproachtoselectthe
+nextbatchoftrainingdata. Thismethodin-
+volvessortingpointsbasedontheirmargin
+(uncertainty)scoresandselectingthetopCn
+b
+points, from which n points are randomly
+b
+chosen. Thisstrategyprovidesastraightfor-
+ward and computationally efficient way to
+balancetheexploration-exploitationtrade-off.
+t=0.125,α=1.0 t=0.125,α=10.0 t=0.125,α=50.0
+It’simportanttoacknowledgetheexistence
+SurrogateCov. SurrogateCov. SurrogateCov.
+ofalternativeactive-queryingstrategies;how- ActualCov. 0.8 ActualCov. 0.8 ActualCov.
+ever,weadoptthemargin-randomapproach
+0.6 0.6
+asourstandardtomaintainafocusonevalu-
+atingvariouschoicesofconfidencefunctions 0.4 0.4
+forauto-labeling. Notethatwhileweusethe
+newconfidencescorescomputedusingpost- 0.0 0.5 1.0 0.0 0.5 1.0
+w(parameterofg) w(parameterofg)
+hocmethodsforauto-labeling,wedonotuse
+(b) Auto-labelingcoverageandsurrogatecoverageatvariousα.
+thesescoresinactivequerying. Instead,we
+use the softmax scores from the model for
+Figure5: Illustrationofthetightnessofsurrogateerrorandcoverage
+this. Wedothistoavoidconflatingthestudy
+functionsbasedonthechoiceofα.
+withthestudyofactivequeryingstrategies.
+WeuseC =2forallexperiments.
+15PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+C AdditionalExperimentsandDetails
+C.1 Detailsoftheexperimentinsection2.2
+WerunTBALforasingleroundontheCIFAR-10datasetwithaSimpleCNNclassificationmodelwitharound5.8M
+parameters (Hussain,2021). Werandomlysampled4,000pointsfortrainingtheclassifierandrandomlysampled1,000
+pointsasvalidationdata. WetrainthemodeltozerotrainingerrorusingminibatchSGDwithlearningrate1e-3,weight
+decay1e-3HansonandPratt(1988);KroghandHertz(1991),momentum0.9,andbatchsize32. Thetrainedmodel
+hasvalidationaccuracyaround55%,implyingwecouldhopetogetcoveragearound55%. Weruntheauto-labeling
+procedurewithanerrortoleranceof5%.
+C.2 ExperimentsonN ,N andν
+t v
+Weneedtounderstandtheeffectoftrainingdataquerybudgeti.e. N ,thetotalvalidationdataN ,andthedatathat
+t v
+canbeusedforcalibratingthemodeli.e. thecalibrationdatafractionν ontheauto-labelingobjective. Asvarying
+thesehyperparametersoneachtrain-timemethodisexpensive,weexperimentedwithonlySquentropyasitwasthe
+best-performingmethodacrosssettingsforvariousdatasets.
+WhenwevarythebudgetfortrainingdataN ,weobservefromFigure6thatourmethoddoesnotrequirealotof
+t
+datatotrainthebasemodel,i.e. achievinglowauto-labelingerrorandhighcoveragewithalowbudget. Whileother
+methodsbenefitfromhavingmoretrainingdataforauto-labelingobjectives,itcomesattheexpenseofreducingthe
+availabledataforvalidation.
+Fromfigure7,weobservethat,whilethecoverageofourmethodremainsthesameacrossdifferentN ,itreducesfor
+v
+othermethods. Thecauseofthisphenomenoncanbeattributedtothefactthatweareborrowingthedatafromthe
+trainingbudgetasitlimitstheperformanceofthebasemodel,whichinturnlimitstheauto-labelingobjective.
+Asweincreasethepercentageofdatathatcanbeusedtocalibratethemodel,i.e.,ν,wenotefromfigure8thatother
+methodsimprovethecoverage,whichcanbeunderstoodfromthefactthatwhenmoredataisavailableforcalibrating
+themodel,themodelbecomesbetterintermsoftheauto-labelingobjective. Butit’sinterestingtonotethatevenwitha
+lowcalibrationfraction,ourmethodachievessuperiorcoveragecomparedtoothermethods. Itisalsoimportanttonote
+thattheauto-labelingerrorincreasesasweincreaseν. Thisisbecausewhenν increases,thenumberofdatapoints
+usedtoestimatethethresholddecreases,leadingtoalessgranularandprecisethreshold.
+Feature Model Error Coverage
+Pre-logits TwoLayer 4.6±0.3 82.8±0.5
+Logits TwoLayer 3.2±1.3 82.8±0.3
+Concat TwoLayer 3.3±0.8 82.9±0.4
+Table4: Auto-labelingerrorandcoverageforthe3featurerepresentationswecouldusefor20Newsgroup. Aswecan
+see,thefeaturerepresentationdoesnotleadtoasignificantdifferenceinauto-labelingerrorandcoverage.
+Feature Model Error Coverage
+Pre-logits TwoLayer 2.1±0.5 79.0±0.2
+Logits TwoLayer 3.1±0.4 76.5±0.9
+Concat TwoLayer 2.3±0.5 79.0±0.3
+Table5: Auto-labelingerrorandcoverageforthe3featurerepresentationswecoulduseforCIFAR10SimpleCNN.As
+wecansee,thefeaturerepresentationdoesnotleadtoasignificantdifferenceinauto-labelingerrorandcoverage.
+C.3 ExperimentsonColanderinput
+Figure4illustratesthatwecoulduselogits(lastlayer’srepresentations),pre-logits(secondlastlayer’srepresentations),
+or the concatenation of these two as the input to g. To help us decide which one we should use, we conduct a
+hyperparametersearchforinputfeaturesontheCIFAR-10and20NewsgroupdatasetusingtheSquentropytrain-time
+method. Table4and5presenttheauto-labelingerrorandcoverageofusingthe3typesoffeaturerepresentations. As
+wecansee,allfeaturerepresentationleadstoasimilarauto-labelingerrorandcoverage,andinsomecases,itisbetter
+toincludepre-logitsaswell. Therefore,weuseconcatenatedrepresentation(Concat),allowingmoreflexibility.
+16PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Figure6: Autolabelingerrorandcoverageofdifferentpost-hocmethodsonCIFAR-10forvariousN
+t
+Figure7: Autolabelingerrorandcoverageofdifferentpost-hocmethodsonCIFAR-10forvariousN
+v
+Figure8: Autolabelingerrorandcoverageofdifferentpost-hocmethodsonCIFAR-10forvariousν
+C.4 Hyperparameters
+ThehyperparametersandtheirvalueswesweptoverarelistedinTable6and7fortrain-timeandpost-hocmethods,
+respectively.
+C.5 Train-timeandpost-hocmethods
+C.5.1 Train-timemethods
+1. Vanilla: Neuralnetworksarecommonlytrainedbyminimizingthecrossentropylossusingstochasticgradient
+descent(SGD)withmomentum (Amari,1993;Bottou,2012). WerefertothisastheVanillatrainingmethod. We
+alsoincludeweightdecaytomitigatetheoverconfidenceissueassociatedwiththismethod (Guoetal.,2017).
+17PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Method Hyperparameter Values
+optimizer SGD
+learningrate 0.001,0.01,0.1
+batchsize 32,256
+Common
+maxepoch 50,100
+weightdecay 0.001,0.01,0.1
+momentum 0.9
+ranktarget softmax
+CRL
+rankweight 0.7,0.8,0.9
+FMFP optimizer SAM
+Table6: Hyperparameterssweptoverfortrain-timemethods. ThoselistednexttoCommonarethehyperparameters
+forthefourtrain-timemethods: Vanilla,CRL,FMFP,andSquentropy. Therefore,wedonotlistthoseagainforeach
+method. NotethatforFMFP,weusedSAMoptimizerinsteadofSGD.Foreachmethod,wesweptthroughallpossible
+combinationsofthepossiblevaluesforeachhyperparameter. UnderlinedvaluesareonlyusedonTinyImageNetsince
+itisacomplicateddatasetcontaining200classes.
+2. Squentropy(Huietal.,2023): Thismethodaddstheaveragesquarelossovertheincorrectclassestothecross-
+entropyloss. ThissimplemodificationtotheVanillamethodleadstotheendmodelwithbettertestaccuracyand
+calibration.
+3. CorrectnessRankingLoss(CRL)(Moonetal.,2020): Thismethodincludesaterminthelossfunctionofthe
+vanillatrainingmethodsothattheconfidencescoresofthemodelarealignedwiththeordinalrankingscriterion
+(HendrycksandGimpel,2017;Corbièreetal.,2019). Theconfidencefunctionssatisfyingthiscriterionproduce
+highscoresonpointswheretheprobabilityofcorrectnessishighandlowscoresonpointswithlowprobabilities
+ofbeingcorrect.
+4. FMFP (Zhuetal.,2022)aimstoalignconfidencescoreswiththeordinalrankingscriterion. ItusesSharpness
+AwareMinimizer(SAM)(Foretetal.,2021)totrainthemodel,withtheexpectationthattheflatminimawould
+benefittheordinalrankingsobjectiveoftheconfidencefunction.
+C.5.2 Post-hocmethods
+1. Temperaturescaling(Guoetal.,2017): ThisisavariantofPlattscaling (Guoetal.,2017),aclassicandoneof
+theeasiestparametricmethodsforpost-hoccalibration. Itrescalesthelogitsbyalearnablescalarparameterand
+hasbeenshowntoworkwellforneuralnetworks.
+2. Top-LabelHistogram-Binning (GuptaandRamdas,2022): SinceTBALassignsthetoplabels(predictedlabels)to
+theselectedunlabeledpoints,itisappealingtoonlycalibratethescoresofthepredictedlabel. Buildingupona
+richlineofhistogram-binningmethods(non-parametric)forpost-hoccalibration(ZadroznyandElkan,2002),this
+methodfocusesoncalibratingthescoresofpredictedlabels.
+3. Scaling-Binning (Kumaretal.,2019): Thismethodcombinesparametricandnon-parametricmethods. Itfirst
+appliestemperaturescalingandthenbinstheconfidencefunctionvaluestoensurecalibration.
+4. DirichletCalibration (Kulletal.,2019): Thismethodmodelsthedistributionofpredictedprobabilityvectors
+separatelyoninstancesofeachclassandassumestheclassconditionaldistributionsareDirichletdistributions
+withdifferentparameters. Ituseslinearparameterizationforthedistributions,whichallowseasyimplementation
+inneuralnetworksasadditionallayersandsoftmaxoutput.
+Note: Forbinningmethods,uniformmassbinning(ZadroznyandElkan,2002)hasbeenabetterchoiceoveruniform
+widthbinning. Hence,weuseuniformmassbinningaswell.
+C.6 Computeresources
+OurexperimentswereconductedonmachinesequippedwiththeNVIDIARTXA6000andNVIDIAGeForceRTX
+4090GPUs.
+C.7 Detaileddatasetandmodel
+1. TheMNISTdatasetLeCun(1998)consistsof28×28grayscaleimagesofhand-writtendigitsacross10classes.
+ItwasusedalongsidetheLeNet5LeCunetal.(1998),aconvolutionalneuralnetwork,forauto-labeling.
+18PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+2. The CIFAR-10 dataset Krizhevsky et al. (2009) contains 3 × 32 × 32 color images across 10 classes. We
+utilizeditsrawpixelmatrixinconjunctionwithSimpleCNNHussain(2021),aconvolutionalneuralnetworkwith
+approximately5.8Mparameters,forauto-labeling.
+3. Tiny-ImageNetLeandYang(2015)isacolorimagedatasetthatconsistsof100Kimagesacross200classes.
+Insteadofusingthe3×64×64rawpixelmatricesasinput,weutilizedCLIPRadfordetal.(2021)toderive
+embeddingswithintheR512 vectorspace. Weuseda3-layerperceptron(1,000-500-300)astheauto-labeling
+model.
+4. 20NewsgroupsMitchell(1999);Pedregosaetal.(2011)isanaturallanguagedatasetcomprisingaround18,000
+newspostsacross20topics. WeusedtheFlagEmbeddingXiaoetal.(2023)tomapthetextualdataintoR1024
+embeddings. Weuseda3-layerperceptron(1,000-500-30)astheauto-labelingmodel.
+C.8 Detailedexperimentsprotocol
+WepredefinedTBALhyperparametersforeachdataset-modelpairandthehyperparameterswewillsweepforeach
+train-timeandpost-hocmethodinTable6andTable7respectively. Foradataset-modelpair,initially,weperforma
+hyperparametersearchforthetrain-timemethod. Subsequently,weoptimizethehyperparametersforpost-hocmethods
+whilekeepingthetrain-timemethodfixedwiththepreviouslyfoundoptimumhyperparameterforthatdataset-model
+pair.
+Wefixthehyperparametersforthetrain-timemethodwhilesearchinghyperparametersforthepost-hocmethodto
+alleviatecomputationalbudgetthrottle. Weeffectivelyreducethesearchspacetothesumofthecardinalitiesofunique
+hyper-parametercombinationsacrossthetwomethodsinsteadofalargermultiplicativeproduct. Furthermore,dueto
+theindependentnatureofthesehyper-parametercombinations,TBALrunscanbehighlyparallelizedtoexpeditethe
+searchprocess.
+SinceTBALoperatesiterativelytoacquirehumanlabelsformodeltraining,selectinghyper-parametersateachround
+ofTBALcouldquicklybecomeintractableandloseitspracticalsignificance. Tobetteralignwithitspracticalusage,
+weonlyconductedahyperparametersearchfortheinitialTBALround. Thespecificsetofhyperparametersusedfor
+thesearcharereportedinTable7.
+After completing the hyperparameter search for train-time and post-hoc methods, the determined hyperparameter
+combinationsaresubjectedtoafullevaluationacrossalliterationsofTBAL.Attheendofeachiteration,theauto-
+labeledpointsareevaluatedagainsttheirgroundtruthlabelstodeterminetheirauto-labelingerror. Thesepointsare
+thenaddedtotheauto-labeledset,wheretheirratiotothetotalamountofunlabeleddatadeterminesthecoverage. This
+iterativeprocesscontinuesuntilallunlabeleddataareexhaustivelylabeledbyeithertheoracleorthroughauto-labeling
+inthefinaliteration. Theauto-labelingerrorandcoverageatthefinaliterationofTBALarethenrecorded.
+SinceTBALincorporatesrandomizedcomponentsasdetailedinAlgorithm1,weranthealgorithm5times,eachwitha
+uniquerandomseedwhilemaintainingthesamehyperparametercombination. Wethenrecordedtheresultsfromthe
+finaliterationoftheserunsandcalculatedthemeanandstandarddeviationofbothauto-labelingerrorandcoverage.
+ThesefiguresarereportedinTable2.
+Alimitationofthegridsearchapproachinhyper-parameteroptimizationbecomesapparentwhenourpredefinedhyper-
+parameterchoicesresultinsub-optimalcoverageandauto-labelingerrors. Usingthesesub-optimalhyper-parameters
+canadverselyaffectthemulti-rounditerativeprocessinTBAL,promptingtheneedforrepetitivesearchestofindmore
+effectivehyper-parameters. Whenencounteringsuchscenarios,TBALusersshouldexploreadditionalhyper-parameter
+optionsuntilsatisfactoryperformanceisachievedintheinitialround. However,weoptedforamorestraightforward
+approach to hyper-parameter selection, mindful of the computational demands of repeatedly optimizing multiple
+hyper-parametersacrossdifferentmethods. Inscenariosexpressedconditionally,weretainedthetop-1hyper-parameter
+combinationforanygivenmethodifitachievedthehighestcoveragewhileadheringtothespecifiederrormargin
+(ϵ ). Ifnohyper-parametercombinationsyieldedanauto-labelingerroratmostequaltotheerrormargin(ϵ ),wethen
+a a
+chosethehyper-parametercombinationwiththelowestauto-labelingerror,regardlessofitscoverage. Inthecaseof
+ties,weresolvedthemthroughrandomselection. Thisprocessresultsinobtainingsingularvaluesforeachchoiceof
+hyper-parameteraftercompletingeachmethod’shyper-parametersearch.
+19PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Figure9: Auto-labelingerrorandcoveragefordifferentpost-hocmethodsonCIFAR-10whilewevaryN . N =
+t u
+40,000isthesizeofthegivenunlabeledpool.
+Figure 10: Auto-labeling error and coverage for different post-hoc methods on Tiny-ImageNet while we vary N .
+t
+N =90,000isthesizeofthegivenunlabeledpool.
+u
+Figure 11: Auto-labeling error and coverage for different post-hoc methods on 20 Newsgroups while we vary N .
+t
+N =9,052isthesizeofthegivenunlabeledpool.
+u
+20PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Figure12: Auto-labelingerrorandcoveragefordifferentpost-hocmethodsonCIFAR-10whilewevaryN . N =
+v vmax
+8,000isthemaximumnumberofpointsavailableforvalidation.
+Figure 13: Auto-labeling error and coverage for different post-hoc methods on Tiny-ImageNet while we vary N .
+v
+N =18,000isthemaximumnumberofpointsavailableforvalidation.
+vmax
+Figure14: Auto-labelingerrorandcoveragefordifferentpost-hocmethodson20NewsgroupswhilewevaryN .
+v
+N =1,600isthemaximumnumberofpointsavailableforvalidation.
+vmax
+21PearlsfromPebbles: ImprovedConfidenceFunctionsforAuto-labeling
+Method Hyperparameter Values
+Temperaturescaling optimizer Adam
+learningrate 0.001,0.01,0.1
+batchsize 64
+maxepoch 500
+weightdecay 0.01,0.1,1
+Top-labelhistogrambinning pointsperbin 25,50
+Scaling-binning numberofbins 15,25
+learningrate 0.001,0.01,0.1
+batchsize 64
+maxepoch 500
+weightdecay 0.01,0.1,1
+Dirichletcalibration regularizationparameter 0.001,0.01,0.1
+Ours λ 10,100
+featureskey concat
+class-wise independent
+optimizer Adam
+learningrate 0.01,0.1
+maxepoch 500
+weightdecay 0.01,0.1,1
+batchsize 64
+regularize false
+α 0.01,0.1,1
+Table7:Hyperparamterssweptoverforpost-hocmethods.Foreachmethod,wesweptthroughallpossiblecombinations
+ofthepossiblevaluesforeachhyperparameter.
+22

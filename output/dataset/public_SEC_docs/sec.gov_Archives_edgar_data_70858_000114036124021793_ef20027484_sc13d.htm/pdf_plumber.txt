@@ -1,0 +1,287 @@
+4/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+SC 13D 1 ef20027484_sc13d.htm SC 13D
+UNITED STATES
+SECURITIES AND EXCHANGE COMMISSION
+Washington, D.C. 20549
+SCHEDULE 13D
+Under the Securities Exchange Act of 1934
+(Amendment No. n/a)*
+PIMCO NEW YORK MUNICIPAL INCOME FUND III
+(Name of Issuer)
+REMARKETABLE VARIABLE RATE MUNIFUND TERM PREFERRED SHARES
+(Title of Class of Securities)
+72201E402
+(CUSIP Number)
+Bank of America Corporation
+Bank of America Corporate Center
+100 North Tryon Street
+Charlotte, North Carolina 28255
+(Name, Address and Telephone Number of Person
+Authorized to Receive Notices and Communications)
+April 17, 2024
+(Date of Event Which Requires Filing of this Statement)
+If the filing person has previously filed a statement on Schedule 13G to report the acquisition which is the subject of this Schedule 13D, and is filing this schedule because of
+Rule 13d-1(e), 13d-1(f) or 13d-1(g), check the following box ☐.
+*The remainder of this cover page shall be filled out for a reporting person’s initial filing on this form with respect to the subject class of securities, and for any subsequent
+amendment containing information which would alter disclosures provided in a prior cover page.
+The information required in the remainder of this cover page shall not be deemed to be “filed” for the purpose of Section 18 of the Securities Exchange Act of 1934 (“Act”) or
+otherwise subject to the liabilities of that section of the Act but shall be subject to all other provisions of the Act (however, see the Notes).
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 1/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+SCHEDULE 13D
+CUSIP No. 72201E402
+NAMES OF REPORTING PERSONS
+1
+Bank of America Corporation 56-0906609
+CHECK THE APPROPRIATE BOX IF A MEMBER OF A GROUP (a)☐
+2
+(b)☒
+SEC USE ONLY
+3
+SOURCE OF FUNDS (SEE INSTRUCTIONS)
+4
+WC
+CHECK BOX IF DISCLOSURE OF LEGAL PROCEEDINGS IS REQUIRED PURSUANT TO ITEM 2(D) OR 2(E) ☒
+5
+CITIZENSHIP OR PLACE OF ORGANIZATION
+6
+Delaware
+SOLE VOTING POWER
+7
+0
+SHARED VOTING POWER
+NUMBER OF 8
+SHARES 260
+BENEFICIALLY
+OWNED BY EACH SOLE DISPOSITIVE POWER
+REPORTING 9
+PERSON WITH 0
+SHARED DISPOSITIVE POWER
+10
+260
+AGGREGATE AMOUNT BENEFICIALLY OWNED BY EACH REPORTING PERSON
+11
+260
+CHECK BOX IF THE AGGREGATE AMOUNT IN ROW (11) EXCLUDES CERTAIN SHARES (SEE INSTRUCTIONS) ☐
+12
+PERCENT OF CLASS REPRESENTED BY AMOUNT IN ROW (11)
+13
+98.9%
+TYPE OF REPORTING PERSON (SEE INSTRUCTIONS)
+14
+HC
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 2/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+SCHEDULE 13D
+CUSIP No. 72201E402
+NAMES OF REPORTING PERSONS
+1
+Banc of America Preferred Funding Corporation 75-2939570
+CHECK THE APPROPRIATE BOX IF A MEMBER OF A GROUP (a)☐
+2
+(b)☒
+SEC USE ONLY
+3
+SOURCE OF FUNDS (SEE INSTRUCTIONS)
+4
+WC
+CHECK BOX IF DISCLOSURE OF LEGAL PROCEEDINGS IS REQUIRED PURSUANT TO ITEM 2(D) OR 2(E) ☐
+5
+CITIZENSHIP OR PLACE OF ORGANIZATION
+6
+Delaware
+SOLE VOTING POWER
+7
+0
+SHARED VOTING POWER
+NUMBER OF 8
+SHARES 260
+BENEFICIALLY
+OWNED BY EACH SOLE DISPOSITIVE POWER
+REPORTING 9
+PERSON WITH 0
+SHARED DISPOSITIVE POWER
+10
+260
+AGGREGATE AMOUNT BENEFICIALLY OWNED BY EACH REPORTING PERSON
+11
+260
+CHECK BOX IF THE AGGREGATE AMOUNT IN ROW (11) EXCLUDES CERTAIN SHARES (SEE INSTRUCTIONS) ☐
+12
+PERCENT OF CLASS REPRESENTED BY AMOUNT IN ROW (11)
+13
+98.9%
+TYPE OF REPORTING PERSON (SEE INSTRUCTIONS)
+14
+CO
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 3/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+Item 1 Security and Issuer
+This Statement on Schedule 13D (this “Statement”) relates to the purchase of 260 remarketable variable rate munifund term preferred shares, series 2054 (CUSIP No.
+72201E402) ("RVMTP Shares") of PIMCO New York Municipal Income Fund III (the "Issuer" or the "Company"). This Statement is being filed by the Reporting Persons (as
+defined below) as a result of the purchase of RVMTP Shares by BAPFC (as defined below). The Issuer’s principal executive offices are located at 1633 Broadway, New York,
+New York 10019. The information used in the calculation of preferred share class holdings herein has been provided by the Issuer.
+Item 2 Identity and Background
+(a) This Statement is being filed on behalf of each of the following persons (collectively, the “Reporting Persons”):
+i. Bank of America Corporation (“BAC”)
+ii. Banc of America Preferred Funding Corporation (“BAPFC”)
+This Statement relates to the RVMTP Shares that were purchased for the account of BAPFC.
+(b) The address of the principal business office of BAC is:
+Bank of America Corporate Center
+100 North Tryon Street
+Charlotte, North Carolina 28255
+The address of the principal business office of BAPFC is:
+214 North Tryon Street
+Charlotte, North Carolina 28255
+(c) BAC and its subsidiaries provide diversified global financial services and products. The principal business of BAPFC is to make investments and provide loans to
+clients.
+Information concerning each executive officer, director and controlling person (the “Listed Persons”) of the Reporting Persons is listed on Schedule I attached hereto,
+and is incorporated by reference herein. To the knowledge of the Reporting Persons, all of the Listed Persons are citizens of the United States, other than as otherwise specified
+on Schedule I hereto.
+(d) Other than as set forth on Schedule II, during the last five years, none of the Reporting Persons, and to the best knowledge of the Reporting Persons, none of the
+Listed Persons, have been convicted in a criminal proceeding (excluding traffic violations or similar misdemeanors) or was a party to a civil proceeding of a judicial or
+administrative body of competent jurisdiction as a result of which such person was or is subject to a judgment, decree or final order enjoining future violations of, or prohibiting
+or mandating activities subject to, federal or state securities laws, or finding any violation with respect to such laws.
+Item 3 Source and Amount of Funds or Other Consideration
+The aggregate amount of funds used by the Reporting Persons to purchase the securities reported herein was approximately $26,000,000. The source of funds was the
+working capital of the Reporting Persons.
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 4/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+The Reporting Persons declare that neither the filing of this Statement nor anything herein shall be construed as an admission that such person is, for the purposes of
+Section 13(d) of the Exchange Act or any other purpose, (i) acting (or has agreed or is agreeing to act together with any other person) as a partnership, limited partnership,
+syndicate, or other group for the purpose of acquiring, holding or disposing of securities of the Company or otherwise with respect to the Company or any securities of the
+Company or (ii) a member of any group with respect to the Company or any securities of the Company.
+Item 4 Purpose of the Transaction
+BAPFC has purchased the RVMTP Shares for investment purposes. BAPFC acquired the RVMTP Shares directly from the Company pursuant to the RVMTP Purchase
+Agreement dated April 17, 2024, between the Company and BAPFC on their initial issuance for a purchase price of $26,000,000.
+The Reporting Persons have not acquired the subject securities with any purpose, or with the effect of, changing or influencing control of the issuer, or in connection
+with or as a participant in any transaction having that purpose or effect.
+Item 5 Interest in Securities of the Issuer
+(a) - (b) The responses of the Reporting Persons to Rows (7) through (11) of the cover pages of this Statement are incorporated herein by reference.
+(c) The responses of the Reporting Persons in Item 3 and Item 4 are incorporated herein by reference.
+(d) No other person is known by the Reporting Persons to have the right to receive or the power to direct the receipt of dividends from, or the proceeds from the sale of,
+RVMTP Shares that may be deemed to be beneficially owned by the Reporting Persons.
+(e) Not applicable.
+Item 6 Contracts, Arrangements, Understandings or Relationships with Respect to Securities of the Issuer
+The responses of the Reporting Persons to Item 4 are incorporated herein by reference. With respect to the RVMTP Shares owned by BAPFC, on April 17, 2024 BAPFC
+assigned certain preferred class voting rights on the RVMTP Shares to a voting trust (the “Voting Trust”) created pursuant to the Voting Trust Agreement, dated April 17, 2024,
+among BAPFC, Lord Securities Corporation, as voting trustee (the “Voting Trustee”) and Institutional Shareholder Services Inc. (the “Voting Consultant”). Voting and
+consent rights on the RVMTP Shares not assigned to the Voting Trust have been retained by BAPFC. The Voting Trust provides that with respect to voting or consent matters
+relating to the voting rights assigned to the Voting Trust, the Voting Consultant analyzes such voting or consent matters and makes a recommendation to the Voting Trustee on
+voting or consenting. The Voting Trustee is obligated to follow any such recommendations of the Voting Consultant when providing a vote or consent. BAPFC has the right to
+cause the Company to register the RVMTP Shares pursuant to a Registration Rights Agreement, dated April 17, 2024 between the Company and BAPFC.
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 5/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+Item 7 Material to be Filed as Exhibits
+Exhibit Description of Exhibit
+99.1 Joint Filing Agreement
+99.2 Limited Power of Attorney
+99.3 Voting Trust Agreement dated April 17, 2024
+99.4 RVMTP Shares Purchase Agreement dated April 17, 2024
+99.5 Registration Rights Agreement dated April 17, 2024
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 6/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+SIGNATURES
+After reasonable inquiry and to the best of my knowledge and belief, I certify that the information set forth in this statement is true, complete and correct.
+Date: April 24, 2024
+BANK OF AMERICA CORPORATION
+By: /s/ Michael Jentis
+Name: Michael Jentis
+Title: Attorney-in-fact
+BANC OF AMERICA PREFERRED
+FUNDING CORPORATION
+By: /s/ Michael Jentis
+Name: Michael Jentis
+Title: Authorized Signatory
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 7/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+LIST OF EXHIBITS
+Exhibit Description of Exhibit
+99.1 Joint Filing Agreement
+99.2 Limited Power of Attorney
+99.3 Voting Trust Agreement dated April 17, 2024
+99.4 RVMTP Shares Purchase Agreement dated April 17, 2024
+99.5 Registration Rights Agreement dated April 17, 2024
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 8/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+SCHEDULE I
+EXECUTIVE OFFICERS AND DIRECTORS OF
+REPORTING PERSONS
+The following sets forth the name and present principal occupation of each executive officer and director of Bank of America Corporation. The business address of each
+of the executive officers and directors of Bank of America Corporation is Bank of America Corporate Center, 100 North Tryon Street, Charlotte, North Carolina 28255.
+Position with Bank of
+Name America Corporation Principal Occupation
+Brian T. Moynihan Chairman of the Board, Chief Executive Officer Chairman of the Board and Chief Executive Officer of Bank of America
+and Director Corporation
+Paul M. Donofrio Vice Chair Vice Chair of Bank of America Corporation
+Thong M. Nguyen Vice Chair, Head of Global Strategy & Vice Chair, Head of Global Strategy & Enterprise Platforms of Bank of
+Enterprise Platforms America Corporation
+Catherine P. Bessant Vice Chair, Global Strategy Vice Chair, Global Strategy of Bank of America Corporation
+Bruce R. Thompson Vice Chair, Head of Enterprise Credit Vice Chair, Head of Enterprise Credit of Bank of America Corporation
+Dean C. Athanasia President, Regional Banking President, Regional Banking of Bank of America Corporation
+James P. DeMare President, Global Markets President, Global Markets of Bank of America Corporation
+Kathleen A. Knox President, The Private Bank President, The Private Bank of Bank of America Corporation
+Matthew M. Koder President, Global Corporate and Investment President, Global Corporate and Investment Banking of Bank of America
+Banking Corporation
+Bernard A. Mensah President, International; CEO, Merrill Lynch President, International of Bank of America Corporation and CEO, Merrill
+International Lynch International
+Lindsay DeNardo Hans President, Co-Head Merrill Wealth Management President, Co-Head Merrill Wealth Management of Bank of America
+Corporation
+Eric Schimpf President, Co-Head Merrill Wealth Management President, Co-Head Merrill Wealth Management of Bank of America
+Corporation
+Aditya Bhasin Chief Technology and Information Officer Chief Technology and Information Officer of Bank of America Corporation
+D. Steve Boland Chief Administrative Officer Chief Administrative Officer of Bank of America Corporation
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 9/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+Alastair Borthwick Chief Financial Officer Chief Financial Officer of Bank of America Corporation
+Sheri Bronstein Chief Human Resources Officer Chief Human Resources Officer of Bank of America Corporation
+Geoffrey Greener Chief Risk Officer Chief Risk Officer of Bank of America Corporation
+Thomas M. Scrivener Chief Operations Executive Chief Operations Executive of Bank of America Corporation
+Lauren A. Mogensen Global General Counsel Global General Counsel of Bank of America Corporation
+Lionel L. Nowell, III Lead Independent Director Lead Independent Director, Bank of America Corporation; Former Senior
+Vice President and Treasurer, PepsiCo, Inc.
+Sharon L. Allen Director Former Chairman of Deloitte LLP
+Jose E. Almeida Director Chairman, President and Chief Executive Officer of Baxter International
+Inc.
+Pierre J.P. de Weck1 Director Former Chairman and Global Head of Private Wealth Management,
+Deutsche Bank AG
+Arnold W. Donald Director Former President and Chief Executive Officer, Carnival Corporation &
+Carnival plc
+Linda P. Hudson Director Former Executive Officer, The Cardea Group, LLC and Former President
+and Chief Executive Officer of BAE Systems, Inc.
+Monica C. Lozano Director Lead Independent Director, Target Corporation; Former Chief Executive
+Officer, Former College Futures Foundation and Former Chairman, US
+Hispanic Media Inc.
+Denise L. Ramos Director Former Chief Executive Officer and President of ITT Inc.
+Clayton S. Rose Director Baker Foundation Professor of Management Practice at Harvard Business
+School
+Michael D. White Director Former Chairman, President, and Chief Executive Officer of DIRECTV
+1 Mr. de Weck is a citizen of Switzerland.
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 10/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+Thomas D. Woods2 Director Former Vice Chairman and Senior Executive Vice President of Canadian
+Imperial Bank of Commerce; Former Chairman, Hydro One Limited
+Maria T. Zuber Director Vice President for Research and E.A., Griswold Professor of Geophysics,
+MIT
+2 Mr. Woods is a citizen of Canada.
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 11/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+The following sets forth the name and present principal occupation of each executive officer and director of Banc of America Preferred Funding Corporation. The business
+address of each of the executive officers and directors of Banc of America Preferred Funding Corporation is 214 North Tryon Street, Charlotte, North Carolina 28255.
+Position with Banc of
+America Preferred
+Name Funding Corporation Principal Occupation
+John J. Lawlor Director and President Managing Director, Municipal Markets and Public Sector Banking
+Executive of BofA Securities, Inc. and Bank of America, National
+Association
+Edward H. Curland Director and Managing Director Managing Director, Municipal Markets Executive for Trading of BofA
+Securities, Inc. and Bank of America, National Association
+James Duffy Managing Director Director; MBAM BFO, The CFO Group
+of Bank of America, National Association
+Michael I. Jentis Managing Director Managing Director, Head of Sales – Public Finance of BofA Securities, Inc.
+and Bank of America, National Association
+Mona Payton Managing Director Managing Director, Municipal Markets Executive for Short-Term Trading
+of BofA Securities, Inc. and Bank of America, National Association
+Edward J. Sisk Director and Managing Director Managing Director, Public Finance Executive of BofA Securities, Inc. and
+Bank of America, National Association
+John B. Sprung Director Corporate Director
+David A. Stephens Director and Managing Director Managing Director, Executive for Public Finance and Public Sector Credit
+Products of BofA Securities, Inc. and Bank of America, National
+Association
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 12/134/28/24, 4:30 PM sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm
+SCHEDULE II
+LITIGATION SCHEDULE
+Bank of America Corporation and certain of its affiliates, including BofA Securities, Inc. ("BofA Securities," successor in interest to Merrill Lynch, Pierce, Fenner & Smith
+Incorporated) and Bank of America, N.A., have been involved in a number of civil proceedings and regulatory actions which concern matters arising in connection with the
+conduct of its business. Certain of such proceedings have resulted in findings of violations of federal or state securities laws. Such proceedings are reported and summarized in
+the BofA Securities Form BD as filed with the SEC, which descriptions are hereby incorporated by reference.
+https://www.sec.gov/Archives/edgar/data/70858/000114036124021793/ef20027484_sc13d.htm 13/13
