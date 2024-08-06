@@ -16,3 +16,8 @@ def extract(pdf):
     for df in dfs:
         output_file.write(str(df))
     return dfs
+
+
+def evaluate():
+    evaluation = {"Cost": "Free", "Variation Robustness": "n/a"}
+    return evaluation

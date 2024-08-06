@@ -26,3 +26,8 @@ def extract(pdf):
     # Llama 2 7B: $ 0.0004 / 1K Tokens
     # Llama 2 13B: $ 0.0016 / 1K Tokens
     # Llama 2 70B: $ 0.0032 / 1K Tokens
+
+
+def evaluate():
+    evaluation = {"Cost": "Paid", "Variation Robustness": "n/a"}
+    return evaluation
