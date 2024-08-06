@@ -1,6 +1,4 @@
 # TODO:
-# fix bug: pdf_plumber is not getting through all the pdfs
-# add evaluation notes to the python object themselves
 # test and write metrics for each parser
     # accuracy
         # how to measure F1 score: LLM model, retrieval model? (select one, define retrieval)
@@ -27,17 +25,7 @@ pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_T
 test_pdf_parsers = pdf_parsers
 
 pdfs = get_pdfs()
-results = retrieve_data(test_pdf_parsers, pdfs)
+results = retrieve_data(test_pdf_parsers, pdfs[:1])
 
-pdf_plumber.metrics.cost = "Free"
-PyPDF2.metrics.cost = "Free"
-PyPDF.metrics.cost = "Free"
-pdf_2_tables.metrics.cost = "Free"
-tabula_py.metrics.cost = "Free"
-PDFMiner.metrics.cost = "Free"
-camelot.metrics.cost = "Free"
-llama_parse.metrics.cost = "Paid"
-Amazon_Textract.metrics.cost = "Paid"
-Microsoft_Table_Transformer.metrics.cost = "Paid"
-
-output_evaluations(pdf_parsers)
+evaluate_parsers(test_pdf_parsers)
+output_evaluations(test_pdf_parsers)

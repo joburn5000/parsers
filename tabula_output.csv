@@ -1,15 +1,29 @@
-Title of each class,Trading Symbol(s),Name of each exchange on which registered
-"Common Stock, par value $0.01 per share",BAC,New York Stock Exchange
-"Depositary Shares, each representing a 1/1,000th interest in a share of Floating Rate Non-Cumulative",BAC PrE,New York Stock Exchange
-"Preferred Stock, Series E",,
-"April 16, 2024"
-BANK OF AMERICA CORPORATION
-(Exact name of registrant as specified in its charter)
-1-6523
-corporation) (Commission File Number) (IRS Em
-100 North Tryon Street
-"Charlotte, North Carolina 28255"
-(Address of principal executive offices)
-(704) 386-5681
-"(Registrant’s telephone number, including area code)"
-Not Applicable
+"",Meta,IPW,,
+4,Clb,IPW,4,
+"",Meta,AIPW,,
+2,Clb,AIPW,2,
+"",,,,3.5
+0,,,0,
+2,,,2,3.0
+4,,,4,
+"",Clb,IPW,,,
+"",Meta,AIPW,,,
+2,Clb,AIPW,2,,
+"",,,,,3.5
+0,,,0,,
+2,,,2,,3.0
+4,,,4,,
+"",False PS; True OM,,,False PS; False OM,2.5
+6,,,6,,
+4,,,4,,
+"",,,,,2.0
+2,,,2,,
+0,,,0,,1.5
+2,,,2,,
+4,4,
+"",,2.0
+2,2,
+0,0,1.5
+2,2,
+4,4,
+3.5,4.0,4.00

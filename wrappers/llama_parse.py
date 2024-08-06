@@ -14,7 +14,6 @@ def extract(pdf):
     #     language="en",  # Optionally you can define a language, default=en
     # )
     # documents = parser.load_data(pdf)
-    print("must obtain an API key from llama API")
     # return documents
     # notes: must obtain an API key from llama API
     # Pricing
@@ -26,6 +25,7 @@ def extract(pdf):
     # Llama 2 7B: $ 0.0004 / 1K Tokens
     # Llama 2 13B: $ 0.0016 / 1K Tokens
     # Llama 2 70B: $ 0.0032 / 1K Tokens
+    return "Must obtain an API key from llama API"
 
 
 def evaluate():

@@ -37,8 +37,10 @@ def get_pdfs():
 
 def retrieve_data(test_pdf_parsers, pdfs):
     #retrieve data for each pdf, track speed & memory usage
+    text_data = {}
     num_pdfs = len(pdfs)
     for parser in test_pdf_parsers:
+        text_data[parser.name] = {}
         parser.metrics = metrics()
         # track memory usage
         tracemalloc.start()
@@ -46,7 +48,7 @@ def retrieve_data(test_pdf_parsers, pdfs):
         timestamp = datetime.datetime.now()
         for pdf in pdfs:
             print(pdf)
-            parser.extract(pdf)
+            text_data[pdf] = parser.extract(pdf)
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         # calculate and record speed (PDFs per second)
@@ -55,6 +57,11 @@ def retrieve_data(test_pdf_parsers, pdfs):
         # record memory usage (MB)
         parser.metrics.memory_usage = "n/a" if current < .01 else current / 10**6
     return
+
+def evaluate_parsers(pdf_parsers):
+    for parser in pdf_parsers:
+        evaluation = parser.evaluate()
+        parser.metrics.cost = evaluation["Cost"]
 
 def output_evaluations(pdf_parsers):
     output_file = open("evaluations.txt", "w")

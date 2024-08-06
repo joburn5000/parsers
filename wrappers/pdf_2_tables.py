@@ -16,7 +16,7 @@ def extract(pdf):
     #         'aliyun_appcode': 'b8f41a5f9b664a45af2bc9f58666a17e'
     #     }
     # tables = pdf_tables.extract(pdf, lang='eng+tha', **imgOcrSettings)
-    print("pdf2tables is out of date")
+    return "pdf2tables is out of date"
     # return tables
 
 

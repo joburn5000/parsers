@@ -3,7 +3,7 @@
 name = "Microsoft Table Transformer"
 
 def extract(pdf):
-    print("Please train the detection model")
+    return "Please train the detection model"
 
 
 def evaluate():

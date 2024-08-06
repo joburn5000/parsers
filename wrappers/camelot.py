@@ -11,7 +11,7 @@ def extract(pdf):
     output_file = open(output_dir+"/pdf_plumber.txt", "w", encoding='utf-8')
     tables = camelot.read_pdf(pdf)
     tables.export('foo.csv', f='csv') # json, excel, html, markdown, sqlite
-    return tables
+    return "todo"
 
 def evaluate():
     evaluation = {"Cost": "Free", "Variation Robustness": "n/a"}
