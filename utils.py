@@ -56,13 +56,21 @@ def retrieve_data(test_pdf_parsers, pdfs):
         parser.metrics.speed = "n/a" if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
         # record memory usage (MB)
         parser.metrics.memory_usage = "n/a" if current < .01 else current / 10**6
-    return
+    return text_data
 
 def evaluate_parsers(pdf_parsers):
     for parser in pdf_parsers:
         evaluation = parser.evaluate()
         parser.metrics.cost = evaluation["Cost"]
+def output_text(text_data):
+    for parser in text_data:
+        for pdf in text_data[parser]:
+            output_dir = "output/"+pdf[:-4]
+            os.makedirs(output_dir, exist_ok=True)
+            output_file = open(output_dir+"/pdf_plumber.txt", "w", encoding='utf-8')
+            output_file.write(text_data[parser][pdf])
 
+            
 def output_evaluations(pdf_parsers):
     output_file = open("evaluations.txt", "w")
     for parser in pdf_parsers:

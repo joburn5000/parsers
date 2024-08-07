@@ -5,9 +5,6 @@ name = "Tabula Py"
 
 # todo test tabula
 def extract(pdf):
-    output_dir = "output/"+pdf[:-4]
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = open(output_dir+"/tabula.txt", "w", encoding='utf-8')
     # Read pdf into list of DataFrame
     dfs = tabula.read_pdf(pdf, pages='all')
     # convert PDF into CSV file
@@ -16,7 +13,6 @@ def extract(pdf):
     text = ""
     for df in dfs:
         df_text = str(df)
-        output_file.write(df_text)
     return text
 
 
