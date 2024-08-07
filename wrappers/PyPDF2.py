@@ -12,7 +12,7 @@ def extract(pdf):
         page = reader.pages[i]
         page_text = page.extract_text()
         text += page_text
-    return reader
+    return text
 
 def evaluate():
     evaluation = {"Cost": "Free", "Variation Robustness": "n/a"}

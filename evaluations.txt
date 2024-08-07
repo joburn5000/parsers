@@ -1,24 +1,24 @@
 Pdf Plumber
-Speed: 0.123 PDFs per second
-Memory Usage: 119.480043 MB
+Speed: 0.117 PDFs per second
+Memory Usage: 119.479013 MB
 Accuracy: 
 Cost: Free
 
 PyPdf
-Speed: 0.281 PDFs per second
-Memory Usage: 7.654553 MB
+Speed: 0.292 PDFs per second
+Memory Usage: 7.654033 MB
 Accuracy: 
 Cost: Free
 
 PyPdf2
-Speed: 0.311 PDFs per second
-Memory Usage: 6.183893 MB
+Speed: 0.337 PDFs per second
+Memory Usage: 6.297865 MB
 Accuracy: 
 Cost: Free
 
 camelot
-Speed: 0.453 PDFs per second
-Memory Usage: 2.401434 MB
+Speed: 0.570 PDFs per second
+Memory Usage: 2.400147 MB
 Accuracy: 
 Cost: Free
 
@@ -41,8 +41,8 @@ Accuracy:
 Cost: Paid
 
 Tabula Py
-Speed: 0.059 PDFs per second
-Memory Usage: 0.356306 MB
+Speed: 0.058 PDFs per second
+Memory Usage: 0.356728 MB
 Accuracy: 
 Cost: Free
 
@@ -53,8 +53,8 @@ Accuracy:
 Cost: Free
 
 Pdf Miner
-Speed: 0.126 PDFs per second
-Memory Usage: 4.80412 MB
+Speed: 0.128 PDFs per second
+Memory Usage: 4.804069 MB
 Accuracy: 
 Cost: Free
 

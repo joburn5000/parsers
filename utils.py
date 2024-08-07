@@ -40,7 +40,7 @@ def retrieve_data(test_pdf_parsers, pdfs):
     text_data = {}
     num_pdfs = len(pdfs)
     for parser in test_pdf_parsers:
-        text_data[parser.name] = {}
+        parser_text_data = {}
         parser.metrics = metrics()
         # track memory usage
         tracemalloc.start()
@@ -48,7 +48,7 @@ def retrieve_data(test_pdf_parsers, pdfs):
         timestamp = datetime.datetime.now()
         for pdf in pdfs:
             print(pdf)
-            text_data[pdf] = parser.extract(pdf)
+            parser_text_data[pdf] = parser.extract(pdf)
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         # calculate and record speed (PDFs per second)
@@ -56,18 +56,20 @@ def retrieve_data(test_pdf_parsers, pdfs):
         parser.metrics.speed = "n/a" if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
         # record memory usage (MB)
         parser.metrics.memory_usage = "n/a" if current < .01 else current / 10**6
+        text_data[parser.name] = parser_text_data
     return text_data
 
 def evaluate_parsers(pdf_parsers):
     for parser in pdf_parsers:
         evaluation = parser.evaluate()
         parser.metrics.cost = evaluation["Cost"]
+
 def output_text(text_data):
     for parser in text_data:
         for pdf in text_data[parser]:
             output_dir = "output/"+pdf[:-4]
             os.makedirs(output_dir, exist_ok=True)
-            output_file = open(output_dir+"/pdf_plumber.txt", "w", encoding='utf-8')
+            output_file = open(output_dir + "/" + parser + "txt", "w", encoding='utf-8')
             output_file.write(text_data[parser][pdf])
 
             
