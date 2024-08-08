@@ -1,0 +1,10 @@
+Tabula Py                     Memory usage: 0.355668 MB
+camelot                       Memory usage: 2.414346 MB
+Pdf Miner                     Memory usage: 4.804831 MB
+PyPdf2                        Memory usage: 6.299065 MB
+PyPdf                         Memory usage: 7.654073 MB
+Pdf Plumber                   Memory usage: 116.857516 MB
+Amazon Textract               Memory usage: 100000 MB
+Microsoft Table Transformer   Memory usage: 100000 MB
+llama parse                   Memory usage: 100000 MB
+pdf2tables                    Memory usage: 100000 MB

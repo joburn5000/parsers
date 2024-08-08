@@ -50,10 +50,10 @@ def retrieve_data(pdf_parsers, pdfs):
             parser_text_data[pdf] = parser.extract(pdf)
         
         # record memory usage (MB)
-        memory_usage = tracemalloc.get_traced_memory()[0]
+        memory_usage = tracemalloc.get_traced_memory()[0] / 10**6
         tracemalloc.stop()
         parser.metrics = metrics()
-        parser.metrics.memory_usage = "0" if memory_usage < .01 else memory_usage / 10**6
+        parser.metrics.memory_usage = "100000" if memory_usage < .1 else memory_usage 
         text_data[parser.name] = parser_text_data
 
         # record speed (PDFs per second)
