@@ -40,23 +40,25 @@ def retrieve_data(pdf_parsers, pdfs):
     text_data = {}
     num_pdfs = len(pdfs)
     for parser in pdf_parsers:
-        parser_text_data = {}
-        parser.metrics = metrics()
-        # track memory usage
+        # track memory usage & start time
         tracemalloc.start()
-        # track time elapsed
         timestamp = datetime.datetime.now()
+
+        # extract text
+        parser_text_data = {}
         for pdf in pdfs:
-            print(pdf)
             parser_text_data[pdf] = parser.extract(pdf)
-        current, peak = tracemalloc.get_traced_memory()
+        
+        # record memory usage (MB)
+        memory_usage = tracemalloc.get_traced_memory()[0]
         tracemalloc.stop()
-        # calculate and record speed (PDFs per second)
+        parser.metrics = metrics()
+        parser.metrics.memory_usage = "0" if memory_usage < .01 else memory_usage / 10**6
+        text_data[parser.name] = parser_text_data
+
+        # record speed (PDFs per second)
         seconds_elapsed =  (datetime.datetime.now() - timestamp).total_seconds()
         parser.metrics.speed = "0" if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
-        # record memory usage (MB)
-        parser.metrics.memory_usage = "0" if current < .01 else current / 10**6
-        text_data[parser.name] = parser_text_data
     return text_data
 
 def evaluate_parsers(pdf_parsers):
@@ -84,7 +86,14 @@ def output_evaluations(pdf_parsers):
 
 def compare_speed(pdf_parsers):
     output_file = open("evaluations/speed_comparison.txt", "w")
-    pdf_parsers.sort(key=lambda x: float(x.metrics.speed))
+    pdf_parsers.sort(key=lambda x: float(x.metrics.speed), reverse=True)
     for parser in pdf_parsers:
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
+
+def compare_memory_usage(pdf_parsers):
+    output_file = open("evaluations/memory_usage_comparison.txt", "w")
+    pdf_parsers.sort(key=lambda x: float(x.metrics.memory_usage))
+    for parser in pdf_parsers:
+        output_file.write(parser.name + " "*(30-len(parser.name)))
+        output_file.write("Memory usage: " + str(parser.metrics.memory_usage) + " MB\n")

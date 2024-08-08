@@ -1,5 +1,5 @@
 # TODO:
-# calculate average data for metric results across all pdf parsers
+# compare and output memory usage results across all pdf parsers
 # test and write metrics for each parser
     # accuracy
         # how to measure F1 score: LLM model, retrieval model? (select one, define retrieval)
@@ -26,8 +26,9 @@ test_pdf_parsers = pdf_parsers
 
 pdfs = get_pdfs()
 text_data = retrieve_data(test_pdf_parsers, pdfs[:1])
+output_text(text_data)
 
 evaluate_parsers(test_pdf_parsers)
-output_text(text_data)
 output_evaluations(test_pdf_parsers)
 compare_speed(test_pdf_parsers)
+compare_memory_usage(test_pdf_parsers)

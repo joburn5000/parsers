@@ -1,10 +1,10 @@
+camelot                       Speed: 0.548 PDFs per second
+PyPdf2                        Speed: 0.312 PDFs per second
+PyPdf                         Speed: 0.289 PDFs per second
+Pdf Miner                     Speed: 0.127 PDFs per second
+Tabula Py                     Speed: 0.117 PDFs per second
+Pdf Plumber                   Speed: 0.111 PDFs per second
 Amazon Textract               Speed: 0 PDFs per second
 Microsoft Table Transformer   Speed: 0 PDFs per second
 llama parse                   Speed: 0 PDFs per second
-Tabula Py                     Speed: 0.112 PDFs per second
-Pdf Plumber                   Speed: 0.115 PDFs per second
-Pdf Miner                     Speed: 0.119 PDFs per second
-PyPdf2                        Speed: 0.279 PDFs per second
-PyPdf                         Speed: 0.296 PDFs per second
-camelot                       Speed: 0.533 PDFs per second
-pdf2tables                    Speed: 1001. PDFs per second
+pdf2tables                    Speed: 0 PDFs per second
