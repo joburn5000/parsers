@@ -8,7 +8,7 @@ def extract(pdf):
     # Read pdf into list of DataFrame
     dfs = tabula.read_pdf(pdf, pages='all')
     # convert PDF into CSV file
-    tabula.convert_into(pdf, "tabula_output.csv", output_format="csv", pages='all')
+    # tabula.convert_into(pdf, "tabula_output.csv", output_format="csv", pages='all')
     # notes: extracts TABLE data to a CSV format. dependency (not necessary to run it though) jpype 'pip install jpype1'
     text = ""
     for df in dfs:
