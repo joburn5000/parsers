@@ -1,5 +1,4 @@
 # TODO:
-# compare and output memory usage results across all pdf parsers
 # test and write metrics for each parser
     # accuracy
         # how to measure F1 score: LLM model, retrieval model? (select one, define retrieval)
@@ -25,7 +24,7 @@ pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_T
 test_pdf_parsers = pdf_parsers
 
 pdfs = get_pdfs()
-text_data = retrieve_data(test_pdf_parsers, pdfs[:1])
+text_data = retrieve_data(test_pdf_parsers, pdfs)
 output_text(text_data)
 
 evaluate_parsers(test_pdf_parsers)

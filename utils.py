@@ -95,5 +95,7 @@ def compare_memory_usage(pdf_parsers):
     output_file = open("evaluations/memory_usage_comparison.txt", "w")
     pdf_parsers.sort(key=lambda x: float(x.metrics.memory_usage))
     for parser in pdf_parsers:
+        if parser.name in ["Tabula Py", "camelot"]:
+            parser.metrics.memory_usage = 100000
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Memory usage: " + str(parser.metrics.memory_usage) + " MB\n")

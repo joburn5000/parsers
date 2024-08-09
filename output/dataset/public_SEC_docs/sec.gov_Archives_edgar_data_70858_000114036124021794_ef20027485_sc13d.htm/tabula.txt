@@ -1,109 +1,0 @@
-                                                    1  ... Unnamed: 1
-0                                                   2  ...        NaN
-1                                                   3  ...        NaN
-2                                                 NaN  ...        NaN
-3                                                 NaN  ...        NaN
-4                                                   4  ...        NaN
-5                                                   5  ...        NaN
-6                                                   6  ...        NaN
-7   NUMBER OF\rSHARES\rBENEFICIALLY\rOWNED BY EACH...  ...        NaN
-8                                                 NaN  ...        NaN
-9                                                 NaN  ...        NaN
-10                                                NaN  ...        NaN
-11                                                 11  ...        NaN
-12                                                 12  ...        NaN
-13                                                 13  ...        NaN
-14                                                 14  ...        NaN
-
-[15 rows x 4 columns]                                                    1  ... Unnamed: 1
-0                                                   2  ...        NaN
-1                                                   3  ...        NaN
-2                                                 NaN  ...        NaN
-3                                                 NaN  ...        NaN
-4                                                   4  ...        NaN
-5                                                   5  ...        NaN
-6                                                   6  ...        NaN
-7   NUMBER OF\rSHARES\rBENEFICIALLY\rOWNED BY EACH...  ...        NaN
-8                                                 NaN  ...        NaN
-9                                                 NaN  ...        NaN
-10                                                NaN  ...        NaN
-11                                                 11  ...        NaN
-12                                                 12  ...        NaN
-13                                                 13  ...        NaN
-14                                                 14  ...        NaN
-
-[15 rows x 4 columns]Empty DataFrame
-Columns: [Brian T. Moynihan, hairman of the Board, Chief Executive Officer andirector, hairman of the Board and Chief Executive Officer of Bank of Americaorporation]
-Index: []Empty DataFrame
-Columns: [Paul M. Donofrio, ice Chair, ice Chair of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [Thong M. Nguyen, ice Chair, Head of Global Strategy & Enterpriselatforms, ice Chair, Head of Global Strategy & Enterprise Platforms of Bank ofmerica Corporation]
-Index: []Empty DataFrame
-Columns: [Catherine P. Bessant, ice Chair, Global Strategy, ice Chair, Global Strategy of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [Bruce R. Thompson, ice Chair, Head of Enterprise Credit, ice Chair, Head of Enterprise Credit of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [Dean C. Athanasia, resident, Regional Banking, resident, Regional Banking of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [James P. DeMare, resident, Global Markets, resident, Global Markets of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [Kathleen A. Knox, resident, The Private Bank, resident, The Private Bank of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [Matthew M. Koder, resident, Global Corporate and Investment Banking, resident, Global Corporate and Investment Banking of Bank of Americaorporation]
-Index: []Empty DataFrame
-Columns: [Bernard A. Mensah, resident, International; CEO, Merrill Lynchnternational, resident, International of Bank of America Corporation and CEO, Merrillynch International]
-Index: []Empty DataFrame
-Columns: [Lindsay DeNardo Hans, resident, Co-Head Merrill Wealth Management, resident, Co-Head Merrill Wealth Management of Bank of Americaorporation]
-Index: []Empty DataFrame
-Columns: [Eric Schimpf, resident, Co-Head Merrill Wealth Management, resident, Co-Head Merrill Wealth Management of Bank of Americaorporation]
-Index: []Empty DataFrame
-Columns: [Aditya Bhasin, hief Technology and Information Officer, hief Technology and Information Officer of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [D. Steve Boland, hief Administrative Officer, hief Administrative Officer of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [lastair Borthwick, hief Financial Officer, hief Financial Officer of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [heri Bronstein, hief Human Resources Officer, hief Human Resources Officer of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [eoffrey Greener, hief Risk Officer, hief Risk Officer of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [homas M. Scrivener, hief Operations Executive, hief Operations Executive of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [auren A. Mogensen, lobal General Counsel, lobal General Counsel of Bank of America Corporation]
-Index: []Empty DataFrame
-Columns: [ionel L. Nowell, III, ead Independent Director, ead Independent Director, Bank of America Corporation; Former Seniorice President and Treasurer, PepsiCo, Inc.]
-Index: []Empty DataFrame
-Columns: [haron L. Allen, irector, ormer Chairman of Deloitte LLP]
-Index: []Empty DataFrame
-Columns: [ose E. Almeida, irector, hairman, President and Chief Executive Officer of Baxter International Inc.]
-Index: []Empty DataFrame
-Columns: [ierre J.P. de Weck1, irector, ormer Chairman and Global Head of Private Wealth Management, Deutscheank AG]
-Index: []Empty DataFrame
-Columns: [rnold W. Donald, irector, ormer President and Chief Executive Officer, Carnival Corporation &arnival plc]
-Index: []Empty DataFrame
-Columns: [inda P. Hudson, irector, ormer Executive Officer, The Cardea Group, LLC and Former Presidentnd Chief Executive Officer of BAE Systems, Inc.]
-Index: []Empty DataFrame
-Columns: [onica C. Lozano, irector, ead Independent Director, Target Corporation; Former Chief Executivefficer, Former College Futures Foundation and Former Chairman, USispanic Media Inc.]
-Index: []Empty DataFrame
-Columns: [enise L. Ramos, irector, ormer Chief Executive Officer and President of ITT Inc.]
-Index: []Empty DataFrame
-Columns: [layton S. Rose, irector, aker Foundation Professor of Management Practice at Harvard Businesschool]
-Index: []Empty DataFrame
-Columns: [ichael D. White, irector, ormer Chairman, President, and Chief Executive Officer of DIRECTV]
-Index: []Empty DataFrame
-Columns: [John J. Lawlor, irector and President, Managing Director, Municipal Markets and Public Sector Banking Executiveof BofA Securities, Inc. and Bank of America, National Association]
-Index: []Empty DataFrame
-Columns: [Edward H. Curland, irector and Managing Director, Managing Director, Municipal Markets Executive for Trading of BofASecurities, Inc. and Bank of America, National Association]
-Index: []Empty DataFrame
-Columns: [James Duffy, anaging Director, Director; MBAM BFO, The CFO Groupof  Bank of America, National Association]
-Index: []Empty DataFrame
-Columns: [Michael I. Jentis, anaging Director, Managing Director, Head of Sales – Public Finance of BofA Securities, Inc.and Bank of America, National Association]
-Index: []Empty DataFrame
-Columns: [Mona Payton, anaging Director, Managing Director, Municipal Markets Executive for Short-Term Trading ofBofA Securities, Inc. and Bank of America, National Association]
-Index: []Empty DataFrame
-Columns: [Edward J. Sisk, irector and Managing Director, Managing Director, Public Finance Executive of BofA Securities, Inc. andBank of America, National Association]
-Index: []Empty DataFrame
-Columns: [John B. Sprung, irector, Corporate Director]
-Index: []Empty DataFrame
-Columns: [David A. Stephens, irector and Managing Director, Managing Director, Executive for Public Finance and Public Sector CreditProducts of BofA Securities, Inc. and Bank of America, National Association]
-Index: []

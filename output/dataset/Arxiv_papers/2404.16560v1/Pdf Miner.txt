@@ -1,0 +1,3850 @@
+4
+2
+0
+2
+
+r
+p
+A
+5
+2
+
+]
+L
+M
+
+.
+t
+a
+t
+s
+[
+
+1
+v
+0
+6
+5
+6
+1
+.
+4
+0
+4
+2
+:
+v
+i
+X
+r
+a
+
+Automated Model Selection for Generalized Linear
+Models
+
+Benjamin Schwendingera,∗, Florian Schwendingerb, Laura Vana-G¨urc
+
+aInstitute of Computer Technology, TU Wien, Gußhausstraße
+27-29, Vienna, 1040, Austria
+bDepartment of Statistics, University of Klagenfurt, Universit¨atsstraße
+65-57, Klagenfurt, 9020, Austria
+cInstitute of Statistics and Mathematical Methods in Economics, TU Wien, Wiedner
+Hauptstraße 7, Vienna, 1040, Austria
+
+Abstract
+
+In this paper, we show how mixed-integer conic optimization can be used to
+combine feature subset selection with holistic generalized linear models to
+fully automate the model selection process. Concretely, we directly optimize
+for the Akaike and Bayesian information criteria while imposing constraints
+designed to deal with multicollinearity in the feature selection task. Specif-
+ically, we propose a novel pairwise correlation constraint that combines the
+sign coherence constraint with ideas from classical statistical models like
+Ridge regression and the OSCAR model.
+
+Keywords: Feature Subset Selection, Holistic Generalized Linear Models,
+Mixed-Integer Conic Optimization, Best Subset Selection, Computational
+Statistics, Generalized Linear Models
+
+1. Introduction
+
+Model selection is an important but typically time-consuming task. Sev-
+eral authors suggest using mixed-integer optimization to automate model
+selection. The classical best subset selection (BSS) problem [1] identiﬁes the
+best k features out of p possible features according to some goodness-of-ﬁt
+
+∗Corresponding author.
+Email address: benjaminschwe@gmail.com (Benjamin Schwendinger)
+
+Submitted preprint
+
+ 
+ 
+ 
+ 
+ 
+ 
+(GOF) measure. For linear regression, the BSS problem, in the least-squares
+sense is non-convex and known to be NP-hard [2].
+In practice, the BSS
+problem is commonly approached using methods such as stepwise regression
+or exhaustive enumeration [1]. Bertsimas et al. [3] highlight the signiﬁcant
+advancements in mixed-integer optimization solvers since the 1970s when
+BSS problems were ﬁrst investigated. As a result, the BSS problem, which
+was once perceived as intractable, can now be solved by mixed-integer linear
+optimization solvers and used to ﬁnd the solution of real-world linear regres-
+sion problems. In the case of logistic regression, the BSS problem becomes a
+mixed-integer non-linear optimization problem. To address this, Bertsimas
+and King [4] explore the utilization of several general-purpose non-linear
+mixed-integer solvers. Another approach to tackle the BSS problem in lin-
+ear and logistic regression is presented by Hazimeh and Mazumder [5], who
+employ a hybrid approach combining cyclic coordinate descent with a local
+combinatorial search.
+
+An extension to the BSS problem is the integration of an information cri-
+terion (IC) such as the Akaike information criterion (AIC) or the Bayesian
+information criterion (BIC) into the optimization problem’s objective. This
+enables the selection of not only the best features for a ﬁxed k but the over-
+all optimal features according to the chosen goodness-of-ﬁt measure. This
+approach is commonly referred to in the optimization literature as feature
+subset selection (FSS). Based on the division of subset selection algorithms
+into classes of ﬁlter, wrapper and embedded methods as done by Guyon and
+Elisseeﬀ [6], FSS classiﬁes as an embedded method. FSS has been applied for
+various model classes including generalized linear models (GLMs). Miyashiro
+and Takano [7] apply FSS to linear regression using Mallows’ Cp statistic as
+a GOF measure. By using intelligent branch-and-bound strategies, Hofmann
+et al. [8] demonstrate the ability to solve the FSS problem for linear regression
+with 1,000s of observations and 100s of features within seconds. Sato et al. [9]
+propose a linear approximation approach to solve the FSS problem in logistic
+regression models. They utilize a tangent line approximation of the logistic
+loss function, resulting in a mixed-integer linear problem. Likewise, Saishu
+et al. [10] suggest using a piecewise-linear approximation, solvable through
+mixed-integer linear programming, to address the FSS problem in Poisson
+models. Many heuristic approaches for solving the FSS problem for GLMs
+are based on known metaheuristics. These include simulated annealing [11],
+genetic algorithms (Yang and Honavar 12, Calcagno and de Mazancourt 13),
+ant colony optimization [14] and particle swarm optimization [15].
+
+2
+
+In this paper, we aim to provide a uniﬁed framework for performing au-
+tomated model selection in GLMs by solving the FSS problem using mixed-
+integer conic programming and to extend existing approaches to FSS to ef-
+fectively handle two common challenges in GLM optimization: separation
+and multicollinearity. Furthermore, our paper is the ﬁrst to propose utiliz-
+ing conic optimization speciﬁcally for the FSS problem in Poisson regression
+models.
+
+The proposed framework builds on the class of holistic generalized linear
+models (HGLMs) introduced by Schwendinger et al. [16] in package holiglm
+for R. HGLMs extend linear, binomial and Poison GLMs by adding con-
+straints designed to improve the model quality (e.g., restricting the number
+of variables entering the model, enforcing coherent signs of coeﬃcients, etc.).
+Instead of approximating the log-likelihood or its components, holiglm formu-
+lates the underlying optimization problems as conic optimization problems,
+providing a more reliable [17] and accurate solution approach. The parame-
+ters of these constrained models are obtained by using (mixed-integer) conic
+optimization.
+
+While the framework in [16] allows for the speciﬁcation of an upper bound
+on the number of variables to be selected in the model, this bound must
+still be predetermined prior to solving the underlying optimization problem.
+In particular, we modify the framework of HGLMs for the purpose of FSS
+and directly integrate the AIC and BIC into the objective function rather
+than using the likelihood function as an objective. This allows us to obtain
+an exact solution to the FSS problem without resorting to piecewise-linear
+approximation methods while treating FSS for linear, binomial and Poison
+GLMs in a uniﬁed way.
+
+As mentioned above, a primary focus of the paper is addressing the issue
+of separation and multicollinearity in the automated model selection process.
+For tackling strong multicollinearity, we propose a novel pairwise correlation
+constraint that combines ideas from the sign coherence constraint [18] with
+a simultaneous restriction of equal-magnitude coeﬃcients. The idea of re-
+stricting coeﬃcients to have the same magnitude can also be found in other
+statistical models, such as Ridge regression [19], where the coeﬃcients shrink
+equally or the OSCAR (Octagonal Shrinkage and Clustering Algorithm for
+Regression) model [20], where exact equality of clustered coeﬃcients is re-
+quired. Separation on the other hand is characterized by extreme overlap
+or distinct separation in the data and can result in unbounded optimization
+problems that common solvers often fail to detect. To ensure reliable results,
+
+3
+
+it is therefore vital to verify the existence of solutions. For the binomial
+family with logit, probit, log and complementary log-log link, this can be
+done with a linear program [21] which we employ to avoid wrongly reporting
+solutions for problems whose solution is actually not determinable.
+
+Through extensive simulation studies, we demonstrate the feasibility and
+practicality of our approach. The results clearly indicate that our proposed
+constraint outperforms existing methods, oﬀering a more accurate and eﬃ-
+cient model selection process for GLMs, eﬀectively addressing the challenges
+posed by multicollinearity.
+
+The remainder of this paper is structured as follows: Section 2 introduces
+best subset selection, feature subset selection and holistic generalized linear
+models. Section 3 explores common pitfalls that arise when estimating cer-
+tain GLMs, such as failure to converge or the nonexistence of a solution and
+possible solutions to mitigate these problems. In Section 4, we present our
+proposed optimization problem for automated model selection in GLMs. The
+importance of dealing with multicollinearity when aiming for automated fea-
+ture selection is illustrated through a simulation study in Section 5. Section 6
+concludes the paper.
+
+2. Feature subset selection in GLMs
+
+In this section we set the stage for introducing the proposed modeling ap-
+proach for performing FSS in GLMs. More speciﬁcally, we start with a brief
+introduction to GLMs in Section 2.1 and show how to formulate the likeli-
+hood optimization problem such that it can be solved using (mixed-integer)
+conic programming. FSS is an extension to BSS, in the sense that the objec-
+tive (i.e., log-likelihood) in the BSS problem is replaced by an information
+criterion. Before introducing the FSS problem, we introduce the formulation
+of the BSS problem as a conic program in Section 2.2. Section 2.3 introduces
+the information criteria we use to extend BSS to FSS.
+
+2.1. Generalized linear models and conic optimization
+
+In this work we focus on solving the FSS problem for GLMs with linear,
+binomial and Poisson families. Generally, GLMs as introduced by Nelder
+and Wedderburn [22], are a classs of models with probability density func-
+tions that belong to the exponential dispersion model (EDM) family with
+
+4
+
+probability density function:
+
+f (y; θ, φ) = exp
+
+(yθ
+
+b(θ))
+
+−
+φ
+
+(cid:18)
+
++ c(y, φ)
+
+.
+
+(cid:19)
+
+(1)
+
+·
+
+·
+
+) and c(
+
+Here, b(
+) are well-deﬁned functions that vary depending on the
+speciﬁc distribution.
+In addition, in the presence of a (design) matrix of
+covariates X with p + 1 columns (including a column of ones), a GLM has a
+linear predictor η = Xβ, and a link function g that establishes the relation-
+ship between the linear combination of the p + 1 covariates and the mean
+of response yi: g(E(yi)) = ηi. Given g and b, θ is then a function of η and
+therefore of β. Given a sample of n independent and identically distributed
+response observations y⊤ = (y1, . . . , yn) and observed covariates, the esti-
+mation of the parameters is usually done by maximum likelihood, and the
+maximum likelihood estimate (MLE) of (β, φ) are the values (β∗, φ∗) that
+maximize the (log)-likelihood function for the EDM family:
+
+log
+
+L
+
+n
+
+(β; y) =
+
+log f (y; θ, φ) =
+
+n
+
+yiθi(β)
+
+i=1
+X
+
+i=1
+X
+
+b(θi(β))
+
+−
+φi
+
++ c(yi, φi).
+
+(2)
+
+Conic optimization provides a framework for expressing the maximiza-
+tion of the log-likelihood function of various GLMs as convex optimiza-
+tion problems. A conic optimization problem is designed to model con-
+vex problems by optimizing a linear objective function over the intersec-
+tion of an aﬃne hyperplane and a nonempty closed convex cone. The log-
+likelihood maximization can be reformulated as a conic problem. The rea-
+son for this lies in the fact that the log-likelihood of common GLMs in-
+cludes functions that can be represented by convex cones, which in turn
+can be solved by modern conic optimization solvers. The estimation by
+means of the conic programming is in turn feasible given that eﬃcient op-
+timization solvers exist which can provide exact solutions. More speciﬁ-
+cally, the MLE for the linear regression model (Gaussian family with iden-
+tity link) is the solution of a convex optimization problem which uses the
+t
+second-order cone
+.
+}
+∈
+Since both logistic regression and Poisson regression involve exponential
+and logarithmic terms in their log-likelihoods, the primal exponential cone
+(x, y, z)
+Kexpp :=
+is
+utilized to represent them.
+
+x
+||2 ≤
+
+y > 0, ye
+
+Rn−1, t
+
+n
+soc :=
+
+(x, 0, z)
+
+} ∪ {
+
+(t, x)
+
+0, z
+
+Rn
+
+R3
+
+R3
+
+R,
+
+≥
+
+≤
+
+≤
+
+K
+
+∈
+
+∈
+
+∈
+
+∈
+
+||
+
+x
+
+x
+
+}
+
+{
+
+{
+
+0
+
+z
+
+x
+y
+
+|
+
+|
+
+|
+
+5
+
+A comprehensive introduction to conic optimization can be found in Boyd
+and Vandenberghe [23]. For the detailed explanation and derivation of conic
+formulations for various GLMs based on the family and link information, we
+refer to the appendix provided by Schwendinger et al. [16].
+
+2.2. Best subset selection
+
+We introduce the classical best subset selection (BSS) problem before pre-
+senting its extension to FSS. The classical best subset selection (BSS) prob-
+lem is concerned with determining the best k features from a set of p potential
+features using some goodness-of-ﬁt (GOF) metric. However, the BSS problem
+is non-convex and NP-hard [2]. Surrogate models are often used to overcome
+this computational burden, such as those that incorporate an L1 penalty
+or a combination of L1 and L2 penalties [24]. Adding an L1 penalty gives
+the least absolute shrinkage and selection operator (LASSO) [25]. However,
+the performance of BSS and LASSO depends on the signal-to-noise ratio.
+A comprehensive overview by Hastie et al. [26] highlights situations for the
+linear regression case where BSS outperforms LASSO and vice versa. Yang
+et al. [27] approximate the BSS problem by solving a sequence of weighted
+LASSO problems, with the weights determined progressively.
+
+For generalized linear models where the log-likelihood is used as the
+goodness-of-ﬁt measure, the BSS problem can be formulated as an optimiza-
+tion problem. The goal is to minimize the negative log-likelihood (equivalent
+to maximizing the likelihood) with respect to the parameter vector β while
+constraining the number of selected features to be k. This results in the
+following optimization problem:
+
+minimize
+β
+
+log
+
+L
+
+−
+
+(β; y)
+
+subject to
+
+p
+
+i=1
+X
+
+I{βi6=0} ≤
+
+k.
+
+(3)
+
+∈
+
+Here, k
+1, . . . , p is a user-deﬁned parameter that restricts the size of the
+subset. We can formulate the whole problem as a mixed-integer convex
+optimization problem containing the constraint with the ℓ0 pseudo-norm,
+which counts the number of non-zero entries in β. To do so, we introduce p
+binary variables zi that indicate whether the covariate βi is selected for the
+model or not. Note that β0 denotes the intercept, which is always included
+
+6
+
+in the model. Now, the BSS problem becomes the following problem:
+
+minimize
+β
+subject to
+
+(β; y)
+log
+−
+L
+Mzi ≤
+βi ≤
+−
+p
+zi ≤
+k,
+i=1
+Rp+1, z
+β
+P
+∈
+
+0, 1
+
+p.
+
+Mzi,
+
+i = 1, . . . , p,
+
+(4)
+
+∈ {
+
+≥ ||
+
+}
+ˆβ
+Here, M
+||∞ is a constant that ensures that a coeﬃcient βi is zero if the
+corresponding binary variable zi is zero. In other words, zi indicates whether
+βi is included in the model. These types of constraints are often referred to
+as big-M constraints. It is well documented that problems containing big-M
+constraints depend on a good choice of M. If M is too small, the convergence
+to the same optimum as the original problem is not guaranteed. If M is too
+large, loss of accuracy and numerical instability may occur. One should also
+be aware that choosing an arbitrarily large M results in an unnecessarily large
+feasible region for the LP relaxation [28]. To address this challenge, Bertsimas
+et al. [3] proposed a data-driven method to determine lower and upper bounds
+for ˆβi in linear regression. In the following, we extend this approach to convex
+GLMs. Let UB be an upper bound on the MLE of Problem 3. Then one can
+ﬁnd lower and upper bounds by solving the following convex optimization
+problems:
+
+u+
+i
+
+s. t.
+
+u−
+i
+
+:= maximize
+
+βi
+
+(β; y)
+
+L
+
+≤
+
+UB,
+
+:= minimize
+
+βi
+
+β
+log
+
+−
+
+β
+log
+
+(5)
+
+(6)
+
+s. t.
+
+−
+
+(β; y)
+
+UB
+
+≤
+
+L
+is a lower bound to ˆβi. Now, let Mi :=
+
+where u+
+i
+u+
+max
+i |
+
+,
+
+is an upper bound and u−
+i
+u−
+i |}
+
+|
+
+and one can choose the big-M as M = max
+
+Mi.
+
+{|
+This procedure involves solving several convex optimization problems and
+estimating an upper bound (UB) beforehand. An alternative simpler ap-
+proach, which we have also employed in our simulation studies, is to stan-
+dardize the design matrix X and choose an M that works well for most
+settings. We have found that a value of M = 100 works well for many data
+sets when using a standardized design matrix.
+
+i
+
+7
+
+2.3. Information criteria for feature subset selection
+
+While BSS obtains the best subset of features for a ﬁxed number of max-
+imal active coeﬃcients k (where a coeﬃcient is said to be active if it is non-
+zero), information criteria such as the Akaike Information Criterion [29] or
+the Bayesian Information Criterion [30] are often used (typically in a second
+stage, see Hofmann et al. [8]) to select the best model out of the candidate
+models with diﬀerent number of active coeﬃcients. For linear regression, it
+is computationally advantageous not to optimize the AIC directly but to use
+Mallows’ Cp statistic (CP) [31] instead. Boisbunon et al. [32] show that for
+linear regression, the AIC and CP are equivalent in the sense that both reach
+their minimum objective value with the same set of active coeﬃcients.
+
+Instead of having a two stage procedure, in FSS we will replace the objec-
+tive function in Equation 4 by an IC. Although many other ICs exist, we will
+focus on the AIC and BIC in this paper, as they are the most commonly used
+in practice. For linear regression, however, we use the computationally advan-
+tageous CP to replace the AIC and a modiﬁed CP (CP2) to replace the BIC.
+The proof of the equivalence of BIC and CP2 can be found in Appendix B.
+
+The Akaike Information Criterion (AIC) is deﬁned as follows:
+
+AIC = 2k
+
+2 log(
+
+)
+
+L
+
+−
+
+(7)
+
+L
+
+is the likelihood function and k represents the number of active
+where
+covariates. Similarly, the Bayesian Information Criterion (BIC) is deﬁned
+as:
+
+The Mallows’ Cp statistic (CP) for linear regression is deﬁned by:
+
+BIC = k log(n)
+
+2 log(
+
+).
+
+−
+
+L
+
+CP = 2k +
+
+1
+σ2 ||
+
+y
+
+Xβ
+
+2
+2 −
+
+||
+
+n.
+
+−
+
+(8)
+
+(9)
+
+Similarly, the modiﬁed CP, which is equivalent to the BIC, is deﬁned as
+follows:
+
+CP2 = k log(n) +
+
+1
+σ2 ||
+
+y
+
+−
+
+Xβ
+
+2
+2 −
+
+||
+
+n.
+
+(10)
+
+Here σ2 is the residual variance. The following observation, which is some-
+times referred to as monotonicity of the GOF measure, applies to AIC, BIC,
+CP and CP2. When we encounter two models with the same likelihood value,
+then the model with fewer selected coeﬃcients is better. We use the unbiased
+estimator of the variance ˆσ2 = ||y−Xβ||2
+
+from the full regression model.
+
+2
+
+n−p
+
+8
+
+3. Issues in GLM optimization
+
+In this section, we investigate common data settings of GLMs that cause
+optimizers to recover wrong solutions. Two main reasons are causing opti-
+mizers to recover an incorrect solution for GLMs. Firstly, for GLMs with a
+binomial response, separation in the data can cause the maximum likelihood
+estimate to contain inﬁnite components. Secondly, cases where the data ex-
+hibits strong multicollinearity can lead to instability in the estimation and
+in inconsistent signs in the regression coeﬃents.
+
+Before introducing our approach, we present in the following some pro-
+
+posed approaches in the literature to address these issues.
+
+3.1. Separation
+
+Albert and Anderson [33] show that for logistic regression and probit mod-
+els, the ﬁniteness and uniqueness of the MLE are connected to the overlap
+of the data. They identify three diﬀerent data settings, complete separation,
+quasi-complete separation and overlap and show that for logistic regression
+overlap is necessary and suﬃcient for the ﬁniteness of the MLE. Konis and
+Fokianos [34] translate these criteria into a linear problem, which can be
+checked to verify the existence of the MLE.
+
+Although, in theory, the solvers should be able to detect the unbound-
+edness of the problem, we found in our experiments that all the solvers we
+tried failed to detect the unboundedness for GLMs with a binomial response.
+Therefore, it is important to check in the simulation that, indeed, a solution
+exists; otherwise, we would mainly compare the default tolerance settings of
+the solvers.
+
+Konis and Fokianos [34] suggest using the following linear program (LP)
+
+to verify that the solution exists:
+
+maximize
+β
+subject to
+
+x⊤
+i β
+
+i∈I
+x⊤
+i β
+P
+x⊤
+i β
+
+≤
+≥
+
+x⊤
+i β
+
+J =
+I =
+
+yi = 0
+i
+|
+{
+yi = 1
+i
+|
+{
+
+}
+.
+}
+
+∈
+∈
+
+−
+0
+0
+
+i∈J
+i
+P
+∀
+i
+∀
+
+(11)
+
+If the solution is a zero vector, this veriﬁes that the data is overlapping
+and that the solution of the corresponding logistic regression model is ﬁ-
+nite and unique. In case the solution of the LP is unbounded, the data is
+(quasi-)separated and the MLE does not exist.
+
+9
+
+In the preparation of this paper, we found more than two examples of
+peer-reviewed articles where the authors did not check their data for sepa-
+ration, which led them to report results based on unbounded optimization
+problems. This likely occurred as a consequence of the solver incorrectly
+signaling convergence.
+
+3.2. Multicollinearity
+
+In the presence of strong collinearity, the matrix X ⊤X in linear regression
+becomes ill-conditioned, leading to unstable estimates of the coeﬃcients ( ˆβ).
+This instability can result in inﬂated estimates and inconsistent signs of the
+coeﬃcients. Diﬀerent approaches to solving this problem have been proposed
+in the optimization and statistics literature. One approach, as suggested by
+Bertsimas and King [35], is to limit collinearity by incorporating the at most
+one constraint:
+
+zi + zj ≤
+
+1
+
+(i, j)
+
+=
+
+(i, j) : ν
+
+(12)
+
+{
+
+∀
+
+∈ HC
+where the binary z variables are the ones introduced in Equation 4, ν is a
+predeﬁned constant and ρij denotes Pearson’s empirical correlation coeﬃcient
+between the i-th and j-th columns of the design matrix X. Hence,
+HC
+represents the set of highly correlated features. This constraint limits the
+pairwise correlation by ensuring that, at most one of the variables among a
+pair with a correlation exceeding ν is selected in the regression model.
+
+≤ |
+
+,
+
+ρij|}
+
+Carrizosa et al. [18] relax this constraint to the sign coherence constraint (see
+
+Equation 13)
+
+{
+
+=
+
+≤
+
+−
+
+−
+
+≤ |
+
+∈ G
+
+uij)
+
+M(1
+
+(i, j)
+
+(i, j) : τ
+
+βi, sign(ρij)βj ≤
+
+ρij|}
+Muij ∀
+(13)
+to force coeﬃcients of covariates with large pairwise multicollinearity to have
+coherent signs. Hence, highly positively correlated features must have coef-
+ﬁcients with the same sign, while highly negatively correlated features must
+have coeﬃcients with opposite signs. Again, M is a suﬃciently large enough
+constant and uij is a binary variable introduced to enforce the sign coherence.
+M.
+One can see that for uij = 1 and positive ρij it holds that 0
+Similarly, for uij = 0 and negative ρij we have that
+0 and
+M. Clearly, the sign coherence constraint is less restrictive than
+0
+the at most one constraint.
+
+βj ≤
+On the other hand, a diﬀerent but related approach in statistics is to
+assume that strongly correlated features should have similar estimates. This
+
+βi, βj ≤
+βi ≤
+
+≤
+≤
+
+M
+
+≤
+
+−
+
+10
+
+assumption is utilized in models like Ridge regression [19] and the OSCAR
+model [20]. In Ridge regression, a L2 penalty term is added to the objec-
+tive function, encouraging similar estimates for strongly correlated features.
+The OSCAR model goes further by enforcing exactly the same coeﬃcient
+for strongly correlated features, inducing a clustering behavior among the
+coeﬃcients.
+
+4. Suggested model
+
+4.1. FSS for the Poisson model
+
+We present in this section the formulation of the FSS problem for the Pois-
+son model using the AIC, which, to the best of our knowledge, has not been
+proposed before in the literature. The corresponding AIC and BIC formula-
+tions for linear, logistic, and Poisson regression can be found in Appendix C.
+We formulate the following mixed-integer conic program for feature subset
+
+selection:
+
+minimize
+β,δ
+
+subject to (x⊤
+
+p
+
+zj
+
+2
+
+n
+
+2
+
+! −
+
+j=1
+P
+i β, 1, δi)
+Mzi ≤
+−
+β
+∈
+
+Rp+1, z
+
+i=1
+(cid:18)
+P
+∈ Kexpp,
+Mzi,
+0, 1
+
+βi ≤
+∈ {
+
+}
+
+yix⊤
+
+i β
+
+δi
+
+−
+
+(cid:19)
+
+i = 1, . . . , n,
+i = 1, . . . , p,
+Rn.
+
+p, δ
+
+∈
+
+(14)
+
+This problem can be solved by oﬀ-the-shelf mixed-integer conic optimization
+solvers like ECOS [36] or MOSEK [37]. It is worth noting that Saishu et al.
+[10] have highlighted the concave but non-linear nature of the log-likelihood
+function for Poisson regression and proposed a piecewise-linear approxima-
+tion method. On the other hand, we are the ﬁrst to suggest utilizing conic
+optimization to solve the feature subset selection problem speciﬁcally for
+Poisson regression. Similar problem formulations can be established for all
+family-link combinations introduced in [16].
+
+4.2. Combined constraint for multicollinearity
+
+To further enhance this FSS model to handle multicollinearity, we pro-
+pose the so-called combined constraint where we integrate the sign coherence
+constraint and a equal magnitude constraint as a uniﬁed criterion. Based on
+the idea of similar estimates for highly correlated features, we believe that an
+equal magnitude constraint would be beneﬁcial in much the same way that
+the sign coherence constraint extends the at most one constraint. Assuming
+
+11
+
+ 
+that the design matrix X has been standardized, we can deﬁne the equal
+magnitude constraint as follows:
+
+βi = sign(ρij)βj ∀
+
+(i, j)
+
+∈ HC
+
+=
+
+{
+
+(i, j) : ν
+
+ρij|}
+
+≤ |
+
+(15)
+
+here ρij again refers to the Pearson’s correlation coeﬃcient, and ν is a pre-
+deﬁned constant threshold. This constraint ensures that the coeﬃcients of
+strongly correlated features have the same magnitude but possibly diﬀerent
+signs based on the correlation direction.
+
+This combination allows us to automatically control pairwise multicollinear-
+
+ity in addition to the feature subset selection process. The sign coherence
+constraint is applied to variables exhibiting a moderate to strong pairwise
+correlation, while the equal magnitude constraint is exclusively imposed on
+strongly correlated pairs. By employing the equal magnitude constraint in-
+stead of the previous at most one constraint, users gain more insightful in-
+formation about the underlying data structure, instead of making a near-
+random selection.
+
+4.3. Final model
+
+By incorporating FSS with our novel combined constraint, we formulate
+
+the following optimization problem:
+
+β
+
+−
+
+0, 1
+
+(16)
+
+(i, j)
+
+i = 1, . . . , p,
+
+βi ≤
+≤
+
+Muij ∀
+
+minimize
+β
+subject to
+
+Mzi,
+βi, sign(ρij)βj ≤
+(i, j)
+∈ HC
+0, 1
+}
+=
+
+IC
+Mzi ≤
+−
+M(1
+uij)
+−
+βi = sign(ρij)βj ∀
+Rp+1, z
+p, u
+}
+∈ {
+∈
+< ν
+ρij|
+(i, j) :
+, with
+where
+HC
+1. Again, M represents a suﬃciently large positive constant.
+0
+This model simultaneously enforces coherent coeﬃcient signs for moderately
+correlated features and equal coeﬃcient magnitudes for highly correlated
+features. The thresholds for medium and high correlations are deﬁned by
+τ and ν, respectively. Moreover, before estimating any binomial model, we
+employ the linear program in [21] to identify the problems whose solution is
+actually not determinable.
+
+=
+G
+τ < ν
+
+(i, j) : ν
+
+ρij|}
+
+{
+≤
+
+and
+
+∈ G
+
+≤ |
+
+≤ |
+
+∈ {
+
+≤
+
+|G|
+
+}
+
+{
+
+τ
+
+It is worth noting that the objective function of our ﬁnal model, as shown
+in Equation (16), incorporates an arbitrary information criterion. Conse-
+quently, our model can accommodate multiple information criteria, such as
+
+12
+
+AIC, BIC, CP, and CP2, which can be expressed using the respective for-
+mulas in Equation (7, 8, 9, 10). This not only allows for greater ﬂexibility,
+but also opens to the door to more customized models. The model can be
+further extended by using further holistic constraints and expert knowledge
+can be seamlessly integrated into the model. Our entire approach should be
+viewed as an additional tool in the modern data scientist’s tool belt.
+
+5. Simulation studies
+
+In our simulation study, we present two key ﬁndings. Firstly, our ap-
+proach demonstrates the ability to recover the true predictors. Speciﬁcally,
+we achieve selection accuracy comparable to that of exact methods, highlight-
+ing the quality of our solutions. Secondly, our newly integrated constraint
+proves successful in estimating variables within a multicollinearity context.
+This ﬁnding emphasizes the eﬀectiveness of our approach in overcoming chal-
+lenges posed by multicollinearity and recovering accurate estimates.
+
+All computational experiments were conducted on a Dell XPS15 lap-
+top with an Intel Core i7–8750H CPU @ 2.20GHzx12 processor and 32
+GB of RAM. We utilized three mixed-integer optimization solvers: Gurobi
+9.1.2 [38], MOSEK 10.0.34 [37], and ECOS 2.0.5 [36]. The R package ROI
+was employed for representing the optimization problems.
+
+To obtain the exact reference solutions, we utilized the R packages lm-
+Subsets [39] and bestglm [40]. The bestglm package can also solve linear
+regression problems, but we exclude it from the comparison as lmSubsets
+exhibits signiﬁcantly faster performance. There exist many more R packages
+for subset selection, such as glmulti [13], L0Learn [5] or abess [41], but only
+the selected two ensure that the solutions are indeed globally optimal. In
+order to ensure a fair comparison, all solvers were restricted to utilizing only
+a single core.
+
+5.1. Simulation without multicollinearity
+
+In this simulation, we compare the performance of the FSS formulations
+suggested in Equation (14, C.1, C.2, C.3, C.4, C.5) with special purpose
+solvers for FSS and BSS.
+
+We use true positives (T P ) and true negatives (T N) to calculate the
+selection accuracy. The true positives are the number of features j for which
+
+13
+
+both the estimated coeﬃcient ( ˆβj) and the true coeﬃcient (βtrue
+zero:
+
+j
+
+) are non-
+
+j : ˆβj 6
+Analogously, the true negatives represent the number of features j for which
+both the estimated coeﬃcient ( ˆβj) and the true coeﬃcient (βtrue
+
+= 0, βtrue
+
+) are zero:
+
+T P (β) =
+
+(17)
+
+= 0
+
+|
+
+|
+
+.
+
+j
+
+j
+
+T N(β) =
+
+|
+
+j : ˆβj = 0, βtrue
+
+j = 0
+
+.
+
+|
+
+(18)
+
+Once T P and T N are calculated, the selection accuracy (A) is determined
+as the sum of T P and T N divided by the total number of potential features
+(p):
+
+A(β) =
+
+T P + T N
+p
+
+.
+
+(19)
+
+The runtime provides an indication of the computational eﬃciency of the
+solvers. At the same time, the selection accuracy measures how well the
+solvers are able to correctly identify the relevant and irrelevant features.
+For linear regression, we employ the specialized solver lmSelect from the
+lmSubsets package, which utilizes a branch-and-bound strategy tailored for
+this problem. For logistic and Poisson regression, we use the dedicated solver
+bestglm. Unlike lmSubsets, bestglm employs complete enumeration and is
+only suitable for regression problems with a moderate number of features.
+To avoid excessively long runtimes, bestglm restricts the maximum number
+of features (for non-Gaussian families) to 15.
+
+Following the setting of Hofmann et al. [8] the simulation study adopts
+the following design: the design matrix X is generated from a multivariate
+(0, Σ) for i = 1, . . . , n with a mean of zero
+normal distribution, with xi ∼ N
+and the covariance matrix Σ is the identity matrix Ip. Each scenario consists
+of 5 diﬀerent runs, with n = 1000 observations. The number of features p
+coeﬃcients of β are set to 1, while
+varies, and for each scenario, the ﬁrst
+⌈
+the remaining coeﬃcients are set to 0.
+
+p
+2⌉
+
+∈ {
+
+In the linear regression setting, we generate 175 datasets. The number
+20, 25, 30, 35, 40, 45, 50
+of features p varies among
+, and diﬀerent standard
+{
+deviations σ
+0.05, 0.10, 0.50, 1.00, 5.00
+are employed. The response vari-
+}
+able yi is generated according to yi = x⊤
+i β + ǫi, where ǫi follows a normal
+distribution with mean 0 and variance σ2. To avoid long runtimes in the
+brute force setting, we limit the allowed time for each run to 4200 seconds.
+In the logistic and Poisson regression settings, we vary the number of
+. The inverse link function is
+
+5, 10, 15, 20, 25, 30, 35, 40
+
+features within p
+
+}
+
+∈ {
+
+}
+
+14
+
+6
+used to calculate µi = g−1(ηi), where ηi = x⊤
+the response yi is sampled from either yi ∼
+Poisson(λ = µi), based on the underlying distribution assumption.
+
+i β. Depending on the model,
+Binomial(1, p = µi) or yi ∼
+Tables C.1–C.6 summarize the results of the computation time and selec-
+
+tion accuracy for the diﬀerent GLMs.
+
+For linear regression, Table C.2 shows that all tested methods achieve a
+high selection accuracy. However, in some cases, lmSelect ﬁnds models with
+a slightly lower AIC or BIC, including more features. Upon inspecting the
+data, it is discovered that the true coeﬃcients of the additionally selected
+features are all 0. This discrepancy can be attributed to the fact that the
+residual variance σ2 is only estimated, and as a result, the minima of AIC
+and Mallows’ Cp may not coincide perfectly. As for the computation time,
+Table C.1 indicates that our FSS model is only slightly slower than lmSelect.
+Compared to the enumerating BSS approach of trying all diﬀerent values for
+the sparsity parameter k, the FSS approach is faster and scales better with
+the number of features.
+
+Regarding logistic regression, FSS can recover the actual coeﬃcients with
+In terms of scalability, our
+high accuracy, as can be seen in Table C.4.
+FSS approach scales better than the complete enumeration of bestglm. See
+Table C.3 for the full timings.
+
+Our ﬁndings for Poisson regression are similar to those for logistic regres-
+sion. The computation time and selection quality results are summarized in
+Table C.5 and Table C.6. Here we achieve excellent selection accuracies and
+FSS scales better than complete enumeration. For Poisson regression, we
+found that ECOS encounters numerical problems for the simulation setting
+with more than 20 features (see also Table C.6).
+
+5.2. Simulation with multicollinearity
+
+In this section, we compare the performance of FSS with and without
+pairwise correlation constraints. We use the mean squared error (MSE) as
+a performance measure of how well a method performs at recovering the
+estimates. We consider three types of pairwise correlation constraints: the
+at most one constraint, the sign coherence constraint and the combined con-
+straint. Moreover, to establish a baseline, we also benchmark a model selected
+based on the information criterion alone without additional constraints which
+we call no constraint model. Following the recommendation of Bertsimas and
+King [35] we set the threshold for the at most one constraint to ν = 0.7. If
+the correlation between two features exceeds 0.7, at most, one of the features
+
+15
+
+can be selected in the feature subset. The sign coherence constraint evalu-
+ates two thresholds, τ = 0.5 and τ = 0.7. This constraint ensures that if
+two features have a correlation magnitude above the threshold, they must
+have a coherent sign in the feature subset. Thus, highly positively correlated
+features are forced to have the same sign, while highly negatively correlated
+features must have opposite signs. The combined constraint combines the
+ideas of the equal magnitude constraint and the sign coherence constraint by
+enforcing the equal magnitude for highly correlated feature pairs and ensur-
+ing sign coherence for moderately correlated feature pairs. To distinguish
+between moderately and highly correlated feature pairs, we used the thresh-
+olds τ = 0.5 and ν = 0.7.
+
+It is important to note that the simulation study design will impact the
+study’s outcome, especially when comparing pairwise correlation constraints.
+By using the simulation setting proposed by McDonald and Galarneau [42],
+we aim to provide a common ground for comparing the constraints. This
+simulation setting is widely used in statistics to simulate collinearity among
+features.
+
+In this setting, the design matrix X is constructed as follows:
+
+xij =
+
+(1
+
+−
+
+α2)zij + αi(p+1), where i = 1, . . . , n and j = 1, . . . , p.
+
+(20)
+
+p
+
+Here, n = 100 represents the number of observations, p = 3 denotes the
+number of features, and zij is drawn from a normal distribution with mean
+0 and standard deviation σ. The design matrix X is standardized, resulting
+in X ⊤X being in correlation form. The parameter α takes values from the
+In this particular setup, ρij = α2 gives the
+set
+correlation between any two features. Consequently, the pairwise correlations
+are ρij =
+. The β coeﬃcients are generated by
+}
+computing the eigenvectors of X ⊤X and selecting the eigenvector associated
+with the largest eigenvalue.
+
+0.49, 0.64, 0.81, 0.90, 0.98
+
+0.7, 0.8, 0.9, 0.95, 0.99
+
+{
+
+{
+
+}
+
+.
+
+ηi = β0 + β1x1i + β2x2i +
+
++ βpxpi = x⊤
+i β
+
+· · ·
+
+(21)
+
+Subsequently, Equation (21) is employed to calculate ηi where β0 is set to
+zero and µi is given by µi = g−1(ηi). Finally, the response yi is sampled
+either from yi ∼
+This simulation setup allows for the generation of data with controlled
+correlations among features, enabling the evaluation and comparison of the
+
+Binomial(1, µi) or yi ∼
+
+Normal(µi, σ) or yi ∼
+
+Poisson(µi).
+
+16
+
+diﬀerent pairwise correlation constraints in the context of feature subset se-
+lection. Table C.7, Table C.8 and Table C.9 summarize the results for the
+diﬀerent constraints and correlation settings for 1,000 simulations and 100
+observations.
+
+In the linear regression setting, the AIC and BIC exhibited almost iden-
+tical results, leading us to report only the AIC outcomes. Analysis of Ta-
+ble C.9 suggests that when the standard deviation σ is very small (speciﬁcally,
+σ = 0.01) and the α values range from small to medium (0.7, 0.8, and 0.9),
+both the no constraint and the sign coherence constraint slightly outperform
+the combined constraint. The at most one constraint performs best for small
+correlations. This observation can be attributed to the decreased likelihood
+of the constraint becoming active at lower α values, rendering its perfor-
+mance similar to the one of the no constraint. Overall, the simulation results
+indicate that the combined constraint performs exceptionally well in this sim-
+ulation setting, eﬀectively harnessing the advantages of the sign coherence
+constraint and the equal magnitude constraint.
+
+Table C.7 presents the results for the logistic regression setting, where the
+generated µi values implicitly determine the standard deviation. In this sce-
+nario, the combined constraint outperformed all other constraints. While the
+MSE values for all constraints were similar under low correlation conditions,
+the combined constraint exhibited signiﬁcantly lower MSE values compared
+to the other constraints under strong correlation.
+
+Similarly, Table C.8 showcases the results for the Poisson regression set-
+ting. In this case, all constraints performed similarly under low correlation
+conditions. However, as the correlation increased, the combined constraint
+emerged as advantageous in this simulation setting. Furthermore, the results
+indicate that the MSE values for the no constraint and the sign coherence
+constraint were almost identical, suggesting that inconsistent signs were rare
+in this simulation setup.
+
+6. Conclusion
+
+This paper proposes an automated model selection approach by combin-
+ing FSS with a correlation constraint for speciﬁc types of generalized lin-
+ear models (GLMs), including linear, logistic, and Poisson regression. Our
+method utilizes conic optimization and information criteria such as AIC or
+BIC for feature subset selection (FSS). Moreover, it also enables the integra-
+tion of additional constraints such as limiting pairwise correlation. We have
+
+17
+
+shown that our approach achieves high selection accuracy and improves com-
+putational eﬃciency as the dimensionality of the problem increases, outper-
+forming naive enumeration methods. The key contribution of our work is the
+development of a new mixed-integer conic programming (MICP) problem for
+model selection under multicollinearity. Our experiments have demonstrated
+that our proposed combined constraint surpasses the existing collinearity con-
+straints in the literature regarding performance. Future research directions
+could explore incorporating additional regularization terms or leveraging lin-
+ear approximations to speed up computation times.
+
+Acknowledgements
+
+This work was supported by the Austrian Science Fund (FWF) under
+
+grant number ZK 35.
+
+Appendix A. GLMs
+
+The PDF of the Normal distribution can be expressed as:
+
+f (y; µ, σ2) =
+
+1
+√2πσ2 exp
+
+−(y−µ)2
+2σ2
+
+= exp
+
+(yµ
+
+µ2/2)
+
+−
+σ2
+
+y2
+2σ2 −
+
+1
+2
+
++
+
+−
+
+(cid:18)
+
+(cid:18)
+
+log(2πσ2)
+
+(cid:19)(cid:19)
+
+(A.1)
+where one can see that it is indeed part of the EDM family with θ = µ,
+φ = σ2, b(θ) = θ2
+The PDF of the binomial distribution can be written as:
+
+2 and c(y, φ) =
+
+1
+2 log(2πφ).
+
+y2
+2φ −
+
+−
+
+(cid:17)
+
+(cid:16)
+
+f (y; p) =
+
+(cid:18)
+
+py(1
+
+n
+y
+
+(cid:19)
+
+−
+
+p)n−y = exp
+
+log
+
+(cid:18)
+
+n
+y
+
+(cid:18)
+
+(cid:19)
+
++ y log(
+
+p
+
+−
+
+p
+
+1
+
+) + n log(1
+
+−
+
+p)
+
+.
+
+(cid:19)
+(A.2)
+
+Together with the link function θ = logit(p) = log
+
+p
+1−p
+
+we get
+
+1
+1 + exp(θ)
+
+(cid:16)
+
+(cid:17)
++ log
+
+n
+y
+
+f (y; p) = exp
+
+yθ + n log
+
+.
+
+(A.3)
+
+(cid:18)
+Here we can see that the binomial distribution is part of the EDM family
+with θ = log
+n log
+
+and c(y, φ) = log
+
+, φ = 1, b(θ) =
+
+(cid:19)(cid:19)
+
+(cid:19)
+
+(cid:18)
+
+(cid:18)
+
+.
+
+1
+1+exp(θ)
+
+p
+1−p
+
+n
+y
+
+−
+
+The PDF of the Poisson distribution can be expressed by:
+
+(cid:16)
+
+(cid:17)
+
+(cid:16)
+
+(cid:17)
+
+f (y; µ) =
+
+µy exp(
+y!
+
+µ)
+
+−
+
+= exp(y log(µ)
+
+µ
+
+−
+
+−
+
+log(y!)).
+
+18
+
+(cid:0)
+
+(cid:1)
+
+(A.4)
+
+Now using the link function θ = log(µ) which is equal to exp(θ) = µ, we get
+
+f (y; µ) = exp(yθ
+
+exp(θ)
+
+log(y!)).
+
+(A.5)
+
+−
+We can see that the Poisson distribution is also part of the EDM family with
+θ = log(µ), φ = 1, b(θ) = exp(θ) and c(y, φ) =
+
+log(y!).
+
+−
+
+−
+
+Appendix B. Mallows Cp for BIC
+
+The log-likelihood for linear regression is given by:
+
+(β; y) =
+
+log
+
+L
+
+1
+2σ2 (yi −
+
+−
+
+i β)2
+x⊤
+
+1
+2
+
+−
+
+log(2πσ2).
+
+(B.1)
+
+Given the deﬁnition of BIC (in Equation (8)) and CP2 (in Equation (10))
+we have
+
+BIC = k log(n)
+
+2 log(
+n
+i=1
+
+)
+L
+−
+1
+σ2 (yi −
+= k log(n) +
+= k log(n) + n log(2πσ2) + ||y−Xβ||2
+= CP2 + n(log(2πσ2) + 1)
+
+P
+
+σ2
+
+2
+
+i β)2 + log(2πσ2)
+x⊤
+
+(B.2)
+
+This implies that they reach their respective minima at the same coeﬃcient
+values.
+
+Appendix C. Mixed-integer conic optimization problems for FSS
+
+FSS for AIC
+Gaussian
+
+minimize
+β,ζ
+
+subject to
+
+p
+
+2
+
++ 1
+
+zj
+
+!
+
+σ2 ζ
+1, 2(y1 −
+−
+Mzi,
+βi ≤
+Rp+1, z
+0, 1
+∈ {
+
+j=1
+P
+(ζ + 1, ζ
+Mzi ≤
+−
+β
+∈
+
+}
+
+x⊤
+n β))
+
+n+2
+soc
+
+∈ K
+
+(C.1)
+
+x⊤
+1 β), . . . , 2(yn −
+i = 1, . . . , p,
+R.
+p, ζ
+
+∈
+
+19
+
+ 
+Binomial
+
+p
+
+minimize
+β,δ,γ
+
+subject to
+
+n
+
+2
+
+2
+
+zj
+
+j=1
+P
+
+! −
+(δi, 1, 1 + γi)
+(x⊤
+i β, 1, γi)
+Mzi ≤
+−
+β
+∈
+
+Rp+1, z
+
+βi ≤
+∈ {
+
+i=1
+(cid:18)
+P
+∈ Kexpp,
+∈ Kexpp,
+Mzi,
+0, 1
+
+}
+
+yix⊤
+
+i β
+
+δi
+
+−
+
+(cid:19)
+i = 1, . . . , n
+
+i = 1, . . . , n
+i = 1, . . . , p,
+Rn, γ
+
+p, δ
+
+∈
+
+Rn.
+
+∈
+
+(C.2)
+
+Poisson
+
+The optimization problem is already given in Equation (14).
+
+FSS for BIC
+Gaussian
+
+minimize
+β,ζ
+
+subject to
+
+Binomial
+
+p
+
++ 1
+
+zj
+
+log(n)
+
+σ2 ζ
+!
+j=1
+P
+1, 2(y1 −
+−
+Mzi,
+βi ≤
+Rp+1, z
+0, 1
+∈ {
+
+(ζ + 1, ζ
+Mzi ≤
+−
+β
+∈
+
+}
+
+x⊤
+1 β), . . . , 2(yn −
+i = 1, . . . , p,
+R.
+p, ζ
+
+∈
+
+x⊤
+n β))
+
+n+2
+soc
+
+∈ K
+
+(C.3)
+
+minimize
+β,δ,γ
+
+subject to
+
+minimize
+β,δ
+
+Poisson
+
+p
+
+n
+
+log(n)
+
+zj
+
+2
+
+j=1
+P
+(δi, 1, 1 + γi)
+(x⊤
+i β, 1, γi)
+Mzi ≤
+−
+β
+∈
+
+Rp+1, z
+
+βi ≤
+∈ {
+
+! −
+(cid:18)
+∈ Kexpp,
+∈ Kexpp,
+Mzi,
+0, 1
+
+}
+
+p, δ
+
+yix⊤
+
+i β
+
+δi
+
+−
+
+(cid:19)
+
+i = 1, . . . , n
+
+i=1
+P
+i = 1, . . . , n
+i = 1, . . . , p,
+Rn, γ
+
+Rn.
+
+∈
+
+∈
+
+(C.4)
+
+subject to (x⊤
+
+p
+
+n
+
+2
+
+(cid:18)
+
+log(n)
+
+zj
+
+j=1
+P
+i β, 1, δi)
+βi ≤
+Mzi ≤
+−
+β
+∈ {
+∈
+
+! −
+∈ Kexpp,
+Mzi,
+0, 1
+
+Rp+1, z
+
+}
+
+δi
+
+yix⊤
+
+i β
+
+−
+
+i=1
+P
+i = 1, . . . , n,
+i = 1, . . . , p,
+Rn.
+
+p, δ
+
+∈
+
+(cid:19)
+
+(C.5)
+
+20
+
+ 
+ 
+ 
+ 
+Result Tables
+
+Table C.1: Simulation without multicollinearity: Comparison of proposed method, HLM
+with enumeration and special purpose solver for linear regression; average execution times
+in seconds.
+
+σ
+
+0.05
+
+0.1
+
+0.5
+
+1
+
+5
+
+p
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+Linear model training time
+
+AIC
+
+BIC
+
+Proposed method
+(Gurobi)
+
+HLM with brute force Proposed method
+
+lmSelect
+
+(Gurobi)
+
+(Gurobi)
+
+lmSelect
+
+HLM with brute force
+(Gurobi)
+
+0.047
+0.062
+0.069
+0.086
+0.094
+0.123
+0.149
+
+0.055
+0.060
+0.074
+0.111
+0.106
+0.120
+0.185
+
+0.059
+0.076
+0.084
+0.113
+0.122
+0.164
+0.146
+
+0.049
+0.076
+0.071
+0.091
+0.117
+0.126
+0.143
+
+0.075
+0.093
+0.133
+0.164
+0.254
+0.606
+1.151
+
+0.002
+0.003
+0.003
+0.004
+0.004
+0.005
+0.006
+
+0.003
+0.003
+0.003
+0.005
+0.005
+0.006
+0.008
+
+0.003
+0.004
+0.004
+0.005
+0.006
+0.007
+0.007
+
+0.002
+0.003
+0.004
+0.004
+0.005
+0.006
+0.008
+
+0.003
+0.004
+0.005
+0.006
+0.010
+0.020
+0.035
+
+1.140
+2.989
+9.551
+58.876
+224.310
+1384.208
+–
+
+1.252
+3.347
+10.526
+51.952
+198.132
+1441.896
+–
+
+1.187
+2.900
+10.476
+54.417
+206.109
+1411.889
+–
+
+1.239
+3.074
+11.753
+65.864
+202.285
+1490.630
+–
+
+1.314
+3.085
+11.729
+45.243
+155.281
+1231.948
+–
+
+0.049
+0.063
+0.085
+0.196
+0.179
+0.214
+0.381
+
+0.059
+0.065
+0.084
+0.169
+0.215
+0.229
+1.012
+
+0.070
+0.073
+0.102
+0.141
+0.194
+0.353
+0.397
+
+0.057
+0.063
+0.085
+0.124
+0.283
+0.275
+0.400
+
+0.086
+0.095
+0.126
+0.154
+0.433
+0.309
+0.388
+
+0.009
+0.003
+0.003
+0.004
+0.004
+0.007
+0.007
+
+0.003
+0.003
+0.004
+0.005
+0.005
+0.006
+0.007
+
+0.003
+0.004
+0.004
+0.005
+0.006
+0.007
+0.007
+
+0.003
+0.004
+0.005
+0.005
+0.005
+0.007
+0.007
+
+0.003
+0.004
+0.004
+0.004
+0.006
+0.007
+0.008
+
+1.140
+2.989
+9.551
+58.876
+224.310
+1384.208
+–
+
+1.252
+3.347
+10.526
+51.952
+198.132
+1441.896
+–
+
+1.187
+2.900
+10.476
+54.417
+206.109
+1411.889
+–
+
+1.239
+3.074
+11.753
+65.864
+202.285
+1490.630
+–
+
+1.314
+3.085
+11.729
+45.243
+155.281
+1231.948
+–
+
+21
+
+Table C.2: Simulation without multicollinearity: Comparison of proposed method, HLM
+with enumeration and special purpose solver for linear regression; average (sd) selection
+accuracy.
+
+Linear model support recovery accuracy
+
+σ
+
+0.05
+
+0.1
+
+0.5
+
+1
+
+5
+
+p
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+20
+25
+30
+35
+40
+45
+50
+
+Proposed method
+(Gurobi)
+
+0.91 (0.02)
+0.90 (0.04)
+0.89 (0.05)
+0.90 (0.09)
+0.92 (0.03)
+0.90 (0.03)
+0.94 (0.03)
+
+0.90 (0.05)
+0.93 (0.05)
+0.93 (0.04)
+0.91 (0.04)
+0.93 (0.04)
+0.91 (0.05)
+0.90 (0.03)
+
+0.91 (0.11)
+0.91 (0.08)
+0.96 (0.04)
+0.93 (0.06)
+0.92 (0.02)
+0.90 (0.06)
+0.93 (0.04)
+
+0.89 (0.07)
+0.94 (0.04)
+0.94 (0.08)
+0.91 (0.06)
+0.93 (0.04)
+0.90 (0.03)
+0.94 (0.02)
+
+0.92 (0.07)
+0.92 (0.05)
+0.87 (0.04)
+0.94 (0.04)
+0.94 (0.04)
+0.92 (0.06)
+0.94 (0.02)
+
+AIC
+
+lmSelect
+
+0.91 (0.02)
+0.90 (0.04)
+0.89 (0.05)
+0.90 (0.09)
+0.92 (0.04)
+0.90 (0.03)
+0.94 (0.03)
+
+0.89 (0.07)
+0.93 (0.05)
+0.93 (0.04)
+0.90 (0.05)
+0.93 (0.04)
+0.91 (0.05)
+0.90 (0.03)
+
+0.91 (0.11)
+0.91 (0.08)
+0.96 (0.04)
+0.93 (0.06)
+0.92 (0.02)
+0.90 (0.06)
+0.93 (0.04)
+
+0.89 (0.07)
+0.93 (0.03)
+0.94 (0.08)
+0.91 (0.06)
+0.93 (0.04)
+0.90 (0.03)
+0.94 (0.03)
+
+0.92 (0.07)
+0.92 (0.05)
+0.87 (0.03)
+0.93 (0.03)
+0.94 (0.04)
+0.92 (0.06)
+0.93 (0.03)
+
+HLM with brute force Proposed method
+
+(Gurobi)
+
+(Gurobi)
+
+lmSelect
+
+HLM with brute force
+(Gurobi)
+
+BIC
+
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.03)
+0.99 (0.01)
+1.00 (0.00)
+1.00 (0.01)
+1.00 (0.00)
+
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+0.99 (0.01)
+0.99 (0.01)
+1.00 (0.01)
+0.99 (0.01)
+
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+0.99 (0.01)
+0.99 (0.01)
+1.00 (0.01)
+
+1.00 (0.00)
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+1.00 (0.01)
+1.00 (0.00)
+
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+1.00 (0.01)
+0.99 (0.01)
+
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.03)
+0.99 (0.01)
+1.00 (0.00)
+1.00 (0.01)
+1.00 (0.00)
+
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+0.99 (0.03)
+0.99 (0.01)
+1.00 (0.01)
+0.99 (0.01)
+
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+0.99 (0.01)
+0.99 (0.01)
+1.00 (0.01)
+
+0.99 (0.02)
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+1.00 (0.01)
+1.00 (0.00)
+
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+1.00 (0.01)
+0.99 (0.01)
+
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.03)
+0.99 (0.01)
+1.00 (0.00)
+1.00 (0.01)
+–
+
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+0.99 (0.03)
+0.99 (0.01)
+1.00 (0.01)
+–
+
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+0.99 (0.01)
+0.99 (0.01)
+–
+
+0.99 (0.02)
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+1.00 (0.01)
+–
+
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+1.00 (0.01)
+–
+
+0.91 (0.02)
+0.90 (0.04)
+0.89 (0.05)
+0.90 (0.09)
+0.92 (0.04)
+0.90 (0.03)
+–
+
+0.90 (0.05)
+0.93 (0.05)
+0.93 (0.04)
+0.91 (0.05)
+0.93 (0.04)
+0.91 (0.05)
+–
+
+0.91 (0.11)
+0.91 (0.08)
+0.96 (0.04)
+0.93 (0.06)
+0.92 (0.03)
+0.90 (0.06)
+–
+
+0.89 (0.07)
+0.93 (0.03)
+0.94 (0.08)
+0.91 (0.06)
+0.93 (0.04)
+0.90 (0.03)
+–
+
+0.92 (0.07)
+0.92 (0.05)
+0.87 (0.03)
+0.93 (0.03)
+0.94 (0.04)
+0.92 (0.06)
+–
+
+22
+
+Table C.3: Simulation without multicollinearity: Comparison of diﬀerent solvers and com-
+plete enumeration for logistic regression; average execution times in seconds.
+
+Logistic model training time
+
+AIC
+
+BIC
+
+Proposed Method Proposed Method
+
+Proposed Method Proposed Method
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+0.896
+1.971
+4.553
+12.635
+21.486
+27.868
+77.166
+47.305
+
+2.329
+4.244
+7.220
+19.999
+29.610
+38.201
+105.110
+91.766
+
+0.081
+2.522
+94.975
+–
+–
+–
+–
+–
+
+0.878
+2.035
+3.076
+5.051
+7.755
+11.001
+21.279
+33.676
+
+2.188
+4.188
+5.809
+11.751
+13.668
+14.549
+25.351
+28.208
+
+0.081
+2.510
+95.105
+–
+–
+–
+–
+–
+
+p
+
+5
+10
+15
+20
+25
+30
+35
+40
+
+Table C.4: Simulation without multicollinearity: Comparison of diﬀerent solvers and com-
+plete enumeration for logistic regression; average (sd) selection accuracy.
+
+Logistic model support recovery accuracy
+
+AIC
+
+BIC
+
+Proposed Method Proposed Method
+
+Proposed Method Proposed Method
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+1.00 (0.00)
+0.94 (0.06)
+0.95 (0.03)
+0.93 (0.03)
+0.92 (0.07)
+0.95 (0.04)
+0.95 (0.02)
+0.95 (0.02)
+
+1.00 (0.00)
+0.94 (0.06)
+0.95 (0.03)
+0.93 (0.03)
+0.92 (0.07)
+0.95 (0.04)
+0.95 (0.02)
+0.95 (0.02)
+
+1.00 (0.00)
+0.94 (0.06)
+0.95 (0.03)
+–
+–
+–
+–
+–
+
+1.00 (0.00)
+0.98 (0.04)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+
+1.00 (0.00)
+0.98 (0.04)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.02)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.01)
+
+1.00 (0.00)
+0.98 (0.04)
+1.00 (0.00)
+–
+–
+–
+–
+–
+
+p
+
+5
+10
+15
+20
+25
+30
+35
+40
+
+23
+
+Table C.5: Simulation without multicollinearity: Comparison of diﬀerent solvers and com-
+plete enumeration for Poisson regression; average execution times in seconds.
+
+Poisson model training time
+
+AIC
+
+BIC
+
+Proposed Method Proposed Method
+
+Proposed Method Proposed Method
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+1.962
+6.847
+13.111
+35.552
+238.299
+896.185
+2408.308
+4030.605
+
+1.290
+3.052
+5.903
+11.577
+18.425
+49.401
+51.174
+215.312
+
+0.141
+3.610
+141.839
+–
+–
+–
+–
+–
+
+1.868
+5.667
+12.000
+34.650
+220.857
+952.785
+2346.494
+3354.529
+
+1.229
+3.061
+5.562
+9.628
+12.383
+20.371
+33.675
+35.426
+
+0.141
+3.619
+141.700
+–
+–
+–
+–
+–
+
+p
+
+5
+10
+15
+20
+25
+30
+35
+40
+
+Table C.6: Simulation without multicollinearity: Comparison of diﬀerent solvers and com-
+plete enumeration for Poisson regression; average (sd) selection accuracy.
+
+Poisson model support recovery accuracy
+
+AIC
+
+BIC
+
+Proposed Method Proposed Method
+
+Proposed Method Proposed Method
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+(ECOS)
+
+(MOSEK)
+
+bestglm
+
+0.96 (0.09)
+0.92 (0.04)
+0.87 (0.09)
+0.97 (0.07)
+0.90 (0.21)
+0.87 (0.20)
+0.81 (0.22)
+0.67 (0.26)
+
+0.96 (0.09)
+0.92 (0.04)
+0.87 (0.09)
+0.94 (0.06)
+0.95 (0.04)
+0.94 (0.06)
+0.93 (0.04)
+0.94 (0.03)
+
+0.96 (0.09)
+0.92 (0.04)
+0.87 (0.09)
+–
+–
+–
+–
+–
+
+0.92 (0.18)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.90 (0.21)
+0.90 (0.19)
+0.82 (0.23)
+0.78 (0.28)
+
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+0.99 (0.02)
+0.99 (0.01)
+
+1.00 (0.00)
+1.00 (0.00)
+1.00 (0.00)
+–
+–
+–
+–
+–
+
+p
+
+5
+10
+15
+20
+25
+30
+35
+40
+
+24
+
+Table C.7:
+Simulation with multicollinearity: Comparison of the impact of diﬀerent
+pairwise correlation constraints, for diﬀerent levels of correlation, on the MSE for the
+logistic regression model.
+
+IC
+
+alpha no constraint
+
+Logistic model mean-squared error
+
+at most one
+constraint
+
+sign
+coherence 0.5
+constraint
+
+sign
+coherence 0.7
+constraint
+
+combined
+constraint
+
+AIC
+AIC
+AIC
+AIC
+AIC
+BIC
+BIC
+BIC
+BIC
+BIC
+
+0.70
+0.80
+0.90
+0.95
+0.99
+0.70
+0.80
+0.90
+0.95
+0.99
+
+1.41e-01
+1.96e-01
+3.13e-01
+5.18e-01
+1.21e+00
+2.10e-01
+2.75e-01
+4.50e-01
+5.67e-01
+7.68e-01
+
+1.41e-01
+2.20e-01
+4.94e-01
+5.66e-01
+6.20e-01
+2.10e-01
+2.89e-01
+4.94e-01
+5.66e-01
+6.20e-01
+
+1.41e-01
+1.96e-01
+3.07e-01
+4.90e-01
+6.20e-01
+2.10e-01
+2.75e-01
+4.50e-01
+5.64e-01
+6.20e-01
+
+1.41e-01
+1.96e-01
+3.07e-01
+4.90e-01
+6.20e-01
+2.10e-01
+2.75e-01
+4.50e-01
+5.64e-01
+6.20e-01
+
+1.40e-01
+1.55e-01
+3.07e-02
+2.95e-02
+2.89e-02
+2.10e-01
+2.22e-01
+3.10e-02
+2.96e-02
+2.89e-02
+
+Table C.8:
+Simulation with multicollinearity: Comparison of the impact of diﬀerent
+pairwise correlation constraints, for diﬀerent levels of correlation, on the MSE for the
+Poisson regression model.
+
+IC
+
+alpha no constraint
+
+Poisson model mean-squared error
+
+at most one
+constraint
+
+sign
+coherence 0.5
+constraint
+
+sign
+coherence 0.7
+constraint
+
+combined
+constraint
+
+AIC
+AIC
+AIC
+AIC
+AIC
+BIC
+BIC
+BIC
+BIC
+BIC
+
+0.70
+0.80
+0.90
+0.95
+0.99
+0.70
+0.80
+0.90
+0.95
+0.99
+
+8.98e-03
+9.54e-03
+1.36e-02
+2.71e-02
+1.58e-01
+8.98e-03
+9.66e-03
+1.59e-02
+4.54e-02
+2.42e-01
+
+9.50e-03
+5.81e-02
+3.93e-01
+4.42e-01
+4.95e-01
+9.50e-03
+5.83e-02
+3.93e-01
+4.42e-01
+4.95e-01
+
+8.98e-03
+9.54e-03
+1.36e-02
+2.71e-02
+1.57e-01
+8.98e-03
+9.66e-03
+1.59e-02
+4.54e-02
+2.41e-01
+
+8.97e-03
+8.51e-03
+4.13e-03
+3.11e-03
+5.77e-03
+8.97e-03
+8.56e-03
+4.70e-03
+3.11e-03
+4.98e-03
+
+8.98e-03
+9.54e-03
+1.36e-02
+2.71e-02
+1.57e-01
+8.98e-03
+9.66e-03
+1.59e-02
+4.54e-02
+2.41e-01
+
+25
+
+Table C.9:
+Simulation with multicollinearity: Comparison of the impact of diﬀerent
+pairwise correlation constraints, for diﬀerent levels of correlation, on the MSE for the
+linear regression model.
+
+alpha
+
+sd no constraint
+
+Linear model mean-squared error
+
+at most one
+constraint
+
+sign
+coherence 0.5
+constraint
+
+sign
+coherence 0.7
+constraint
+
+combined
+constraint
+
+0.70
+0.70
+0.70
+0.70
+0.70
+0.70
+0.70
+0.80
+0.80
+0.80
+0.80
+0.80
+0.80
+0.80
+0.90
+0.90
+0.90
+0.90
+0.90
+0.90
+0.90
+0.95
+0.95
+0.95
+0.95
+0.95
+0.95
+0.95
+0.99
+0.99
+0.99
+0.99
+0.99
+0.99
+0.99
+
+0.01 1.46e-06
+1.46e-04
+0.10
+5.84e-04
+0.20
+1.31e-03
+0.30
+2.33e-03
+0.40
+3.65e-03
+0.50
+1.48e-02
+1.00
+0.01 1.90e-06
+1.90e-04
+0.10
+7.59e-04
+0.20
+1.71e-03
+0.30
+3.04e-03
+0.40
+4.75e-03
+0.50
+1.00
+1.98e-02
+0.01 3.27e-06
+3.27e-04
+0.10
+1.31e-03
+0.20
+2.94e-03
+0.30
+5.23e-03
+0.40
+8.17e-03
+0.50
+4.52e-02
+1.00
+6.04e-06
+0.01
+6.04e-04
+0.10
+2.42e-03
+0.20
+5.44e-03
+0.30
+9.67e-03
+0.40
+1.55e-02
+0.50
+1.05e-01
+1.00
+2.83e-05
+0.01
+2.83e-03
+0.10
+1.14e-02
+0.20
+3.25e-02
+0.30
+7.63e-02
+0.40
+1.26e-01
+0.50
+4.04e-01
+1.00
+
+5.04e-04
+6.45e-04
+1.08e-03
+1.81e-03
+2.83e-03
+4.14e-03
+1.52e-02
+4.71e-02
+4.72e-02
+4.79e-02
+4.88e-02
+5.02e-02
+5.18e-02
+6.63e-02
+3.86e-01
+3.87e-01
+3.88e-01
+3.90e-01
+3.92e-01
+3.95e-01
+4.09e-01
+4.39e-01
+4.40e-01
+4.41e-01
+4.43e-01
+4.44e-01
+4.46e-01
+4.57e-01
+4.87e-01
+4.88e-01
+4.88e-01
+4.89e-01
+4.91e-01
+4.92e-01
+4.99e-01
+
+1.46e-06
+1.46e-04
+5.84e-04
+1.31e-03
+2.33e-03
+3.65e-03
+1.48e-02
+1.90e-06
+1.90e-04
+7.59e-04
+1.71e-03
+3.04e-03
+4.75e-03
+1.94e-02
+3.27e-06
+3.27e-04
+1.31e-03
+2.94e-03
+5.23e-03
+8.17e-03
+3.25e-02
+6.04e-06
+6.04e-04
+2.42e-03
+5.44e-03
+9.67e-03
+1.51e-02
+5.85e-02
+2.83e-05
+2.83e-03
+1.13e-02
+2.54e-02
+4.43e-02
+6.75e-02
+2.10e-01
+
+1.57e-06
+1.45e-04
+5.81e-04
+1.31e-03
+2.32e-03
+3.63e-03
+1.46e-02
+1.18e-05
+1.57e-04
+5.97e-04
+1.33e-03
+2.36e-03
+3.67e-03
+1.47e-02
+1.69e-05
+5.07e-05
+1.53e-04
+3.24e-04
+5.63e-04
+8.70e-04
+3.43e-03
+3.86e-06
+3.70e-05
+1.38e-04
+3.05e-04
+5.40e-04
+8.42e-04
+3.36e-03
+4.56e-07
+3.32e-05
+1.32e-04
+2.98e-04
+5.29e-04
+8.27e-04
+3.31e-03
+
+1.46e-06
+1.46e-04
+5.84e-04
+1.31e-03
+2.33e-03
+3.65e-03
+1.46e-02
+1.90e-06
+1.90e-04
+7.59e-04
+1.71e-03
+3.04e-03
+4.75e-03
+1.90e-02
+3.27e-06
+3.27e-04
+1.31e-03
+2.94e-03
+5.23e-03
+8.17e-03
+3.25e-02
+6.04e-06
+6.04e-04
+2.42e-03
+5.44e-03
+9.67e-03
+1.51e-02
+5.85e-02
+2.83e-05
+2.83e-03
+1.13e-02
+2.54e-02
+4.43e-02
+6.75e-02
+2.10e-01
+
+26
+
+References
+
+[1] A. Miller, Subset Selection in Regression, CRC Press,
+
+2002.
+
+doi:10.1201/9781420035933.
+
+[2] B. K. Natarajan, Sparse approximate solutions to linear systems, SIAM
+
+journal on computing 24 (1995) 227–234.
+
+[3] D. Bertsimas, A. King, R. Mazumder, Best subset selection via a modern
+
+optimization lens, The annals of statistics 44 (2016) 813–852.
+
+[4] D. Bertsimas, A. King,
+
+Logistic Regression:
+
+From Art
+367–384. URL:
+
+to Science,
+https://projecteuclid.org/journals/statistical-science/volume-32/issue-3/Logis
+doi:10.1214/16-STS602.
+
+Statistical Science
+
+(2017)
+
+32
+
+[5] H. Hazimeh, R. Mazumder, Fast best subset selection: Coordinate de-
+scent and local combinatorial optimization algorithms, Operations Re-
+search 68 (2020) 1517–1537.
+
+[6] I. Guyon, A. Elisseeﬀ, An introduction to variable and feature selection,
+
+Journal of machine learning research 3 (2003) 1157–1182.
+
+[7] R. Miyashiro, Y. Takano, Subset selection by mallows’ cp: A mixed
+integer programming approach, Expert Systems with Applications 42
+(2015) 325–331.
+
+[8] M. Hofmann, C. Gatu, E. J. Kontoghiorghes, A. Colubi, A. Zeileis,
+regression
+Journal of Statistical Software 93 (2020) 1–21. URL:
+
+lmsubsets:
+for
+r,
+https://www.jstatsoft.org/index.php/jss/article/view/v093i03.
+doi:10.18637/jss.v093.i03.
+
+Exact variable-subset
+
+selection in linear
+
+selection for
+
+[9] T. Sato, Y. Takano, R. Miyashiro, A. Yoshise,
+
+Feature sub-
+logistic regression via mixed integer optimiza-
+Computational Optimization and Applications 64 (2016)
+https://doi.org/10.1007/s10589-016-9832-2.
+
+set
+tion,
+865–880. URL:
+doi:10.1007/s10589-016-9832-2.
+
+[10] H. Saishu, K. Kudo, Y. Takano,
+sion via mixed-integer optimization,
+doi:10.1371/journal.pone.0249916.
+
+Sparse poisson regres-
+PLOS ONE 16 (2021).
+
+27
+
+[11] J. C. Debuse, V. J. Rayward-Smith, Feature subset selection within
+a simulated annealing data mining algorithm, Journal of Intelligent
+Information Systems 9 (1997) 57–81.
+
+[12] J. Yang, V. Honavar, Feature subset selection using a genetic algorithm,
+IEEE Intelligent Systems and their Applications 13 (1998) 44–49.
+
+[13] V. Calcagno, C. de Mazancourt,
+
+glmulti: An r package for
+linear mod-
+Journal of Statistical Software 34 (2010) 1–29. URL:
+
+easy automated model
+els,
+https://www.jstatsoft.org/index.php/jss/article/view/v034i12.
+doi:10.18637/jss.v034.i12.
+
+selection with (generalized)
+
+[14] Y. Chen, D. Miao, R. Wang, A rough set approach to feature selection
+based on ant colony optimization, Pattern Recognition Letters 31 (2010)
+226–233.
+
+[15] X. Wang, J. Yang, X. Teng, W. Xia, R. Jensen, Feature selection based
+on rough sets and particle swarm optimization, Pattern recognition
+letters 28 (2007) 459–471.
+
+[16] B. Schwendinger, F. Schwendinger, L. Vana, Holistic generalized lin-
+ear models, arXiv (2022). URL: https://arxiv.org/abs/2205.15447.
+doi:10.48550/ARXIV.2205.15447.
+
+[17] F. Schwendinger, B. Gr¨un, K. Hornik,
+
+optimization solvers
+programming,
+doi:10.1007/s00180-021-01084-5.
+
+A comparison of
+regression including conic
+Computational Statistics 36 (2021) 1721–1754.
+
+log-binomial
+
+for
+
+[18] E. Carrizosa, A. V. Olivares-Nadal, P. Ram´ırez-Cobo,
+
+straints for enhancing interpretability in linear regression,
+Statistics and Operations Research Transactions (2020) 67–98.
+
+Integer con-
+SORT-
+
+[19] A. E. Hoerl, R. W. Kennard, Ridge regression: Biased estimation for
+
+nonorthogonal problems, Technometrics 12 (1970) 55–67.
+
+[20] H. D. Bondell, B. J. Reich, Simultaneous regression shrinkage, variable
+selection, and supervised clustering of predictors with oscar, Biometrics
+64 (2008) 115–123.
+
+28
+
+[21] K. Konis, Linear programming algorithms for detecting separated data
+in binary logistic regression models, Ph.D. thesis, University of Oxford,
+2007.
+
+[22] J. A. Nelder, R. W. Wedderburn, Generalized linear models, Journal of
+
+the Royal Statistical Society: Series A (General) 135 (1972) 370–384.
+
+[23] S. Boyd, L. Vandenberghe, Convex optimization, Cambridge university
+
+press, 2004.
+
+[24] H. Zou, T. Hastie, Regularization and variable selection via the elastic
+net, Journal of the royal statistical society: series B (statistical method-
+ology) 67 (2005) 301–320.
+
+[25] R. Tibshirani, Regression shrinkage and selection via the lasso, Journal
+of the Royal Statistical Society: Series B (Methodological) 58 (1996)
+267–288.
+
+[26] T. Hastie, R. Tibshirani, R. Tibshirani, Best subset, forward stepwise or
+lasso? analysis and recommendations based on extensive comparisons,
+Statistical Science 35 (2020) 579–592.
+
+[27] Y. Yang, C. S. McMahan, Y.-B. Wang, Y. Ouyang, Estimation of l0
+norm penalized models: A statistical treatment, Computational Statis-
+tics & Data Analysis 192 (2024) 107902.
+
+[28] J. D. Camm,
+
+A.
+big m down
+ting
+66.
+URL:
+doi:10.1287/inte.20.5.61.
+
+S. Raturi,
+size,
+to
+
+Cut-
+61–
+https://doi.org/10.1287/inte.20.5.61.
+
+S. Tsubakitani,
+Interfaces
+
+(1990)
+
+20
+
+[29] H. Akaike, A new look at the statistical model identiﬁcation,
+
+IEEE
+
+transactions on automatic control 19 (1974) 716–723.
+
+[30] G. Schwarz, Estimating the dimension of a model, The annals of statis-
+
+tics (1978) 461–464.
+
+[31] C. Mallows, Choosing variables in a linear regression: A graphical aid,
+in: Central Regional Meeting of the Institute of Mathematical Statistics,
+Manhattan, KS, 1964, 1964.
+
+29
+
+[32] A. Boisbunon, S. Canu, D. Fourdrinier, W. Strawderman, M. T.
+Wells, Akaike’s information criterion, cp and estimators of loss for
+elliptically symmetric distributions,
+International Statistical Review
+82 (2014) 422–439. URL: http://www.jstor.org/stable/43299006.
+doi:https://doi.org/10.1111/insr.12052.
+
+[33] A. Albert, J. A. Anderson, On the existence of maximum likelihood
+estimates in logistic regression models, Biometrika 71 (1984) 1–10.
+
+[34] K. Konis, K. Fokianos, Safe density ratio modeling, Statistics & Prob-
+ability Letters 79 (2009) 1915–1920. doi:10.1016/j.spl.2009.05.020.
+
+[35] D. Bertsimas, A. King, An algorithmic approach to linear regression,
+Operations Research 64 (2015) 2–16. doi:10.1287/opre.2015.1436.
+
+[36] A. Domahidi, E. Chu, S. Boyd, ECOS: An SOCP solver for embedded
+systems, in: European Control Conference (ECC), 2013, pp. 3071–3076.
+doi:10.23919/ECC.2013.6669541.
+
+[37] M. ApS, The MOSEK Rmosek package manual. Version 10.0.34, 2022.
+
+URL: https://docs.mosek.com/latest/rmosek/index.html.
+
+[38] Gurobi Optimization, LLC, Gurobi Optimizer Reference Manual, 2023.
+
+URL: https://www.gurobi.com.
+
+[39] M. Hofmann, C. Gatu, E. J. Kontoghiorghes, A. Colubi, A. Zeileis,
+lmSubsets: Exact Variable-Subset Selection in Linear Regression, 2021.
+URL: https://CRAN.R-project.org/package=lmSubsets, r package
+version 0.5-2.
+
+[40] A. McLeod,
+
+C. Xu,
+and
+
+Y.
+Regression
+
+Lai,
+
+bestglm:
+
+GLM
+
+set
+https://CRAN.R-project.org/package=bestglm,
+sion 0.37.3.
+
+Utilities,
+
+Best
+
+Sub-
+URL:
+r package ver-
+
+2020.
+
+[41] J. Zhu, X. Wang, L. Hu, J. Huang, K. Jiang, Y. Zhang, S. Lin, J. Zhu,
+abess: a fast best-subset selection library in python and r, The Journal
+of Machine Learning Research 23 (2022) 9206–9212.
+
+[42] G. C. McDonald, D. I. Galarneau, A monte carlo evaluation of some
+ridge-type estimators, Journal of the American Statistical Association
+70 (1975) 407–416. URL: http://www.jstor.org/stable/2285832.
+
+30
+
+
