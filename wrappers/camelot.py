@@ -10,5 +10,5 @@ def extract(pdf):
     return "todo"
 
 def evaluate():
-    evaluation = {"Cost": "Free", "Variation Robustness": "n/a"}
+    evaluation = {"Cost": 0, "Accuracy": 0}         
     return evaluation

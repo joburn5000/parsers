@@ -29,5 +29,5 @@ def extract(pdf):
 
 
 def evaluate():
-    evaluation = {"Cost": "Paid", "Variation Robustness": "n/a"}
+    evaluation = {"Cost": 1000, "Accuracy": 0}
     return evaluation

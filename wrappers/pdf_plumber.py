@@ -13,5 +13,10 @@ def extract(pdf):
     return text
 
 def evaluate():
-    evaluation = {"Cost": "Free", "Variation Robustness": "n/a"}
+    evaluation = {"Cost": 0, "Accuracy": 0.8}
+    # Accuracy notes:
+        # 3.pdf
+            # A couple smashed text "Fortheuntrustedcentralserversetting,weprovablyshowthatfederatedlearningis..."
+            # 
+
     return evaluation

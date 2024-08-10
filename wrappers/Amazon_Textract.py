@@ -6,5 +6,5 @@ def extract(pdf):
     return "Must pay - pricing: $1.50 per 1,000 pages"
 
 def evaluate():
-    evaluation = {"Cost": "Paid", "Variation Robustness": "n/a"}
+    evaluation = {"Cost": 1000, "Accuracy": 0}
     return evaluation
