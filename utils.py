@@ -9,6 +9,7 @@ class metrics:
     cost = ""
     accuracy = ""
     variation_robustness = ""
+    weights = {"speed": 10, "memory_usage": -1, "cost": -100, "accuracy": 100, "variation_robustness": 0}
 
 class result:
     extracted_data = ""
@@ -106,3 +107,6 @@ def compare_accuracy(pdf_parsers):
     for parser in pdf_parsers:
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Accuracy: " + str(parser.metrics.accuracy) + " out of 1\n")
+
+def compute_ranking(pdf_parsers):
+
