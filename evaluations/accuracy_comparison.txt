@@ -1,0 +1,10 @@
+Pdf Miner                     Accuracy: 0 out of 1
+PyPdf2                        Accuracy: 0 out of 1
+PyPdf                         Accuracy: 0 out of 1
+Pdf Plumber                   Accuracy: 0 out of 1
+Tabula Py                     Accuracy: 0 out of 1
+camelot                       Accuracy: 0 out of 1
+Amazon Textract               Accuracy: 0 out of 1
+Microsoft Table Transformer   Accuracy: 0 out of 1
+llama parse                   Accuracy: 0 out of 1
+pdf2tables                    Accuracy: 0 out of 1

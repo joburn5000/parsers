@@ -4,13 +4,13 @@ import tracemalloc
 
 class metrics:
     # init TODO
-    speed = ""
-    memory_usage = ""
-    cost = ""
-    accuracy = ""
-    variation_robustness = ""
+    speed = 0
+    memory_usage = 0
+    cost = 0
+    accuracy = 0
+    variation_robustness = 0
     weights = {"speed": 10, "memory_usage": -1, "cost": -100, "accuracy": 100, "variation_robustness": 0}
-    weighted_score = ""
+    weighted_score = 0
 
 class result:
     extracted_data = ""
@@ -55,12 +55,12 @@ def retrieve_data(pdf_parsers, pdfs):
         memory_usage = tracemalloc.get_traced_memory()[0] / 10**6
         tracemalloc.stop()
         parser.metrics = metrics()
-        parser.metrics.memory_usage = "100000" if memory_usage < .1 else memory_usage 
+        parser.metrics.memory_usage = 100000 if memory_usage < .1 else memory_usage 
         text_data[parser.name] = parser_text_data
 
         # record speed (PDFs per second)
         seconds_elapsed =  (datetime.datetime.now() - timestamp).total_seconds()
-        parser.metrics.speed = "0" if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
+        parser.metrics.speed = 0 if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
     return text_data
 
 def evaluate_parsers(pdf_parsers):
@@ -79,13 +79,14 @@ def output_text(text_data):
             
 def output_evaluations(pdf_parsers):
     output_file = open("evaluations/evaluations.txt", "w")
+    pdf_parsers.sort(key = lambda x : x.metrics.weighted_scorer, reverse=True)
     for parser in pdf_parsers:
         output_file.write(parser.name + "\n")
         output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
         output_file.write("Memory Usage: " + str(parser.metrics.memory_usage) + " MB\n")
-        output_file.write("Accuracy: " + parser.metrics.accuracy + "\n")
-        output_file.write("Cost: " + parser.metrics.cost + "\n")
-        output_file.write("Weighted Score: " + parser.metrics.weighted_score + "\n\n")
+        output_file.write("Accuracy: " + str(parser.metrics.accuracy) + "\n")
+        output_file.write("Cost: " + str(parser.metrics.cost) + "\n")
+        output_file.write("Weighted Score: " + str(parser.metrics.weighted_score) + "\n\n")
 
 def compare_speed(pdf_parsers):
     output_file = open("evaluations/speed_comparison.txt", "w")
@@ -117,8 +118,8 @@ def compute_weighted_scores(pdf_parsers):
         memory_usage = parser.metrics.memory_usage
         cost = parser.metrics.cost
         accuracy = parser.metrics.accuracy
-        parser.metrics.weighted_score = speed * weights.speed + \
-                                        memory_usage * weights.memory_usage + \
-                                        cost * weights.cost + \
-                                        accuracy * weights.accuracy + 1000
+        parser.metrics.weighted_score = speed * weights["speed"] + \
+                                        memory_usage * weights["memory_usage"] + \
+                                        cost * weights["cost"] + \
+                                        accuracy * weights["accuracy"] + 1000
         

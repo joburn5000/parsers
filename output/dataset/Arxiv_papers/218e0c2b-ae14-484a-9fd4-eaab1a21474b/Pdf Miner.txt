@@ -2199,9 +2199,9 @@ use Lemma A.2 and get the corresponding HT-type estimator. Since we have that
 
 ˆGClb,1 − ˆN −1
 
-Clb,0
-
 Clb,1
+
+Clb,0
 
 E
 
@@ -3593,9 +3593,9 @@ N (t))
 for any t > 0 and N → ∞. This proves that
 manner. Combining ∆1, . . . , ∆6 with Equation (37) together, we finish the proof of Lemma A.4.
 
-N ∆6
-
 N ∆5
+
+N ∆6
 
 P→ 0. We could prove that
 
@@ -3647,9 +3647,9 @@ N (t)
 N
 N
 
-+
-
 =
+
++
 
 (cid:104)√
 

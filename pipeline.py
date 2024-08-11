@@ -27,12 +27,13 @@ pdf_parsers = [pdf_plumber, PyPDF, PyPDF2, camelot, Amazon_Textract, Microsoft_T
 test_pdf_parsers = pdf_parsers
 
 pdfs = get_pdfs()
-text_data = retrieve_data(test_pdf_parsers, pdfs)
-output_text(text_data)
+text_data = retrieve_data(test_pdf_parsers, pdfs[:1])
+# output_text(text_data)
 
 evaluate_parsers(test_pdf_parsers)
-# compare_speed(test_pdf_parsers)
-# compare_memory_usage(test_pdf_parsers)
-compare_accuracy(test_pdf_parsers)
 compute_weighted_scores(test_pdf_parsers)
+
+compare_speed(test_pdf_parsers)
+compare_memory_usage(test_pdf_parsers)
+compare_accuracy(test_pdf_parsers)
 output_evaluations(test_pdf_parsers)
