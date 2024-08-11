@@ -9,7 +9,7 @@ class metrics:
     cost = 0
     accuracy = 0
     variation_robustness = 0
-    weights = {"speed": 10, "memory_usage": -1, "cost": -100, "accuracy": 100, "variation_robustness": 0}
+    weights = {"speed": 10, "memory_usage": -1, "cost": -10, "accuracy": 10000, "variation_robustness": 0}
     weighted_score = 0
 
 class result:
@@ -67,6 +67,7 @@ def evaluate_parsers(pdf_parsers):
     for parser in pdf_parsers:
         evaluation = parser.evaluate()
         parser.metrics.cost = evaluation["Cost"]
+        parser.metrics.accuracy = evaluation["Accuracy"]
 
 def output_text(text_data):
     for parser in text_data:
@@ -79,14 +80,18 @@ def output_text(text_data):
             
 def output_evaluations(pdf_parsers):
     output_file = open("evaluations/evaluations.txt", "w")
-    pdf_parsers.sort(key = lambda x : x.metrics.weighted_scorer, reverse=True)
+    pdf_parsers.sort(key = lambda x : x.metrics.weighted_score, reverse=True)
+    output_file.write("Weighted Scores:\n")
     for parser in pdf_parsers:
-        output_file.write(parser.name + "\n")
+        output_file.write(parser.name + " "*(30-len(parser.name)))
+        output_file.write(str(parser.metrics.weighted_score) + "\n")
+    for parser in pdf_parsers:
+        output_file.write("\n" + parser.name + "\n")
         output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
         output_file.write("Memory Usage: " + str(parser.metrics.memory_usage) + " MB\n")
         output_file.write("Accuracy: " + str(parser.metrics.accuracy) + "\n")
         output_file.write("Cost: " + str(parser.metrics.cost) + "\n")
-        output_file.write("Weighted Score: " + str(parser.metrics.weighted_score) + "\n\n")
+        output_file.write("Weighted Score: " + str(parser.metrics.weighted_score) + "\n")
 
 def compare_speed(pdf_parsers):
     output_file = open("evaluations/speed_comparison.txt", "w")

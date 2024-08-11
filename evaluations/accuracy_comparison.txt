@@ -1,7 +1,7 @@
-Pdf Miner                     Accuracy: 0 out of 1
-PyPdf2                        Accuracy: 0 out of 1
-PyPdf                         Accuracy: 0 out of 1
-Pdf Plumber                   Accuracy: 0 out of 1
+Pdf Miner                     Accuracy: 0.9 out of 1
+PyPdf2                        Accuracy: 0.8 out of 1
+PyPdf                         Accuracy: 0.8 out of 1
+Pdf Plumber                   Accuracy: 0.8 out of 1
 Tabula Py                     Accuracy: 0 out of 1
 camelot                       Accuracy: 0 out of 1
 Amazon Textract               Accuracy: 0 out of 1
