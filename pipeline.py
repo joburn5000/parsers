@@ -1,12 +1,8 @@
 # TODO:
-# test and write metrics for each parser
-    # accuracy
-        # do an eye test on the pdfs and rank them
-        # do a rating from 0 to 1
-# create a weighted metric score
+# normalize the weights
 # clean up the individual wrappers
-# use instantiations of the parsers, not editing the py object itself
 # annotate: write function descriptions, input & output, explanations for each metric
+# use instantiations of the parsers, not editing the py object itself
 # test tables data
 
 # BTL:
@@ -32,6 +28,7 @@ text_data = retrieve_data(test_pdf_parsers, pdfs[:1])
 
 evaluate_parsers(test_pdf_parsers)
 compute_weighted_scores(test_pdf_parsers)
+normalize_weighted_scores(test_pdf_parsers)
 
 compare_speed(test_pdf_parsers)
 compare_memory_usage(test_pdf_parsers)

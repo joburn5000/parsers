@@ -9,7 +9,7 @@ class metrics:
     cost = 0
     accuracy = 0
     variation_robustness = 0
-    weights = {"speed": 10, "memory_usage": -1, "cost": -10, "accuracy": 10000, "variation_robustness": 0}
+    weights = {"speed": 10, "memory_usage": -1, "cost": -1, "accuracy": 10000, "variation_robustness": 0}
     weighted_score = 0
 
 class result:
@@ -55,7 +55,7 @@ def retrieve_data(pdf_parsers, pdfs):
         memory_usage = tracemalloc.get_traced_memory()[0] / 10**6
         tracemalloc.stop()
         parser.metrics = metrics()
-        parser.metrics.memory_usage = 100000 if memory_usage < .1 else memory_usage 
+        parser.metrics.memory_usage = 1000 if memory_usage < .1 else memory_usage 
         text_data[parser.name] = parser_text_data
 
         # record speed (PDFs per second)
@@ -105,7 +105,7 @@ def compare_memory_usage(pdf_parsers):
     pdf_parsers.sort(key=lambda x: float(x.metrics.memory_usage))
     for parser in pdf_parsers:
         if parser.name in ["Tabula Py", "camelot"]:
-            parser.metrics.memory_usage = 100000
+            parser.metrics.memory_usage = 1000
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Memory usage: " + str(parser.metrics.memory_usage) + " MB\n")
 
@@ -127,4 +127,18 @@ def compute_weighted_scores(pdf_parsers):
                                         memory_usage * weights["memory_usage"] + \
                                         cost * weights["cost"] + \
                                         accuracy * weights["accuracy"] + 1000
+
+def normalize_weighted_scores(pdf_parsers):
+    scores = [parser.metrics.weighted_score for parser in pdf_parsers]
+    OldMax = max(scores) + 1000
+    OldMin = min(scores)
+    NewMax = 100
+    NewMin = 0
+    OldRange = OldMax - OldMin
+    NewRange = NewMax - NewMin
+    for parser in pdf_parsers:
+        OldValue = parser.metrics.weighted_score
+        parser.metrics.weighted_score = (((OldValue - OldMin) * NewRange) / OldRange) + NewMin
+
+        
         

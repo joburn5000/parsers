@@ -1,81 +1,81 @@
 Weighted Scores:
-Pdf Miner                     9996.538178530009
-PyPdf2                        8997.159593198936
-PyPdf                         8995.472037746225
-Pdf Plumber                   8884.412289118383
-camelot                       1003.6142924524953
-Tabula Py                     1000.8248422370643
-pdf2tables                    -99000
-Amazon Textract               -109000
-Microsoft Table Transformer   -109000
-llama parse                   -109000
+Pdf Miner                     91.66424742424086
+PyPdf2                        83.33275284332598
+PyPdf                         83.31927540935638
+Pdf Plumber                   82.39368650171033
+camelot                       16.69901179213285
+Tabula Py                     16.678890856848582
+pdf2tables                    8.335752575759152
+Amazon Textract               0.0
+Microsoft Table Transformer   0.0
+llama parse                   0.0
 
 Pdf Miner
-Speed: 0.134 PDFs per second
-Memory Usage: 4.804832 MB
+Speed: 0.132 PDFs per second
+Memory Usage: 4.804939 MB
 Accuracy: 0.9
 Cost: 0
-Weighted Score: 9996.538178530009
+Weighted Score: 91.66424742424086
 
 PyPdf2
-Speed: 0.345 PDFs per second
-Memory Usage: 6.298939 MB
+Speed: 0.332 PDFs per second
+Memory Usage: 6.299065 MB
 Accuracy: 0.8
 Cost: 0
-Weighted Score: 8997.159593198936
+Weighted Score: 83.33275284332598
 
 PyPdf
-Speed: 0.312 PDFs per second
+Speed: 0.306 PDFs per second
 Memory Usage: 7.654073 MB
 Accuracy: 0.8
 Cost: 0
-Weighted Score: 8995.472037746225
+Weighted Score: 83.31927540935638
 
 Pdf Plumber
-Speed: 0.126 PDFs per second
-Memory Usage: 116.857517 MB
+Speed: 0.123 PDFs per second
+Memory Usage: 116.857518 MB
 Accuracy: 0.8
 Cost: 0
-Weighted Score: 8884.412289118383
+Weighted Score: 82.39368650171033
 
 camelot
-Speed: 0.602 PDFs per second
-Memory Usage: 100000 MB
+Speed: 0.571 PDFs per second
+Memory Usage: 1000 MB
 Accuracy: 0
 Cost: 0
-Weighted Score: 1003.6142924524953
+Weighted Score: 16.69901179213285
 
 Tabula Py
-Speed: 0.117 PDFs per second
-Memory Usage: 100000 MB
+Speed: 0.124 PDFs per second
+Memory Usage: 1000 MB
 Accuracy: 0
 Cost: 0
-Weighted Score: 1000.8248422370643
+Weighted Score: 16.678890856848582
 
 pdf2tables
 Speed: 0 PDFs per second
-Memory Usage: 100000 MB
+Memory Usage: 1000 MB
 Accuracy: 0
 Cost: 0
-Weighted Score: -99000
+Weighted Score: 8.335752575759152
 
 Amazon Textract
 Speed: 0 PDFs per second
-Memory Usage: 100000 MB
+Memory Usage: 1000 MB
 Accuracy: 0
 Cost: 1000
-Weighted Score: -109000
+Weighted Score: 0.0
 
 Microsoft Table Transformer
 Speed: 0 PDFs per second
-Memory Usage: 100000 MB
+Memory Usage: 1000 MB
 Accuracy: 0
 Cost: 1000
-Weighted Score: -109000
+Weighted Score: 0.0
 
 llama parse
 Speed: 0 PDFs per second
-Memory Usage: 100000 MB
+Memory Usage: 1000 MB
 Accuracy: 0
 Cost: 1000
-Weighted Score: -109000
+Weighted Score: 0.0
