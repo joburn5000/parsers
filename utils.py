@@ -3,7 +3,6 @@ import datetime
 import tracemalloc
 
 class metrics:
-    # init TODO
     speed = 0
     memory_usage = 0
     cost = 0
@@ -18,13 +17,7 @@ class result:
     pdf = ""
     evaluation = ""
 
-class pdf_parser:
-    type = ""
-    extract = ""
-    metrics = metrics()
-    result = result()
-
-# initialize data: get pdfs from dataset folder
+# get pdfs from dataset folder
 def get_pdfs():
     pdfs = []
     Arxiv_papaers_directory = "dataset/Arxiv_papers"
@@ -37,12 +30,12 @@ def get_pdfs():
         pdfs.append(public_SEC_docs_directory+"/"+pdf)
     return pdfs
 
+# get text data from each pdf, record speed & memory usage
 def retrieve_data(pdf_parsers, pdfs):
-    #retrieve data for each pdf, track speed & memory usage
     text_data = {}
     num_pdfs = len(pdfs)
     for parser in pdf_parsers:
-        # track memory usage & start time
+        # track memory & start time
         tracemalloc.start()
         timestamp = datetime.datetime.now()
 
@@ -63,12 +56,14 @@ def retrieve_data(pdf_parsers, pdfs):
         parser.metrics.speed = 0 if seconds_elapsed == 0 else num_pdfs / seconds_elapsed
     return text_data
 
+# record manual evaluation metrics cost and accuracy
 def evaluate_parsers(pdf_parsers):
     for parser in pdf_parsers:
         evaluation = parser.evaluate()
         parser.metrics.cost = evaluation["Cost"]
         parser.metrics.accuracy = evaluation["Accuracy"]
 
+# write text data to files in the output folder
 def output_text(text_data):
     for parser in text_data:
         for pdf in text_data[parser]:
@@ -77,7 +72,7 @@ def output_text(text_data):
             output_file = open(output_dir + "/" + parser + ".txt", "w", encoding='utf-8')
             output_file.write(text_data[parser][pdf])
 
-            
+# write weighted scores and metrics to evaluations.txt
 def output_evaluations(pdf_parsers):
     output_file = open("evaluations/evaluations.txt", "w")
     pdf_parsers.sort(key = lambda x : x.metrics.weighted_score, reverse=True)
@@ -93,6 +88,7 @@ def output_evaluations(pdf_parsers):
         output_file.write("Cost: " + str(parser.metrics.cost) + "\n")
         output_file.write("Weighted Score: " + str(parser.metrics.weighted_score) + "\n")
 
+# write speed metric to speed_comparison.txt
 def compare_speed(pdf_parsers):
     output_file = open("evaluations/speed_comparison.txt", "w")
     pdf_parsers.sort(key=lambda x: float(x.metrics.speed), reverse=True)
@@ -100,6 +96,7 @@ def compare_speed(pdf_parsers):
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Speed: " + str(parser.metrics.speed)[:5] + " PDFs per second\n")
 
+# write memory usage metric to Memory_usage_comparison.txt
 def compare_memory_usage(pdf_parsers):
     output_file = open("evaluations/memory_usage_comparison.txt", "w")
     pdf_parsers.sort(key=lambda x: float(x.metrics.memory_usage))
@@ -109,6 +106,7 @@ def compare_memory_usage(pdf_parsers):
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Memory usage: " + str(parser.metrics.memory_usage) + " MB\n")
 
+# write accuracy metric to accuracy_comparison.txt
 def compare_accuracy(pdf_parsers):
     output_file = open("evaluations/accuracy_comparison.txt", "w")
     pdf_parsers.sort(key=lambda x: float(x.metrics.memory_usage))
@@ -116,6 +114,7 @@ def compare_accuracy(pdf_parsers):
         output_file.write(parser.name + " "*(30-len(parser.name)))
         output_file.write("Accuracy: " + str(parser.metrics.accuracy) + " out of 1\n")
 
+# calculate and record weighted scores
 def compute_weighted_scores(pdf_parsers):
     for parser in pdf_parsers:
         weights = parser.metrics.weights
@@ -128,6 +127,7 @@ def compute_weighted_scores(pdf_parsers):
                                         cost * weights["cost"] + \
                                         accuracy * weights["accuracy"] + 1000
 
+# calculate and record a normalized version of the scores
 def normalize_weighted_scores(pdf_parsers):
     scores = [parser.metrics.weighted_score for parser in pdf_parsers]
     OldMax = max(scores) + 1000

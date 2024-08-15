@@ -1,10 +1,8 @@
 # TODO:
-# normalize the weights
+# annotate utils.py, input & output, explanations for each metric
 # clean up the individual wrappers
-# annotate: write function descriptions, input & output, explanations for each metric
 # use instantiations of the parsers, not editing the py object itself
 # test tables data
-
 # BTL:
 # variation_robustness
     # take notes for different types of PDFs variation
