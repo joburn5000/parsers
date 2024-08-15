@@ -2,20 +2,17 @@ import os
 import datetime
 import tracemalloc
 
-class metrics:
-    speed = 0
-    memory_usage = 0
-    cost = 0
-    accuracy = 0
-    variation_robustness = 0
-    weights = {"speed": 10, "memory_usage": -1, "cost": -1, "accuracy": 10000, "variation_robustness": 0}
-    weighted_score = 0
 
-class result:
-    extracted_data = ""
-    parser = ""
-    pdf = ""
-    evaluation = ""
+class metrics:
+    speed = 0           # number of PDF text extractions completed per second
+    memory_usage = 0    # total memory used while extracting in MB
+    cost = 0            # estimated charge to use the parser (0 is free)
+    accuracy = 0        # score from 0 to 1 on extraction quality
+    weights = {"speed": 10, 
+               "memory_usage": -1, 
+               "cost": -1, 
+               "accuracy": 10000}
+    weighted_score = 0
 
 # get pdfs from dataset folder
 def get_pdfs():

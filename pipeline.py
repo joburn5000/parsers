@@ -1,5 +1,6 @@
 # TODO:
 # annotate utils.py, input & output, explanations for each metric
+# change "cost" to "free"
 # clean up the individual wrappers
 # use instantiations of the parsers, not editing the py object itself
 # test tables data
